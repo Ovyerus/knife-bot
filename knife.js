@@ -232,7 +232,7 @@ commands['git'] = {
                         }
                     });
                 } else {
-                    cp.exec('git pull', (err, stdout, stderr) => {
+                    cp.exec('git pull origin master', (err, stdout, stderr) => {
                         if (err) {
                             reject(err);
                         } else if (stderr) {
