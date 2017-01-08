@@ -239,13 +239,19 @@ commands['git'] = {
                             reject(stderr);
                         } else {
                             cp.exec('git log', (e, out, stde) => {
-                                var commits = stdout.split('commit ');
-                                commits.shift();
-                                var first = 'commit ' + commits[0].replace(/ <.+@.+\..+>/, '');
-                                var m = 'Pulled latest commit from GitHub```\n';
-                                m += first + '\n';
-                                m += '```';
-                                knife.createMessage(msg.channel.id, m).then(() => resolve()).catch(reject);
+                                if (e) {
+                                    reject(e);
+                                } else if (stde) {
+                                    reject(stde)
+                                } else {
+                                    var commits = stdout.split('commit ');
+                                    commits.shift();
+                                    var first = 'commit ' + commits[0].replace(/ <.+@.+\..+>/, '');
+                                    var m = 'Pulled latest commit from GitHub```\n';
+                                    m += first + '\n';
+                                    m += '```';
+                                    knife.createMessage(msg.channel.id, m).then(() => resolve()).catch(reject);
+                                }
                             });
                         }
                     });
