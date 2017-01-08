@@ -204,9 +204,9 @@ commands['git'] = {
                         reject(stderr);
                     } else {
                         var commits = stdout.split('commit ');
-                        console.log(commits);
-                        var first = 'commit ' + commits[0];
-                        var cmtMsg = 'Latest pulled commit: \n```\n';
+                        commits.shift();
+                        var first = 'commit ' + commits[0].replace(/ <.+@.+\..+>/, '');
+                        var cmtMsg = 'Latest local commit: \n```\n';
                         cmtMsg += first + '\n';
                         cmtMsg += '```';
                         knife.createMessage(msg.channel.id, cmtMsg).then(() => resolve()).catch(reject);
