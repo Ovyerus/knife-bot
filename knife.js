@@ -196,7 +196,7 @@ commands['git'] = {
     description: 'Git command.',
     func: (msg, args) => {
         return new Promise((resolve, reject) => {
-            if (args.length === 0) {
+            if (args.length === 0 || args[0] !== 'pull') {
                 cp.exec('git log', (err, stdout, stderr) => {
                     if (err) {
                         reject(err);
@@ -206,12 +206,50 @@ commands['git'] = {
                         var commits = stdout.split('commit ');
                         commits.shift();
                         var first = 'commit ' + commits[0].replace(/ <.+@.+\..+>/, '');
-                        var cmtMsg = 'Latest local commit: \n```\n';
+                        var cmtMsg = 'Git repo: <https://github.com/Ovyerus/knife-bot>\n';
+                        cmtMsg += 'Latest local commit: \n```\n';
                         cmtMsg += first + '\n';
                         cmtMsg += '```';
                         knife.createMessage(msg.channel.id, cmtMsg).then(() => resolve()).catch(reject);
                     }
                 });
+            } else if (args[0] === 'pull') {
+                if (msg.author.id !== knife.owner) {
+                    cp.exec('git log', (err, stdout, stderr) => {
+                        if (err) {
+                            reject(err);
+                        } else if (stderr) {
+                            reject(stderr);
+                        } else {
+                            var commits = stdout.split('commit ');
+                            commits.shift();
+                            var first = 'commit ' + commits[0].replace(/ <.+@.+\..+>/, '');
+                            var cmtMsg = 'Git repo: <https://github.com/Ovyerus/knife-bot>\n';
+                            cmtMsg += 'Latest local commit: \n```\n';
+                            cmtMsg += first + '\n';
+                            cmtMsg += '```';
+                            knife.createMessage(msg.channel.id, cmtMsg).then(() => resolve()).catch(reject);
+                        }
+                    });
+                } else {
+                    cp.exec('git pull', (err, stdout, stderr) => {
+                        if (err) {
+                            reject(err);
+                        } else if (stderr) {
+                            reject(stderr);
+                        } else {
+                            cp.exec('git log', (e, out, stde) => {
+                                var commits = stdout.split('commit ');
+                                commits.shift();
+                                var first = 'commit ' + commits[0].replace(/ <.+@.+\..+>/, '');
+                                var m = 'Pulled latest commit from GitHub```\n';
+                                m += first + '\n';
+                                m += '```';
+                                knife.createMessage(msg.channel.id, m).then(() => resolve()).catch(reject);
+                            });
+                        }
+                    });
+                }
             }
         });
     }
