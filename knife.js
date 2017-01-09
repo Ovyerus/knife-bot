@@ -203,14 +203,21 @@ commands['git'] = {
                     } else if (stderr) {
                         reject(stderr);
                     } else {
-                        var commits = stdout.split('commit ');
-                        commits.shift();
-                        var first = 'commit ' + commits[0].replace(/ <.+@.+\..+>/, '');
-                        var cmtMsg = 'Git repo: <https://github.com/Ovyerus/knife-bot>\n';
-                        cmtMsg += 'Latest local commit: \n```\n';
-                        cmtMsg += first + '\n';
-                        cmtMsg += '```';
-                        knife.createMessage(msg.channel.id, cmtMsg).then(() => resolve()).catch(reject);
+                        var commit = stdout.split('commit ')[1].split('\n').filter(str => {return str !== ''})
+                        knife.createMessage(msg.channel.id, {
+                            embed: {
+                                color: 0x1CABB3,
+                                title: 'Latest local commit',
+                                description:'[GitHub Repo](https://github.com/Ovyerus/knife-bot)',
+                                fields: [
+                                    {name: 'Commit Hash', value: commit[0]},
+                                    {name: 'Author', value: commit[1].replace(/Author:\s+/, '').replace(/ <.+@.+\..+>/, '')},
+                                    {name: 'Message', value: commit[3].trim()}
+                                ],
+                                footer: {text: 'Commit Date'},
+                                timestamp: new Date(Date.parse(commit[2].replace(/Date:\s+/, '')))
+                            }
+                        }).then(() => resolve()).catch(reject);
                     }
                 });
             } else if (args[0] === 'pull') {
@@ -221,22 +228,27 @@ commands['git'] = {
                         } else if (stderr) {
                             reject(stderr);
                         } else {
-                            var commits = stdout.split('commit ');
-                            commits.shift();
-                            var first = 'commit ' + commits[0].replace(/ <.+@.+\..+>/, '');
-                            var cmtMsg = 'Git repo: <https://github.com/Ovyerus/knife-bot>\n';
-                            cmtMsg += 'Latest local commit: \n```\n';
-                            cmtMsg += first + '\n';
-                            cmtMsg += '```';
-                            knife.createMessage(msg.channel.id, cmtMsg).then(() => resolve()).catch(reject);
+                            var commit = stdout.split('commit ')[1].split('\n').filter(str => {return str !== ''})
+                            knife.createMessage(msg.channel.id, {
+                                embed: {
+                                    color: 0x1CABB3,
+                                    title: 'Latest local commit',
+                                    description:'[GitHub Repo](https://github.com/Ovyerus/knife-bot)',
+                                    fields: [
+                                        {name: 'Commit Hash', value: commit[0]},
+                                        {name: 'Author', value: commit[1].replace(/Author:\s+/, '').replace(/ <.+@.+\..+>/, '')},
+                                        {name: 'Message', value: commit[3].trim()}
+                                    ],
+                                    footer: {text: 'Commit Date'},
+                                    timestamp: new Date(Date.parse(commit[2].replace(/Date:\s+/, '')))
+                                }
+                            }).then(() => resolve()).catch(reject);
                         }
                     });
                 } else {
                     cp.exec('git pull origin master', (err, stdout, stderr) => {
                         if (err) {
                             reject(err);
-                        } else if (stderr) {
-                            reject(stderr);
                         } else {
                             cp.exec('git log', (e, out, stde) => {
                                 if (e) {
@@ -244,7 +256,7 @@ commands['git'] = {
                                 } else if (stde) {
                                     reject(stde)
                                 } else {
-                                    var commits = stdout.split('commit ');
+                                    var commits = out.split('commit ');
                                     commits.shift();
                                     var first = 'commit ' + commits[0].replace(/ <.+@.+\..+>/, '');
                                     var m = 'Pulled latest commit from GitHub```\n';
