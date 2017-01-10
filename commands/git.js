@@ -1,7 +1,6 @@
 const Promise = require('bluebird');
 const cp = require('child_process');
 const fs = require('fs');
-const moment = require('moment');
 
 exports.cmd = {
     description: 'Git command.',
