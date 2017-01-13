@@ -7,8 +7,9 @@ exports.cmd = {
     func: (knife, msg, args) => {
         return new Promise((resolve, reject) => {
             if (args.length === 0 || args[0] !== 'pull') {
-                let hash = fs.readFileSync('./.git/FETCH_HEAD').toString('utf8').split('\t')[0];
-                let commit = fs.readFileSync('./.git/logs/HEAD').toString('utf8').split(hash)[1];
+                let commits = cp.execSync('git log');
+                let commit = commits.toString('utf8').split('Author: ')[1];
+                let hash = commits.toString('utf8').split('Author: ')[0].substring(6).trim();
                 knife.createMessage(msg.channel.id, {
                     embed: {
                         color: 0x1CABB3,
@@ -16,17 +17,18 @@ exports.cmd = {
                         description:'[GitHub Repo](https://github.com/Ovyerus/knife-bot)',
                         fields: [
                             {name: 'Commit Hash', value: hash},
-                            {name: 'Author', value: commit.split('<')[0]},
-                            {name: 'Message', value: commit.split('\t')[1].substring(7).trim()}
+                            {name: 'Author', value: commit.split('<')[0].trim()},
+                            {name: 'Message', value: commit.split('\n\n')[1].trim()}
                         ],
                         footer: {text: 'Commit Date'},
-                        timestamp: new Date(Number(commit.split('>')[1].split('\t')[0].trim().split(' ')[0]) * 1000)
+                        timestamp: new Date(Date.parse(commit.split('\n\n')[0].split('\n')[1].replace(/Date:\s+/, '')))
                     }
                 }).then(() => resolve()).catch(reject);
             } else if (args[0] === 'pull') {
                 if (msg.author.id !== knife.owner) {
-                    let hash = fs.readFileSync('./.git/FETCH_HEAD').toString('utf8').split('\t')[0];
-                    let commit = fs.readFileSync('./.git/logs/HEAD').toString('utf8').split(hash)[1];
+                    let commits = cp.execSync('git log');
+                    let commit = commits.toString('utf8').split('Author: ')[1];
+                    let hash = commits.toString('utf8').split('Author: ')[0].substring(6).trim();
                     knife.createMessage(msg.channel.id, {
                         embed: {
                             color: 0x1CABB3,
@@ -34,11 +36,11 @@ exports.cmd = {
                             description:'[GitHub Repo](https://github.com/Ovyerus/knife-bot)',
                             fields: [
                                 {name: 'Commit Hash', value: hash},
-                                {name: 'Author', value: commit.split('<')[0]},
-                                {name: 'Message', value: commit.split('\t')[1].substring(7).trim()}
+                                {name: 'Author', value: commit.split('<')[0].trim()},
+                                {name: 'Message', value: commit.split('\n\n')[1].trim()}
                             ],
                             footer: {text: 'Commit Date'},
-                            timestamp: new Date(Number(commit.split('>')[1].split('\t')[0].trim().split(' ')[0]) * 1000)
+                            timestamp: new Date(Date.parse(commit.split('\n\n')[0].split('\n')[1].replace(/Date:\s+/, '')))
                         }
                     }).then(() => resolve()).catch(reject);
                 } else {
@@ -46,8 +48,9 @@ exports.cmd = {
                         if (err) {
                             reject(err);
                         } else {
-                            let hash = fs.readFileSync('./.git/FETCH_HEAD').toString('utf8').split('\t')[0];
-                            let commit = fs.readFileSync('./.git/logs/HEAD').toString('utf8').split(hash)[1];
+                            let commits = cp.execSync('git log');
+                            let commit = commits.toString('utf8').split('Author: ')[1];
+                            let hash = commits.toString('utf8').split('Author: ')[0].substring(6).trim();
                             knife.createMessage(msg.channel.id, {
                                 embed: {
                                     color: 0x1CABB3,
@@ -55,11 +58,11 @@ exports.cmd = {
                                     description:'[GitHub Repo](https://github.com/Ovyerus/knife-bot)',
                                     fields: [
                                         {name: 'Commit Hash', value: hash},
-                                        {name: 'Author', value: commit.split('<')[0]},
-                                        {name: 'Message', value: commit.split('\t')[1].substring(7).trim()}
+                                        {name: 'Author', value: commit.split('<')[0].trim()},
+                                        {name: 'Message', value: commit.split('\n\n')[1].trim()}
                                     ],
                                     footer: {text: 'Commit Date'},
-                                    timestamp: new Date(Number(commit.split('>')[1].split('\t')[0].trim().split(' ')[0]) * 1000)
+                                    timestamp: new Date(Date.parse(commit.split('\n\n')[0].split('\n')[1].replace(/Date:\s+/, '')))
                                 }
                             }).then(() => resolve()).catch(reject);
                         }
