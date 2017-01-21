@@ -37,7 +37,7 @@ knife.on('ready', () => {
 
 knife.on('messageCreate', msg => {
     if (msg.author.bot) return;
-    if (!msg.guild) {
+    if (!msg.channel.guild) {
         logger.custom('cyan', 'dm', `Direct Message | ${knife.formatUser(msg.author)}: ${msg.cleanContent}`);
         return;
     }
@@ -51,12 +51,12 @@ knife.on('messageCreate', msg => {
         if (!knife.commands[cmd]) return;
 
         knife.commands[cmd].func(knife, msg, args).then(lul => {
-            if (!lul) logger.cmd(`${msg.guild.name} | ${msg.channel.name} + ${knife.formatUser(msg.author)}: ${msg.cleanContent}`);
+            if (!lul) logger.cmd(`${msg.channel.guild.name} | ${msg.channel.name} + ${knife.formatUser(msg.author)}: ${msg.cleanContent}`);
         }).catch(err => {
             if (err.resp && err.resp.statusCode === 403) {
                 logger.warn(`Can't send message in '#${msg.channel.name}' (${msg.channel.id}), cmd from user '${knife.formatUser(msg.author)}' (${msg.author.id})`);
                 knife.getDMChannel(msg.author.id).then(dm => {
-                    knife.createMessage(dm.id, `It appears I was unable to send a message in \`#${msg.channel.name}\` on the server \`${msg.guild.name}\`. Please give me the Send Messages permission or notify a mod or admin if you cannot do this.`);
+                    knife.createMessage(dm.id, `It appears I was unable to send a message in \`#${msg.channel.name}\` on the server \`${msg.channel.guild.name}\`. Please give me the Send Messages permission or notify a mod or admin if you cannot do this.`);
                 }).catch(() => logger.warn(`Couldn't get DM channel for ${knife.formatUser(msg.author)} (${msg.author.id})`));
             } else {
                 logger.error(`Error in command '${cmd}' from user ${knife.formatUser(msg.author)} in #${msg.channel.name} (${msg.channel.id})\n${err}\n${err.stack}`);

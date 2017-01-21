@@ -8,11 +8,11 @@ exports.cmd = {
             if (!msg.member.permission.has('banMembers')) {
                 knife.createMessage(msg.channel.id, 'You need heat-proof gloves to handle me.\n**(You require the Ban Members permission)**').then(() => resolve()).catch(reject);
             } else {
-                if (!msg.guild.members.get(knife.user.id).permission.has('banMembers')) {
+                if (!msg.channel.guild.members.get(knife.user.id).permission.has('banMembers')) {
                     knife.createMessage(msg.channel.id, "I'm not hot enough to cut.\n**(I require the Ban Members permission)**").then(() => resolve()).catch(reject);
                 } else {
                     if (msg.mentions.length > 0) {
-                        knife.banGuildMember(msg.guild.id, msg.mentions[0].id, 7).then(() => {
+                        knife.banGuildMember(msg.channel.guild.id, msg.mentions[0].id, 7).then(() => {
                             knife.createMessage(msg.channel.id, `Cut all the way through **${knife.formatUser(msg.mentions[0])}**!`)
                         }).catch(err => {
                             if (err.resp && err.resp.statusCode === 403) {
