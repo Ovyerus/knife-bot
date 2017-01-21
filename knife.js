@@ -16,7 +16,7 @@ knife.owner = config.owner;
 knife.redHot = '🔥 1⃣0⃣0⃣0⃣ 🌡 🔪'; 
 knife.commands = {};
 knife.logger = logger;
-const prefixes = ['\uD83D\uDD2A', '<@{{id}}> '];
+const prefixes = ['\uD83D\uDD2A', '<@{{id}}> ', 'tb!'];
 var useCommands = false;
 var loadCommands = true;
 
@@ -52,7 +52,7 @@ knife.on('messageCreate', msg => {
     prefixParse(msg.content, prefixes).then(content => {
         if (!content) return;
 
-        msg.mentions = msg.mentions.filter(mention => mention.id !== knife.user.id);
+        msg.mentions[0].id === knife.user.id && msg.content.startsWith(`<@${knife.user.id}> `) ? msg.mentions.shift() : null;
         let args = content.split(' ');
         let cmd = args.shift();
         if (/^vs$/i.test(cmd)) cmd = cmd.toLowerCase();
