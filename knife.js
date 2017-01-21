@@ -52,6 +52,7 @@ knife.on('messageCreate', msg => {
     prefixParse(msg.content, prefixes).then(content => {
         if (!content) return;
 
+        msg.mentions = msg.mentions.filter(mention => mention.id !== knife.user.id);
         let args = content.split(' ');
         let cmd = args.shift();
         if (/^vs$/i.test(cmd)) cmd = cmd.toLowerCase();
