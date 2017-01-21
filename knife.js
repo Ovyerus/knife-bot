@@ -18,25 +18,32 @@ knife.commands = {};
 knife.logger = logger;
 const prefixes = ['\uD83D\uDD2A', '<@{{id}}> '];
 var useCommands = false;
+var loadCommands = true;
 
 knife.formatUser = user => {
     return user instanceof Eris.Member ? `${user.nick ? user.nick : user.user.username}#${user.user.discriminator}` : `${user.username}#${user.discriminator}`;
 }
 
 knife.on('ready', () => {
-    logger.info(knife.user.username + ' is online and ready to cut shit I guess.');
-    prefixes[1] = prefixes[1].replace('{{id}}', knife.user.id);
-    var files = fs.readdirSync(`${__dirname}/commands`);
-    for (let file of files) {
-        if (!file.endsWith('.js')) continue;
-        let cmd = require(`${__dirname}/commands/${file}`).cmd;
-        knife.commands[file.substring(0, file.indexOf('.js'))] = cmd;
+    if (loadCommands) {
+        logger.info(knife.user.username + ' is online and ready to cut shit I guess.');
+        prefixes[prefixes.indexOf('<@{{id}}> ')] = '<@{{id}}> '.replace('{{id}}', knife.user.id);
+        var files = fs.readdirSync(`${__dirname}/commands`);
+        for (let file of files) {
+            if (!file.endsWith('.js')) continue;
+            let cmd = require(`${__dirname}/commands/${file}`).cmd;
+            knife.commands[file.substring(0, file.indexOf('.js'))] = cmd;
+        }
+        logger.info(`Loaded ${Object.keys(knife.commands).length} commands.`);
+        loadCommands = false;
+        useCommands = true;
+    } else {
+        logger.info('Reconnected from Discord');
     }
-    logger.info(`Loaded ${Object.keys(knife.commands).length} commands.`);
 });
 
 knife.on('messageCreate', msg => {
-    if (msg.author.bot) return;
+    if (!useCommands || msg.author.bot) return;
     if (!msg.channel.guild) {
         logger.custom('cyan', 'dm', `Direct Message | ${knife.formatUser(msg.author)}: ${msg.cleanContent}`);
         return;
@@ -47,6 +54,7 @@ knife.on('messageCreate', msg => {
 
         let args = content.split(' ');
         let cmd = args.shift();
+        if (/^vs$/i.test(cmd)) cmd = cmd.toLowerCase();
 
         if (!knife.commands[cmd]) return;
 
@@ -70,5 +78,8 @@ knife.on('messageCreate', msg => {
     });
 });
 
+knife.on('disconnect', () => {
+    logger.warn('Disconnected from Discord.');
+});
 
 knife.connect();
