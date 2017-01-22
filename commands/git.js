@@ -52,6 +52,7 @@ exports.cmd = {
                             let commit = commits.toString('utf8').split('Author: ')[1];
                             let hash = commits.toString('utf8').split('Author: ')[0].substring(6).trim();
                             knife.createMessage(msg.channel.id, {
+                                content: 'Pulled latest commit and ready to restart.',
                                 embed: {
                                     color: 0x1CABB3,
                                     title: 'Pulled latest commit from GitHub',
