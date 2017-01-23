@@ -52,7 +52,7 @@ knife.on('messageCreate', msg => {
     prefixParse(msg.content, prefixes).then(content => {
         if (!content) return;
 
-        msg.mentions[0].id === knife.user.id && msg.content.startsWith(`<@${knife.user.id}> `) ? msg.mentions.shift() : null;
+        msg.mentions.length !== 0 && msg.mentions[0].id === knife.user.id && msg.content.startsWith(`<@${knife.user.id}> `) ? msg.mentions.shift() : null;
         let args = content.split(' ');
         let cmd = args.shift();
         if (/^vs$/i.test(cmd)) cmd = cmd.toLowerCase();
