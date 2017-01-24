@@ -16,7 +16,7 @@ knife.owner = config.owner;
 knife.redHot = '🔥 1⃣0⃣0⃣0⃣ 🌡 🔪'; 
 knife.commands = {};
 knife.logger = logger;
-const prefixes = ['\uD83D\uDD2A', '<@{{id}}> '];
+const prefixes = ['\uD83D\uDD2A', '<@{{id}}> ', 'tb!'];
 var useCommands = false;
 var loadCommands = true;
 
@@ -43,7 +43,7 @@ knife.on('ready', () => {
 });
 
 knife.on('messageCreate', msg => {
-    if (!useCommands || msg.author.bot) return;
+    if (!useCommands || !msg.author || msg.author.bot) return;
     if (!msg.channel.guild) {
         logger.custom('cyan', 'dm', `Direct Message | ${knife.formatUser(msg.author)}: ${msg.cleanContent}`);
         return;
@@ -52,7 +52,10 @@ knife.on('messageCreate', msg => {
     prefixParse(msg.content, prefixes).then(content => {
         if (!content) return;
 
-        msg.mentions.length !== 0 && msg.mentions[0].id === knife.user.id && msg.content.startsWith(`<@${knife.user.id}> `) ? msg.mentions.shift() : null;
+        msg.mentionStrings = msg.content.match(/<@\d+>/g) || [];
+        if (msg.mentions.length !== 0) msg.mentionStrings.forEach((mntn, indx) => {
+            msg.mentionStrings[indx] = mntn.replace('<@', '').replace('>', '');
+        });
         let args = content.split(' ');
         let cmd = args.shift();
         if (/^vs$/i.test(cmd)) cmd = cmd.toLowerCase();
