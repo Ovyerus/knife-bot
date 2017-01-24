@@ -56,6 +56,7 @@ knife.on('messageCreate', msg => {
         if (msg.mentions.length !== 0) msg.mentionStrings.forEach((mntn, indx) => {
             msg.mentionStrings[indx] = mntn.replace('<@', '').replace('>', '');
         });
+        msg.content.startsWith(`<@${knife.user.id}> `) ? msg.mentionStrings.shift() : null;
         let args = content.split(' ');
         let cmd = args.shift();
         if (/^vs$/i.test(cmd)) cmd = cmd.toLowerCase();
