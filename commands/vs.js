@@ -22,7 +22,7 @@ exports.cmd = {
                                 return msg.channel.guild.roles.get(b).position - msg.channel.guild.roles.get(a).position;
                             })[0]).position;
 
-                            if (userTopRolePos > mentionTopRolePos && userTopRolePos !== mentionTopRolePos) {
+                            if (msg.author.id === msg.channel.guild.ownerID || (userTopRolePos > mentionTopRolePos && userTopRolePos !== mentionTopRolePos)) {
                                 knife.banGuildMember(msg.channel.guild.id, msg.mentionStrings[0], 7).then(() => {
                                     knife.createMessage(msg.channel.id, `Cut all the way through **${knife.formatUser(mentionedUser)}**!`)
                                 }).catch(err => {
