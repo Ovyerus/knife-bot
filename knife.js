@@ -16,7 +16,7 @@ knife.owner = config.owner;
 knife.redHot = '🔥 1⃣0⃣0⃣0⃣ 🌡 🔪'; 
 knife.commands = {};
 knife.logger = logger;
-const prefixes = ['\uD83D\uDD2A', '<@{{id}}> ', 'tb!'];
+const prefixes = ['\uD83D\uDD2A', '<@{{id}}> '];
 var useCommands = false;
 var loadCommands = true;
 
@@ -72,7 +72,7 @@ knife.on('messageCreate', msg => {
                     knife.createMessage(dm.id, `It appears I was unable to send a message in \`#${msg.channel.name}\` on the server \`${msg.channel.guild.name}\`. Please give me the Send Messages permission or notify a mod or admin if you cannot do this.`);
                 }).catch(() => logger.warn(`Couldn't get DM channel for ${knife.formatUser(msg.author)} (${msg.author.id})`));
             } else {
-                logger.error(`Error in command '${cmd}' from user ${knife.formatUser(msg.author)} in #${msg.channel.name} (${msg.channel.id})\n${err}\n${err.stack}`);
+                logger.error(`Error in command '${cmd}' from user ${knife.formatUser(msg.author)} in #${msg.channel.name} (${msg.channel.id})\n${err.stack}`);
                 var errMsg = `Error with command \`${cmd}\`\n`;
                 errMsg += '```js\n';
                 errMsg += `${err}\n`;
