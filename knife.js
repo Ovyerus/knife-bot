@@ -52,9 +52,9 @@ knife.on('messageCreate', msg => {
     prefixParse(msg.content, prefixes).then(content => {
         if (!content) return;
 
-        msg.mentionStrings = msg.content.match(/<@\d+>/g) || [];
+        msg.mentionStrings = msg.content.match(/<@!?\d+>/g) || [];
         if (msg.mentions.length !== 0) msg.mentionStrings.forEach((mntn, indx) => {
-            msg.mentionStrings[indx] = mntn.replace('<@', '').replace('>', '');
+            msg.mentionStrings[indx] = mntn.replace(/<@!?/, '').replace('>', '');
         });
         msg.content.startsWith(`<@${knife.user.id}> `) ? msg.mentionStrings.shift() : null;
         let args = content.split(' ');
