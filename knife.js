@@ -6,7 +6,6 @@ const prefixParse = require('./prefixParse.js');
 const config = require('./config.json');
 const knife = new Eris(config.token, {
     disableEvents: {
-        PRESENCE_UPDATE: true,
         TYPING_START: true,
         VOICE_STATE_UPDATE: true
     }
