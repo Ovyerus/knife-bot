@@ -25,6 +25,7 @@ knife.formatUser = user => {
 }
 
 knife.on('ready', () => {
+    knife.editStatus('online', {name: `${prefixes[0]}help | ${knife.guilds.size} servers`});
     if (loadCommands) {
         logger.info(knife.user.username + ' is online and ready to cut shit I guess.');
         prefixes[prefixes.indexOf('<@{{id}}> ')] = '<@{{id}}> '.replace('{{id}}', knife.user.id);
@@ -81,6 +82,18 @@ knife.on('messageCreate', msg => {
             }
         });
     });
+});
+
+knife.on('guildCreate', g => {
+    knife.editStatus('online', {name: `${prefixes[0]}help | ${knife.guilds.size} servers`});
+    if (g.members.filter(m => m.bot).length >= Math.ceil(g.memberCount / 2)) {
+        logger.info(`Leaving bot collection guild, '${g.name}' (${g.id})`);
+        g.leave();
+    }
+});
+
+knife.on('guildDelete', g => {
+    knife.editStatus('online', {name: `${prefixes[0]}help | ${knife.guilds.size} servers`});
 });
 
 knife.on('disconnect', () => {
