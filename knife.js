@@ -15,7 +15,7 @@ knife.owner = config.owner;
 knife.redHot = '🔥 1⃣0⃣0⃣0⃣ 🌡 🔪'; 
 knife.commands = {};
 knife.logger = logger;
-const prefixes = ['\uD83D\uDD2A', '<@{{id}}> '];
+const prefixes = [/\uD83D\uDD2A ?/, '<@{{id}}> '];
 var useCommands = false;
 var loadCommands = true;
 

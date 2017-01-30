@@ -6,9 +6,15 @@ function parse(content, prefixes) {
         var oldContent = content;
         
         for (let prfx of prefixes) {
-            if (content.startsWith(prfx)) {
-                content = content.substring(prfx.length);
+            if (typeof prfx === 'string') {
+                content = content.startsWith(prfx) ? content.substring(prfx.length) : content;
                 break;
+            } else if (prfx instanceof RegExp) {
+                let tmp = prfx.toString().replace(/^\//, '').replace(/\/$/, '');
+                tmp = tmp.startsWith('^') ? tmp : '^' + tmp;
+                tmp = new RegExp(tmp);
+                content = tmp.test(content) ? content.replace(tmp, '') : content;
+                if (content !== oldContent) break;
             }
         }
 
