@@ -16,6 +16,7 @@ knife.redHot = '🔥 1⃣0⃣0⃣0⃣ 🌡 🔪';
 knife.commands = {};
 knife.logger = logger;
 const prefixes = [/\uD83D\uDD2A ?/, '<@{{id}}> '];
+const noDM = ['purge', 'vs', 'info'];
 var useCommands = false;
 var loadCommands = true;
 
@@ -27,7 +28,7 @@ knife.on('ready', () => {
     knife.editStatus('online', {name: `${prefixes[0]}help | ${knife.guilds.size} servers`});
     if (loadCommands) {
         logger.info(knife.user.username + ' is online and ready to cut shit I guess.');
-        prefixes[prefixes.indexOf('<@{{id}}> ')] = '<@{{id}}> '.replace('{{id}}', knife.user.id);
+        if (prefixes.indexOf ('<@{{id}}>') !== -1) prefixes[prefixes.indexOf('<@{{id}}> ')] = '<@{{id}}> '.replace('{{id}}', knife.user.id);
         var files = fs.readdirSync(`${__dirname}/commands`);
         for (let file of files) {
             if (!file.endsWith('.js')) continue;
@@ -46,7 +47,6 @@ knife.on('messageCreate', msg => {
     if (!useCommands || !msg.author || msg.author.bot) return;
     if (!msg.channel.guild) {
         logger.custom('cyan', 'dm', `Direct Message | ${knife.formatUser(msg.author)}: ${msg.cleanContent}`);
-        return;
     }
     
     prefixParse(msg.content, prefixes).then(content => {
@@ -61,10 +61,12 @@ knife.on('messageCreate', msg => {
         let cmd = args.shift();
         if (/^vs$/i.test(cmd)) cmd = cmd.toLowerCase();
 
-        if (!knife.commands[cmd]) return;
+        if (!knife.commands[cmd] || (!msg.channel.guild && noDM.indexOf(cmd) !== -1)) return;
 
         knife.commands[cmd].func(knife, msg, args).then(lul => {
-            if (!lul) logger.cmd(`${msg.channel.guild.name} | ${msg.channel.name} + ${knife.formatUser(msg.author)}: ${msg.cleanContent}`);
+            if (!lul) {
+                if (msg.guild) logger.cmd(`${msg.channel.guild.name} | ${msg.channel.name} + ${knife.formatUser(msg.author)}: ${msg.cleanContent}`);
+            }
         }).catch(err => {
             if (err.resp && err.resp.statusCode === 403) {
                 logger.warn(`Can't send message in '#${msg.channel.name}' (${msg.channel.id}), cmd from user '${knife.formatUser(msg.author)}' (${msg.author.id})`);
