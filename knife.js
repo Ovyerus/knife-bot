@@ -28,7 +28,8 @@ knife.on('ready', () => {
     knife.editStatus('online', {name: `${prefixes[0]}help | ${knife.guilds.size} servers`});
     if (loadCommands) {
         logger.info(knife.user.username + ' is online and ready to cut shit I guess.');
-        if (prefixes.indexOf ('<@{{id}}>') !== -1) prefixes[prefixes.indexOf('<@{{id}}> ')] = '<@{{id}}> '.replace('{{id}}', knife.user.id);
+        if (prefixes.indexOf('<@{{id}}> ') !== -1) prefixes[prefixes.indexOf('<@{{id}}> ')] = '<@{{id}}> '.replace('{{id}}', knife.user.id);
+        console.log(prefixes[1]);
         var files = fs.readdirSync(`${__dirname}/commands`);
         for (let file of files) {
             if (!file.endsWith('.js')) continue;
@@ -65,7 +66,7 @@ knife.on('messageCreate', msg => {
 
         knife.commands[cmd].func(knife, msg, args).then(lul => {
             if (!lul) {
-                if (msg.guild) logger.cmd(`${msg.channel.guild.name} | ${msg.channel.name} + ${knife.formatUser(msg.author)}: ${msg.cleanContent}`);
+                if (msg.channel.guild) logger.cmd(`${msg.channel.guild.name} | ${msg.channel.name} + ${knife.formatUser(msg.author)}: ${msg.cleanContent}`);
             }
         }).catch(err => {
             if (err.resp && err.resp.statusCode === 403) {

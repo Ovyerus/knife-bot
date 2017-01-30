@@ -8,7 +8,7 @@ function parse(content, prefixes) {
         for (let prfx of prefixes) {
             if (typeof prfx === 'string') {
                 content = content.startsWith(prfx) ? content.substring(prfx.length) : content;
-                break;
+                if (content !== oldContent) break;
             } else if (prfx instanceof RegExp) {
                 let tmp = prfx.toString().replace(/^\//, '').replace(/\/$/, '');
                 tmp = tmp.startsWith('^') ? tmp : '^' + tmp;
