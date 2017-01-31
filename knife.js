@@ -15,21 +15,34 @@ knife.owner = config.owner;
 knife.redHot = '🔥 1⃣0⃣0⃣0⃣ 🌡 🔪'; 
 knife.commands = {};
 knife.logger = logger;
+
 const prefixes = [/\uD83D\uDD2A ?/, '<@{{id}}> '];
+const games = ['🔪 help', '🔪 invite', 'OH GOD EVERYTHING IS MELTING', '🔪 info', 'HOLY SHIT WHY AM I ON FIRE', 'IT BUUURNNNNS'];
 const noDM = ['purge', 'vs', 'info'];
+const gameInterval = 600000;
 var useCommands = false;
 var loadCommands = true;
+var currentGame;
+var gameLoop;
 
 knife.formatUser = user => {
     return user instanceof Eris.Member ? `${user.nick ? user.nick : user.user.username}#${user.user.discriminator}` : `${user.username}#${user.discriminator}`;
 }
 
+function pickGame() {
+    let game = games[Math.floor(Math.random() * games.length)];
+    if (game !== currentGame) {
+        currentGame = game;
+        return game;
+    } else {
+        pickGame();
+    }
+}
+
 knife.on('ready', () => {
-    knife.editStatus('online', {name: `${prefixes[0]}help | ${knife.guilds.size} servers`});
     if (loadCommands) {
         logger.info(knife.user.username + ' is online and ready to cut shit I guess.');
         if (prefixes.indexOf('<@{{id}}> ') !== -1) prefixes[prefixes.indexOf('<@{{id}}> ')] = '<@{{id}}> '.replace('{{id}}', knife.user.id);
-        console.log(prefixes[1]);
         var files = fs.readdirSync(`${__dirname}/commands`);
         for (let file of files) {
             if (!file.endsWith('.js')) continue;
@@ -42,6 +55,11 @@ knife.on('ready', () => {
     } else {
         logger.info('Reconnected from Discord');
     }
+
+    knife.editStatus('online', {name: `${pickGame()} | ${knife.guilds.size} servers`});
+    if (!gameLoop) gameLoop = setInterval(() => {
+        knife.editStatus('online', {name: `${pickGame()} | ${knife.guilds.size} servers`});
+    }, gameInterval)
 });
 
 knife.on('messageCreate', msg => {
@@ -87,15 +105,16 @@ knife.on('messageCreate', msg => {
 });
 
 knife.on('guildCreate', g => {
-    knife.editStatus('online', {name: `${prefixes[0]}help | ${knife.guilds.size} servers`});
     if (g.members.filter(m => m.bot).length >= Math.ceil(g.memberCount / 2)) {
         logger.info(`Leaving bot collection guild, '${g.name}' (${g.id})`);
         g.leave();
+    } else {
+        knife.editStatus('online', {name: `${currentGame} | ${knife.guilds.size} servers`});
     }
 });
 
 knife.on('guildDelete', g => {
-    knife.editStatus('online', {name: `${prefixes[0]}help | ${knife.guilds.size} servers`});
+    knife.editStatus('online', {name: `${currentGame} | ${knife.guilds.size} servers`});
 });
 
 knife.on('disconnect', () => {
