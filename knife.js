@@ -39,6 +39,15 @@ function pickGame() {
     }
 }
 
+function setGame() {
+    let game = pickGame();
+    if (game) {
+        knife.editStatus('online', {name: `${game} | ${knife.guilds.size} servers`});
+    } else {
+        setGame();
+    }
+}
+
 knife.on('ready', () => {
     if (loadCommands) {
         logger.info(knife.user.username + ' is online and ready to cut shit I guess.');
@@ -56,10 +65,8 @@ knife.on('ready', () => {
         logger.info('Reconnected from Discord');
     }
 
-    knife.editStatus('online', {name: `${pickGame()} | ${knife.guilds.size} servers`});
-    if (!gameLoop) gameLoop = setInterval(() => {
-        knife.editStatus('online', {name: `${pickGame()} | ${knife.guilds.size} servers`});
-    }, gameInterval)
+    setGame();
+    if (!gameLoop) gameLoop = setInterval(setGame, gameInterval);
 });
 
 knife.on('messageCreate', msg => {
