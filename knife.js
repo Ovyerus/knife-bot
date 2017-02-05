@@ -15,6 +15,7 @@ knife.owner = config.owner;
 knife.redHot = '🔥 1⃣0⃣0⃣0⃣ 🌡 🔪'; 
 knife.commands = {};
 knife.logger = logger;
+knife.db = require('rethinkdbdash')(config.rethinkOptions);
 
 const prefixes = [/\uD83D\uDD2A ?/, '<@{{id}}> '];
 const games = ['🔪 help', '🔪 invite', 'OH GOD EVERYTHING IS MELTING', '🔪 info', 'HOLY SHIT WHY AM I ON FIRE', 'IT BUUURNNNNS'];
@@ -126,6 +127,10 @@ knife.on('guildDelete', g => {
 
 knife.on('disconnect', () => {
     logger.warn('Disconnected from Discord.');
+});
+
+knife.getPoolMaster().on('draining', () => {
+    logger.info('RethinkDB connection pool is draining.');
 });
 
 knife.connect();
