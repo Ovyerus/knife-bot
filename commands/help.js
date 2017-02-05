@@ -2,7 +2,7 @@ const Promise = require('bluebird');
 
 exports.cmd = {
     description: 'Help command.',
-    func: (knife, msg) => {
+    func(knife, msg) {
         return new Promise((resolve, reject) => {
             var helpMsg = '```\n';
             for (let command in knife.commands) {

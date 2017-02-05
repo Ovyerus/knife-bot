@@ -5,7 +5,7 @@ const fs = require('fs');
 
 exports.cmd = {
     description: 'Git command.',
-    func: (knife, msg, args) => {
+    func(knife, msg, args) {
         return new Promise((resolve, reject) => {
             if (args.length === 0 || args[0] !== 'pull') {
                 let commits = cp.execSync('git log');

@@ -3,7 +3,7 @@ const Promise = require('bluebird');
 exports.cmd = {
     description: 'Cuts through someone and bans them',
     usage: '<user mention>',
-    func: (knife, msg, args) => {
+    func(knife, msg, args) {
         return new Promise((resolve, reject) => {
             if (!msg.member.permission.has('banMembers')) {
                 knife.createMessage(msg.channel.id, 'You need heat-proof gloves to handle me.\n**(You require the Ban Members permission)**').then(() => resolve()).catch(reject);

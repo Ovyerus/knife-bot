@@ -8,7 +8,7 @@ exports.cmd = {
     description: '👀',
     usage: '<👀>',
     owner: true,
-    func: (knife, msg, args) => {
+    func(knife, msg, args) {
         return new Promise((resolve, reject) => {
             if (msg.author.id !== knife.owner) {
                 resolve('fagit');

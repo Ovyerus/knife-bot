@@ -3,7 +3,7 @@ const Promise = require('bluebird');
 exports.cmd = {
     description: 'Delete messages in the current channel.',
     usage: '<type> [amount]',
-    func: (knife, msg, args) => {
+    func(knife, msg, args) {
         return new Promise((resolve, reject) => {
             if (!msg.member.permission.has('manageMessages')) {
                 knife.createMessage(msg.channel.id, "You don't have permission to clean up this chopping board.\n**(You require the Manage Messages permission.)**").then(() => resolve()).catch(reject);

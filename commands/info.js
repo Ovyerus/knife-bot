@@ -25,7 +25,7 @@ function msToTime(ms) {
 
 exports.cmd = {
     description: 'Display information about the bot.',
-    func: (knife, msg) => {
+    func(knife, msg) {
         return new Promise((resolve, reject) => {
             var guildBot = msg.channel.guild.members.get(knife.user.id);
             var roleColour = guildBot.roles.sort((a, b) => {
