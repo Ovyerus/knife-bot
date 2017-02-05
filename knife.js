@@ -30,6 +30,44 @@ knife.formatUser = user => {
     return user instanceof Eris.Member ? `${user.nick ? user.nick : user.user.username}#${user.user.discriminator}` : `${user.username}#${user.discriminator}`;
 }
 
+knife.awaitMessage = (msg, filter=function(){return true}, timeout=15000) => {
+    return new Promise((resolve, reject) => {
+        if (!msg || !(msg instanceof Eris.Message)) {
+            reject(new Error('No message, or invalid message object.'));
+        } else if (!filter || typeof filter !== 'function') {
+            reject(new Error('No filter or invalid filter.'));
+        } else {
+            var responded, rmvTimeout;
+
+            var onCrt = (m) => {
+                if (m.channel.id === msg.channel.id && m.author.id === msg.author.id && filter(m)) {
+                    responded = true;
+                    knife.removeListener('messageCreate', onCrt);
+                    return m;
+                }
+            }
+
+            var onCrtWrap = (m) => {
+                var res = onCrt(m);
+                if (responded) {
+                    knife.removeListener('messageCreate', onCrtWrap);
+                    clearInterval(rmvTimeout);
+                    resolve(res);
+                } 
+            }
+
+            knife.on('messageCreate', onCrtWrap);
+
+            rmvTimeout = setTimeout(() => {
+                if (!responded) {
+                    knife.removeListener('messageCreate', onCrtWrap);
+                    reject(new Error('Message await expired.'))
+                }
+            }, timeout);
+        }
+    });
+}
+
 function pickGame() {
     let game = games[Math.floor(Math.random() * games.length)];
     if (game !== currentGame) {
@@ -127,10 +165,6 @@ knife.on('guildDelete', g => {
 
 knife.on('disconnect', () => {
     logger.warn('Disconnected from Discord.');
-});
-
-knife.getPoolMaster().on('draining', () => {
-    logger.info('RethinkDB connection pool is draining.');
 });
 
 knife.connect();
