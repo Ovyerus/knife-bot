@@ -9,7 +9,7 @@ exports.cmd = {
                 resolve('o');
             } else {
                 knife.createMessage(msg.channel.id, 'Are you sure you want to shutdown [y/n]?').then(() => {
-                    knife.awaitMessage(msg).then(m => {
+                    knife.awaitMessage(msg.channel.id, msg.author.id).then(m => {
                         if (/^y(es)?$/i.test(m.content)) {
                             knife.createMessage(m.channel.id, 'Turning off the blowtorches...').then(() => {
                                 knife.db.getPoolMaster().drain();

@@ -30,25 +30,24 @@ knife.formatUser = user => {
     return user instanceof Eris.Member ? `${user.nick ? user.nick : user.user.username}#${user.user.discriminator}` : `${user.username}#${user.discriminator}`;
 }
 
-knife.awaitMessage = (msg, filter=function(){return true}, timeout=15000) => {
+knife.awaitMessage = (channelID, userID, filter=function(){return true}, timeout=15000) => {
     return new Promise((resolve, reject) => {
-        if (!msg || !(msg instanceof Eris.Message)) {
-            reject(new Error('No message, or invalid message object.'));
-        } else if (!filter || typeof filter !== 'function') {
-            reject(new Error('No filter or invalid filter.'));
+        if (!channelID || typeof channelID !== 'string') {
+            reject(new Error(`Unwanted type of channelID: got "${typeof channelID}" expected "string"`));
+        } else if (!userID || typeof userID !== 'string') {
+            reject(new Error(`Unwanted type of userID: got "${typeof userID}" expected "string"`));
         } else {
             var responded, rmvTimeout;
 
-            var onCrt = (m) => {
-                if (m.channel.id === msg.channel.id && m.author.id === msg.author.id && filter(m)) {
+            var onCrt = (msg) => {
+                if (msg.channel.id === channelID && msg.author.id === userID && filter(msg)) {
                     responded = true;
-                    knife.removeListener('messageCreate', onCrt);
-                    return m;
+                    return msg;
                 }
             }
 
-            var onCrtWrap = (m) => {
-                var res = onCrt(m);
+            var onCrtWrap = (msg) => {
+                var res = onCrt(msg);
                 if (responded) {
                     knife.removeListener('messageCreate', onCrtWrap);
                     clearInterval(rmvTimeout);
