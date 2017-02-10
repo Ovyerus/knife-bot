@@ -1,6 +1,7 @@
 const Eris = require('eris');
 const Promise = require('bluebird');
 const fs = require('fs');
+const util = require('util');
 const logger = require('./logger.js');
 const prefixParse = require('./prefixParse.js');
 const config = require('./config.json');
@@ -160,6 +161,18 @@ knife.on('guildCreate', g => {
 
 knife.on('guildDelete', g => {
     knife.editStatus('online', {name: `${currentGame} | ${knife.guilds.size} servers`});
+});
+
+knife.on('error', (err, id) => {
+    logger.error(`Shard ${id} experienced error.\n${err}`);
+});
+
+knife.on('warn', (msg, id) => {
+    logger.warn(`Shard ${id} warned.\n${msg}`);
+});
+
+knife.on('unknown', (pkt, id) => {
+    logger.warn(`Shard ${id} encountered unknown packet.\n${util.inspect(pkt, {depth: 1})}`);
 });
 
 knife.on('disconnect', () => {
