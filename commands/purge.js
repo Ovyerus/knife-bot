@@ -1,10 +1,13 @@
 const Promise = require('bluebird');
+const safe = require('safe-regex');
+
+var outside = {};
 
 function deleteDelay(msg) {
     return new Promise((resolve, reject) => {
         setTimeout(() => {
-            knife.deleteMessage(msg.channel.id, msg.id).then(() => resolve()).catch(reject);
-        }, 2500);
+            outside.knife.deleteMessage(msg.channel.id, msg.id).then(() => resolve()).catch(reject);
+        }, 1000);
     });
 }
 
@@ -19,22 +22,23 @@ exports.cmd = {
                 if (!msg.channel.guild.members.get(knife.user.id).permission.has('manageMessages')) {
                     knife.createMessage(msg.channel.id, "I can't cleanup this chopping board.\n**(I require the Manage Messages permission.)**").then(() => resolve()).catch(reject);
                 } else {
+                    outside.knife = knife;
                     if (args.length === 0) {
                         knife.createMessage(msg.channel.id, {embed: {
                             title: 'Incorrect Usage',
-                            description: '**purge all [0-250]**\n**purge author <author> [0-250]**\n**purge bots [0-250]**\n**purge including <word> [0-250]**\n**purge embeds [0-250]**\n**purge attachments [0-250]**\n**purge images [0-250]**\n**purge regex <regex> [0-250]**',
+                            description: '**purge all [0-100]**\n**purge author <author> [0-100]**\n**purge bots [0-100]**\n**purge including <word> [0-100]**\n**purge embeds [0-100]**\n**purge attachments [0-100]**\n**purge images [0-100]**\n**purge regex <regex> [0-100]**',
                             color: 0xF21904
                         }}).then(() => resolve()).catch(err => {
                             if (err.resp && err.resp.statusCode === 400) {
                                 var m = '**Incorrect Usage**\n';
-                                m += '`purge all [0-250]`\n';
-                                m += '`purge author <author ID|author mention> [0-250]`\n';
-                                m += '`purge bots [0-250]`\n';
-                                m += '`purge including <word> [0-250]`\n';
-                                m += '`purge embeds [0-250]`\n';
-                                m += '`purge attachments [0-250]`\n';
-                                m += '`purge images [0-250]`\n';
-                                m += '`purge regex <regex> [0-250]`';
+                                m += '`purge all [0-100]`\n';
+                                m += '`purge author <author ID|author mention> [0-100]`\n';
+                                m += '`purge bots [0-100]`\n';
+                                m += '`purge including <word> [0-100]`\n';
+                                m += '`purge embeds [0-100]`\n';
+                                m += '`purge attachments [0-100]`\n';
+                                m += '`purge images [0-100]`\n';
+                                m += '`purge regex <regex> [0-100]`';
                                 knife.createMessage(msg.channel.id, m).then(() => resolve()).catch(reject);
                             } else {
                                 reject(err);
@@ -43,26 +47,26 @@ exports.cmd = {
                     } else if (args.length > 0) {
                         if (args[0] === 'all') {
                             if (!args[1] || !/^\d+$/.test(args[1])) {
-                                knife.purgeChannel(msg.channel.id, 250).then(amt => {
+                                knife.purgeChannel(msg.channel.id, 100).then(amt => {
                                     return knife.createMessage(msg.channel.id, `Purged **${amt}** ${amt === 1 ? 'message' : 'messages'}.`);
                                 }).then(deleteDelay).then(() => resolve()).catch(reject);
-                            } else if (/^\d+$/.test(args[1]) && Number(args[1]) <= 250 && Number(args[1]) >= 1) {
+                            } else if (/^\d+$/.test(args[1]) && Number(args[1]) <= 100 && Number(args[1]) >= 1) {
                                 knife.purgeChannel(msg.channel.id, Number(args[1])).then(amt => {
                                     return knife.createMessage(msg.channel.id, `Purged **${amt}** ${amt === 1 ? 'message' : 'messages'}.`);
                                 }).then(deleteDelay).then(() => resolve()).catch(reject);
                             } else {
-                                knife.createMessage(msg.channel.id, 'Woah there, way too spicy. I only accept numbers between `1` and `250`').then(() => resolve()).catch(reject);
+                                knife.createMessage(msg.channel.id, 'Woah there, way too spicy. I only accept numbers between `1` and `100`').then(() => resolve()).catch(reject);
                             }
                         } else if (args[0] === 'author') {
                             if (!args[1] || !/^(?:\d+|<@!?\d+>)$/.test(args[1])) {
                                 knife.createMessage(msg.channel.id, {embed: {
                                     title: 'Incorrect Usage',
-                                    description: '**purge author <author ID|author mention> [0-250]**',
+                                    description: '**purge author <author ID|author mention> [0-100]**',
                                     color: 0xF21904
                                 }}).then(() => resolve()).catch(err => {
                                     if (err.resp && err.resp.statusCode === 400) {
                                         var m = '**Incorrect Usage**\n';
-                                        m += '`purge author <author ID|author mention> [0-250]`';
+                                        m += '`purge author <author ID|author mention> [0-100]`';
                                         knife.createMessage(msg.channel.id, m).then(() => resolve()).catch(reject);
                                     } else {
                                         reject(err);
@@ -76,42 +80,42 @@ exports.cmd = {
                                     knife.createMessage(msg.channel.id, 'That user could not be found.').then(() => resolve()).catch(reject);
                                 } else {
                                     if (!args[2] || !/^\d+$/.test(args[2])) {
-                                        knife.purgeChannel(msg.channel.id, 250, m => m.author.id === user.id).then(amt => {
+                                        knife.purgeChannel(msg.channel.id, 100, m => m.author.id === user.id).then(amt => {
                                             return knife.createMessage(msg.channel.id, `Purged **${amt}** ${amt === 1 ? 'message' : 'messages'} from **${knife.formatUser(user)}**.`);
                                         }).then(deleteDelay).then(() => resolve()).catch(reject);
-                                    } else if (/^\d+$/.test(args[2]) && Number(args[2]) <= 250 && Number(args[2]) >= 1) {
+                                    } else if (/^\d+$/.test(args[2]) && Number(args[2]) <= 100 && Number(args[2]) >= 1) {
                                         let i = 0;
-                                        knife.purgeChannel(msg.channel.id, 250, m => m.author.id === user.id && ++i <= Number(args[2])).then(amt => {
+                                        knife.purgeChannel(msg.channel.id, 100, m => m.author.id === user.id && ++i <= Number(args[2])).then(amt => {
                                             return knife.createMessage(msg.channel.id, `Purged **${amt}** ${amt === 1 ? 'message' : 'messages'} from **${knife.formatUser(user)}**.`);
                                         }).then(deleteDelay).then(() => resolve()).catch(reject);
                                     } else {
-                                        knife.createMessage(msg.channel.id, 'Woah there, way too spicy. I only accept numbers between `1` and `250`').then(() => resolve()).catch(reject);
+                                        knife.createMessage(msg.channel.id, 'Woah there, way too spicy. I only accept numbers between `1` and `100`').then(() => resolve()).catch(reject);
                                     }
                                 }
                             }
                         } else if (args[0] === 'bots') {
                             if (!args[1] || !/^\d+$/.test(args[1])) {
-                                knife.purgeChannel(msg.channel.id, 250, m => m.author.bot).then(amt => {
+                                knife.purgeChannel(msg.channel.id, 100, m => m.author.bot).then(amt => {
                                     return knife.createMessage(msg.channel.id, `Purged **${amt}** bot ${amt === 1 ? 'message' : 'messages'}.`);
                                 }).then(deleteDelay).then(() => resolve()).catch(reject);
-                            } else if (/^\d+$/.test(args[1]) && Number(args[1]) <= 250 && Number(args[1]) >= 1) {
+                            } else if (/^\d+$/.test(args[1]) && Number(args[1]) <= 100 && Number(args[1]) >= 1) {
                                 let i = 0;
-                                knife.purgeChannel(msg.channel.id, 250, m => m.author.bot && ++i <= Number(args[1])).then(amt => {
+                                knife.purgeChannel(msg.channel.id, 100, m => m.author.bot && ++i <= Number(args[1])).then(amt => {
                                     return knife.createMessage(msg.channel.id, `Purged **${amt}** bot ${amt === 1 ? 'message' : 'messages'}.`);
                                 }).then(deleteDelay).then(() => resolve()).catch(reject);
                             } else {
-                                knife.createMessage(msg.channel.id, 'Woah there, way too spicy. I only accept numbers between `1` and `250`').then(() => resolve()).catch(reject);
+                                knife.createMessage(msg.channel.id, 'Woah there, way too spicy. I only accept numbers between `1` and `100`').then(() => resolve()).catch(reject);
                             }
                         } else if (args[0] === 'including') {
                             if (!args[1]) {
                                 knife.createMessage(msg.channel.id, {embed: {
                                     title: 'Incorrect Usage',
-                                    description: '**purge including <word> [0-250]**',
+                                    description: '**purge including <word> [0-100]**',
                                     color: 0xF21904
                                 }}).then(() => resolve()).catch(err => {
                                     if (err.resp && err.resp.statusCode === 400) {
                                         var m = '**Incorrect Usage**\n';
-                                        m += '`purge including <content> [0-250]`';
+                                        m += '`purge including <content> [0-100]`';
                                         knife.createMessage(msg.channel.id, m).then(() => resolve()).catch(reject);
                                     } else {
                                         reject(err);
@@ -119,47 +123,47 @@ exports.cmd = {
                                 });
                             } else {
                                 if (!args[2] || !/^\d+$/.test(args[2])) {
-                                    knife.purgeChannel(msg.channel.id, 250, m => m.content.includes(args[1])).then(amt => {
+                                    knife.purgeChannel(msg.channel.id, 100, m => m.content.includes(args[1])).then(amt => {
                                         return knife.createMessage(msg.channel.id, `Purged **${amt}** ${amt === 1 ? 'message' : 'messages'}.`);
                                     }).then(deleteDelay).then(() => resolve()).catch(reject);
-                                } else if (/^\d+$/.test(args[2]) && Number(args[2]) <= 250 && Number(args[2]) >= 1) {
+                                } else if (/^\d+$/.test(args[2]) && Number(args[2]) <= 100 && Number(args[2]) >= 1) {
                                     let i = 0;
-                                    knife.purgeChannel(msg.channel.id, 250, m => m.content.includes(args[1]) && ++i <= Number(args[2])).then(amt => {
+                                    knife.purgeChannel(msg.channel.id, 100, m => m.content.includes(args[1]) && ++i <= Number(args[2])).then(amt => {
                                         return knife.createMessage(msg.channel.id, `Purged **${amt}** ${amt === 1 ? 'message' : 'messages'}.`);
                                     }).then(deleteDelay).then(() => resolve()).catch(reject);
                                 } else {
-                                    knife.createMessage(msg.channel.id, 'Woah there, way too spicy. I only accept numbers between `1` and `250`').then(() => resolve()).catch(reject);
+                                    knife.createMessage(msg.channel.id, 'Woah there, way too spicy. I only accept numbers between `1` and `100`').then(() => resolve()).catch(reject);
                                 }
                             }
                         } else if (args[0] === 'embeds') {
                             if (!args[1] || !/^\d+$/.test(args[1])) {
-                                knife.purgeChannel(msg.channel.id, 250, m => m.embeds.length > 0).then(amt => {
+                                knife.purgeChannel(msg.channel.id, 100, m => m.embeds.length > 0).then(amt => {
                                     return knife.createMessage(msg.channel.id, `Purged **${amt}** ${amt === 1 ? 'embed' : 'embeds'}.`);
                                 }).then(deleteDelay).then(() => resolve()).catch(reject);
-                            } else if (/^\d+$/.test(args[1]) && Number(args[1]) <= 250 && Number(args[1]) >= 1) {
+                            } else if (/^\d+$/.test(args[1]) && Number(args[1]) <= 100 && Number(args[1]) >= 1) {
                                 let i = 0;
-                                knife.purgeChannel(msg.channel.id, 250, m => m.embeds.length > 0 && ++i <= Number(args[1])).then(amt => {
+                                knife.purgeChannel(msg.channel.id, 100, m => m.embeds.length > 0 && ++i <= Number(args[1])).then(amt => {
                                     return knife.createMessage(msg.channel.id, `Purged **${amt}** ${amt === 1 ? 'embed' : 'embeds'}.`);
                                 }).then(deleteDelay).then(() => resolve()).catch(reject);
                             } else {
-                                knife.createMessage(msg.channel.id, 'Woah there, way too spicy. I only accept numbers between `1` and `250`').then(() => resolve()).catch(reject);
+                                knife.createMessage(msg.channel.id, 'Woah there, way too spicy. I only accept numbers between `1` and `100`').then(() => resolve()).catch(reject);
                             }
                         } else if (args[0] === 'attachments') {
                             if (!args[1] || !/^\d+$/.test(args[1])) {
-                                knife.purgeChannel(msg.channel.id, 250, m => m.attachments.length > 0).then(amt => {
+                                knife.purgeChannel(msg.channel.id, 100, m => m.attachments.length > 0).then(amt => {
                                     return knife.createMessage(msg.channel.id, `Purged **${amt}** ${amt === 1 ? 'attachment' : 'attachments'}.`);
                                 }).then(deleteDelay).then(() => resolve()).catch(reject);
-                            } else if (/^\d+$/.test(args[1]) && Number(args[1]) <= 250 && Number(args[1]) >= 1) {
+                            } else if (/^\d+$/.test(args[1]) && Number(args[1]) <= 100 && Number(args[1]) >= 1) {
                                 let i = 0;
-                                knife.purgeChannel(msg.channel.id, 250, m => m.attachments.length > 0 && ++i <= Number(args[1])).then(amt => {
+                                knife.purgeChannel(msg.channel.id, 100, m => m.attachments.length > 0 && ++i <= Number(args[1])).then(amt => {
                                     return knife.createMessage(msg.channel.id, `Purged **${amt}** ${amt === 1 ? 'attachment' : 'attachments'}.`);
                                 }).then(deleteDelay).then(() => resolve()).catch(reject);
                             } else {
-                                knife.createMessage(msg.channel.id, 'Woah there, way too spicy. I only accept numbers between `1` and `250`').then(() => resolve()).catch(reject);
+                                knife.createMessage(msg.channel.id, 'Woah there, way too spicy. I only accept numbers between `1` and `100`').then(() => resolve()).catch(reject);
                             }
                         } else if (args[0] === 'images') {
                             if (!args[1] || !/^\d+$/.test(args[1])) {
-                                knife.purgeChannel(msg.channel.id, 250, m => {
+                                knife.purgeChannel(msg.channel.id, 100, m => {
                                     if (m.attachments.length > 0) {
                                         return m.attachments.filter(atch => /(?:([^:/?#]+):)?(?:\/\/([^\/?#]*))?([^?#]*\.(?:png|jpe?g|gifv?|webp|bmp|tiff|jfif))(?:\?([^#]*))?(?:#(.*))?/ig.test(atch.url)).length > 0;
                                     } else {
@@ -168,9 +172,9 @@ exports.cmd = {
                                 }).then(amt => {
                                     return knife.createMessage(msg.channel.id, `Purged **${amt}** ${amt === 1 ? 'image' : 'images'}.`);
                                 }).then(deleteDelay).then(() => resolve()).catch(reject);
-                            } else if (/^\d+$/.test(args[1]) && Number(args[1]) <= 250 && Number(args[1]) >= 1) {
+                            } else if (/^\d+$/.test(args[1]) && Number(args[1]) <= 100 && Number(args[1]) >= 1) {
                                 let i = 0;
-                                knife.purgeChannel(msg.channel.id, 250, m => {
+                                knife.purgeChannel(msg.channel.id, 100, m => {
                                     if (m.attachments.length > 0) {
                                         return m.attachments.filter(atch => /(?:([^:/?#]+):)?(?:\/\/([^\/?#]*))?([^?#]*\.(?:png|jpe?g|gifv?|webp|bmp|tiff|jfif))(?:\?([^#]*))?(?:#(.*))?/ig.test(atch.url)).length > 0 && ++i <= Number(args[1]);
                                     } else {
@@ -180,18 +184,18 @@ exports.cmd = {
                                     return knife.createMessage(msg.channel.id, `Purged **${amt}** ${amt === 1 ? 'image' : 'images'}.`);
                                 }).then(deleteDelay).then(() => resolve()).catch(reject);
                             } else {
-                                knife.createMessage(msg.channel.id, 'Woah there, way too spicy. I only accept numbers between `1` and `250`').then(() => resolve()).catch(reject);
+                                knife.createMessage(msg.channel.id, 'Woah there, way too spicy. I only accept numbers between `1` and `100`').then(() => resolve()).catch(reject);
                             }
                         } else if (args[0] === 'regex') {
                             if (!args[1]) {
                                 knife.createMessage(msg.channel.id, {embed: {
                                     title: 'Incorrect Usage',
-                                    description: '**purge regex <regex> [0-250]**',
+                                    description: '**purge regex <regex> [0-100]**',
                                     color: 0xF21904
                                 }}).then(() => resolve()).catch(err => {
                                     if (err.resp && err.resp.statusCode === 400) {
                                         var m = '**Incorrect Usage**\n';
-                                        m += '`purge regex <regex> [0-250]`';
+                                        m += '`purge regex <regex> [0-100]`';
                                         knife.createMessage(msg.channel.id, m).then(() => resolve()).catch(reject);
                                     } else {
                                         reject(err);
@@ -200,7 +204,11 @@ exports.cmd = {
                             } else {
                                 var purgeRegex;
                                 try {
-                                    purgeRegex = new RegExp(args[1]);
+                                    if (safe(args[1])) {
+                                        purgeRegex = new RegExp(args[1]);
+                                    } else {
+                                        knife.createMessage(msg.channel.id, 'Invalid or unsafe regex.').then(() => resolve()).catch(reject);
+                                    }
                                 } catch(err) {
                                     var m = 'Invalid Regex\n```js\n';
                                     m += `${err}\n`;
@@ -210,35 +218,35 @@ exports.cmd = {
 
                                 if (purgeRegex) {
                                     if (!args[2] || !/^\d+$/.test(args[2])) {
-                                        knife.purgeChannel(msg.channel.id, 250, m => purgeRegex.test(m.content)).then(amt => {
+                                        knife.purgeChannel(msg.channel.id, 100, m => purgeRegex.test(m.content)).then(amt => {
                                             return knife.createMessage(msg.channel.id, `Purged **${amt}** ${amt === 1 ? 'message' : 'messages'}.`);
                                         }).then(deleteDelay).then(() => resolve()).catch(reject);
-                                    } else if (/^\d+$/.test(args[2]) && Number(args[2]) <= 250 && Number(args[2]) >= 1) {
+                                    } else if (/^\d+$/.test(args[2]) && Number(args[2]) <= 100 && Number(args[2]) >= 1) {
                                         let i = 0;
-                                        knife.purgeChannel(msg.channel.id, 250, m => purgeRegex.test(m.content) && ++i <= Number(args[2])).then(amt => {
+                                        knife.purgeChannel(msg.channel.id, 100, m => purgeRegex.test(m.content) && ++i <= Number(args[2])).then(amt => {
                                             knife.createMessage(msg.channel.id, `Purged **${amt}** ${amt === 1 ? 'message' : 'messages'}.`);
                                         }).then(deleteDelay).then(() => resolve()).catch(reject);
                                     } else {
-                                        knife.createMessage(msg.channel.id, 'Woah there, way too spicy. I only accept numbers between `1` and `250`').then(() => resolve()).catch(reject);
+                                        knife.createMessage(msg.channel.id, 'Woah there, way too spicy. I only accept numbers between `1` and `100`').then(() => resolve()).catch(reject);
                                     }
                                 }
                             }
                         } else {
                             knife.createMessage(msg.channel.id, {embed: {
                                 title: 'Incorrect Usage',
-                                description: '**purge all [0-250]**\n**purge author <author> [0-250]**\n**purge bots [0-250]**\n**purge including <word> [0-250]**\n**purge embeds [0-250]**\n**purge attachments [0-250]**\n**purge images [0-250]**\n**purge regex <regex> [0-250]**',
+                                description: '**purge all [0-100]**\n**purge author <author> [0-100]**\n**purge bots [0-100]**\n**purge including <word> [0-100]**\n**purge embeds [0-100]**\n**purge attachments [0-100]**\n**purge images [0-100]**\n**purge regex <regex> [0-100]**',
                                 color: 0xF21904
                             }}).then(() => resolve()).catch(err => {
                                 if (err.resp && err.resp.statusCode === 400) {
                                     var m = '**Incorrect Usage**\n';
-                                    m += '`purge all [0-250]`\n';
-                                    m += '`purge author <author ID|author mention> [0-250]`\n';
-                                    m += '`purge bots [0-250]`\n';
-                                    m += '`purge including <word> [0-250]`\n';
-                                    m += '`purge embeds [0-250]`\n';
-                                    m += '`purge attachments [0-250]`\n';
-                                    m += '`purge images [0-250]`\n';
-                                    m += '`purge regex <regex> [0-250]`';
+                                    m += '`purge all [0-100]`\n';
+                                    m += '`purge author <author ID|author mention> [0-100]`\n';
+                                    m += '`purge bots [0-100]`\n';
+                                    m += '`purge including <word> [0-100]`\n';
+                                    m += '`purge embeds [0-100]`\n';
+                                    m += '`purge attachments [0-100]`\n';
+                                    m += '`purge images [0-100]`\n';
+                                    m += '`purge regex <regex> [0-100]`';
                                     knife.createMessage(msg.channel.id, m).then(() => resolve()).catch(reject);
                                 } else {
                                     reject(err);

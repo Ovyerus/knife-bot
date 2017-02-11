@@ -17,6 +17,7 @@
     "chalk": "^1.1.3",
     "eris": "^0.5.1",
     "pretty-bytes": "^4.0.2",
-    "rethinkdbdash": "^2.3.27"
+    "rethinkdbdash": "^2.3.27",
+    "safe-regex": "^1.1.0"
   }
 }
