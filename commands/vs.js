@@ -16,11 +16,14 @@ exports.cmd = {
                         if (msg.mentionStrings[0] !== knife.user.id && msg.mentionStrings[0] !== msg.author.id) {
                             var userTopRolePos = msg.channel.guild.roles.get(msg.member.roles.sort((a, b) => {
                                 return msg.channel.guild.roles.get(b).position - msg.channel.guild.roles.get(a).position;
-                            })[0]).position;
+                            })[0]);
+                            userTopRolePos = userTopRolePos ? userTopRolePos.position : 0;
+
                             var mentionMember = msg.channel.guild.members.get(msg.mentionStrings[0]);
                             var mentionTopRolePos = msg.channel.guild.roles.get(mentionMember.roles.sort((a, b) => {
                                 return msg.channel.guild.roles.get(b).position - msg.channel.guild.roles.get(a).position;
-                            })[0]).position;
+                            })[0]);
+                            mentionTopRolePos = mentionTopRolePos ? mentionTopRolePos.position : 0;
 
                             if (msg.author.id === msg.channel.guild.ownerID || (userTopRolePos > mentionTopRolePos && userTopRolePos !== mentionTopRolePos)) {
                                 knife.banGuildMember(msg.channel.guild.id, msg.mentionStrings[0], 7).then(() => {
