@@ -20,6 +20,10 @@ exports.cmd = {
                             userTopRolePos = userTopRolePos ? userTopRolePos.position : 0;
 
                             var mentionMember = msg.channel.guild.members.get(msg.mentionStrings[0]);
+                            if (!mentionMember) {
+                                knife.createMessage(msg.channel.id, 'That user does not seem to exist.').then(() => resolve()).catch(reject);
+                                return;
+                            }
                             var mentionTopRolePos = msg.channel.guild.roles.get(mentionMember.roles.sort((a, b) => {
                                 return msg.channel.guild.roles.get(b).position - msg.channel.guild.roles.get(a).position;
                             })[0]);
@@ -27,8 +31,8 @@ exports.cmd = {
 
                             if (msg.author.id === msg.channel.guild.ownerID || (userTopRolePos > mentionTopRolePos && userTopRolePos !== mentionTopRolePos)) {
                                 knife.banGuildMember(msg.channel.guild.id, msg.mentionStrings[0], 7).then(() => {
-                                    knife.createMessage(msg.channel.id, `Cut all the way through **${knife.formatUser(mentionedUser)}**!`)
-                                }).catch(err => {
+                                    return knife.createMessage(msg.channel.id, `Cut all the way through **${knife.formatUser(mentionedUser)}**!`);
+                                }).then(() => resolve()).catch(err => {
                                     if (err.resp && err.resp.statusCode === 403) {
                                         knife.createMessage(msg.channel.id, `**${knife.formatUser(mentionedUser)}** is too tough for me and I was unable to be cut through.`).then(() => resolve()).catch(reject);
                                     } else {
@@ -36,7 +40,7 @@ exports.cmd = {
                                     }
                                 });
                             } else {
-                                msg.channel.createMessage(`**${knife.formatUser(mentionMember)}** was wearing an anti-1000-degree-knife vest and you were unable to cut throw them.\n**(You cannot ban people ${userTopRolePos === mentionTopRolePos ? 'with the same role as you.' : 'higher then you'})**`).then(() => resolve()).catch(reject);
+                                knife.createMessage(msg.channel.id, `**${knife.formatUser(mentionMember)}** was wearing an anti-1000-degree-knife vest and you were unable to cut throw them.\n**(You cannot ban people ${userTopRolePos === mentionTopRolePos ? 'with the same role as you.' : 'higher then you'})**`).then(() => resolve()).catch(reject);
                             }
                         } else if (msg.mentionStrings[0] === msg.author.id) {
                             knife.createMessage(msg.channel.id, "You can't cut yourself.").then(() => resolve()).catch(reject);

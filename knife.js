@@ -6,6 +6,7 @@ const logger = require('./logger.js');
 const prefixParse = require('./prefixParse.js');
 const config = require('./config.json');
 const knife = new Eris(config.token, {
+    getAllUsers: true,
     disableEvents: {
         TYPING_START: true,
         VOICE_STATE_UPDATE: true
