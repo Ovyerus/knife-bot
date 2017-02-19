@@ -165,7 +165,7 @@ knife.on('guildDelete', g => {
 });
 
 knife.on('error', (err, id) => {
-    logger.error(`Shard ${id} experienced error.\n${err}`);
+    logger.error(`Shard ${id} experienced error.\n${err.stack}`);
 });
 
 knife.on('warn', (msg, id) => {
