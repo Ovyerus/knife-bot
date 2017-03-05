@@ -27,11 +27,11 @@ exports.cmd = {
                         resolve();
                     });
                 }).catch(err => {
-                    if (err.resp && err.resp.statusCode === 403) logger.warn(`Can't send message in '#${msg.channel.name}' (${msg.channel.id}), cmd from user '${knife.formatUser(msg.author)}' (${msg.author.id})`);
+                    if (err.resp && err.resp.statusCode === 403) knife.logger.warn(`Can't send message in '#${msg.channel.name}' (${msg.channel.id}), cmd from user '${knife.formatUser(msg.author)}' (${msg.author.id})`);
                 });
             } else {
                 knife.createMessage(msg.channel.id, helpMsg).then(() => resolve()).catch(reject);
             }
         });
     }
-}
+};
