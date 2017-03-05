@@ -18,6 +18,9 @@ knife.redHot = '🔥 1⃣0⃣0⃣0⃣ 🌡 🔪';
 knife.commands = {};
 knife.logger = logger;
 knife.db = require('rethinkdbdash')(config.rethinkOptions);
+knife.rest = new Eris('Bot ' + config.token, {
+    restMode: true
+});
 
 const prefixes = [/\uD83D\uDD2A ?/, '<@{{id}}> '];
 const games = ['🔪 help', '🔪 invite', 'OH GOD EVERYTHING IS MELTING', '🔪 info', 'HOLY SHIT WHY AM I ON FIRE', 'IT BUUURNNNNS'];
