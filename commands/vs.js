@@ -40,7 +40,7 @@ exports.cmd = {
                                     }
                                 });
                             } else {
-                                knife.createMessage(msg.channel.id, `**${knife.formatUser(mentionMember)}** was wearing an anti-1000-degree-knife vest and you were unable to cut throw them.\n**(You cannot ban people ${userTopRolePos === mentionTopRolePos ? 'with the same role as you.' : 'higher then you'})**`).then(() => resolve()).catch(reject);
+                                knife.createMessage(msg.channel.id, `**${knife.formatUser(mentionMember)}** was wearing an anti-1000-degree-knife vest and you were unable to cut through them.\n**(You cannot ban people ${userTopRolePos === mentionTopRolePos ? 'with the same role as you.' : 'higher then you'})**`).then(() => resolve()).catch(reject);
                             }
                         } else if (msg.mentionStrings[0] === msg.author.id) {
                             knife.createMessage(msg.channel.id, "You can't cut yourself.").then(() => resolve()).catch(reject);
