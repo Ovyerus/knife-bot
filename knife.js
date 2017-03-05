@@ -30,9 +30,9 @@ var gameLoop;
 
 knife.formatUser = user => {
     return user instanceof Eris.Member ? `${user.nick ? user.nick : user.user.username}#${user.user.discriminator}` : `${user.username}#${user.discriminator}`;
-}
+};
 
-knife.awaitMessage = (channelID, userID, filter=function(){return true}, timeout=15000) => {
+knife.awaitMessage = (channelID, userID, filter=function(){return true;}, timeout=15000) => {
     return new Promise((resolve, reject) => {
         if (!channelID || typeof channelID !== 'string') {
             reject(new Error(`Unwanted type of channelID: got "${typeof channelID}" expected "string"`));
@@ -46,7 +46,7 @@ knife.awaitMessage = (channelID, userID, filter=function(){return true}, timeout
                     responded = true;
                     return msg;
                 }
-            }
+            };
 
             var onCrtWrap = (msg) => {
                 var res = onCrt(msg);
@@ -55,19 +55,19 @@ knife.awaitMessage = (channelID, userID, filter=function(){return true}, timeout
                     clearInterval(rmvTimeout);
                     resolve(res);
                 } 
-            }
+            };
 
             knife.on('messageCreate', onCrtWrap);
 
             rmvTimeout = setTimeout(() => {
                 if (!responded) {
                     knife.removeListener('messageCreate', onCrtWrap);
-                    reject(new Error('Message await expired.'))
+                    reject(new Error('Message await expired.'));
                 }
             }, timeout);
         }
     });
-}
+};
 
 function pickGame() {
     let game = games[Math.floor(Math.random() * games.length)];
@@ -160,7 +160,7 @@ knife.on('guildCreate', g => {
     }
 });
 
-knife.on('guildDelete', g => {
+knife.on('guildDelete', () => {
     knife.editStatus('online', {name: `${currentGame} | ${knife.guilds.size} servers`});
 });
 
