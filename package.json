@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "description": "dank meme",
   "main": "knife.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "author": "Ovyerus",
   "license": "MIT",
   "repository": {
@@ -19,5 +16,11 @@
     "pretty-bytes": "^4.0.2",
     "rethinkdbdash": "^2.3.27",
     "safe-regex": "^1.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^3.18.0",
+    "eslint-config-defaults": "^9.0.0",
+    "tslint": "^4.5.1",
+    "typescript": "^2.2.1"
   }
 }
