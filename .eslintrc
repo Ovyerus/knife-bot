@@ -14,7 +14,7 @@
     },
 
     "globals": {
-        "dir": false,
+        "__baseDir": false,
         "logger" : false
     },
 

@@ -5,7 +5,7 @@ exports.cmd = {
     func(knife, msg, args) {
         return new Promise((resolve, reject) => {
             if (args.length === 0) {
-                let embedTemplate = {title: `${knife.user.username} Help`, color: 2201331};
+                let embedTemplate = {title: `${knife.user.username} Help`, color: 0xCDDC39};
                 let cmdFields = [];
 
                 for (let cmd in knife.commands) {
