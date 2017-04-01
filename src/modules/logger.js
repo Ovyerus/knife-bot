@@ -2,7 +2,7 @@ const chalk = require('chalk');
 
 /**
  * Generic infomation logging.
- * @arg {String} message Message to log to console.
+ * @param {String} message Message to log to console.
  */
 function info(message) {
     console.log(`${chalk.bgGreen('info')} ${chalk.green(message)}`);
@@ -10,7 +10,7 @@ function info(message) {
 
 /**
  * Internal logging for command running.
- * @arg {String} message Message to log to console.
+ * @param {String} message Message to log to console.
  */
 function cmd(message) {
     console.log(`${chalk.bgMagenta('cmd')} ${chalk.magenta(message)}`);
@@ -18,7 +18,7 @@ function cmd(message) {
 
 /**
  * Generic warning. Use if wishing to report a non fatal error, but still probably shouldn't be happening.
- * @arg {String} message Message to log to console.
+ * @param {String} message Message to log to console.
  */
 function warn(message) {
     console.log(`${chalk.bgYellow('warn')} ${chalk.yellow(message)}`);
@@ -26,7 +26,7 @@ function warn(message) {
 
 /**
  * Generic error logging.
- * @arg {String} message Message to log to console.
+ * @param {String} message Message to log to console.
  */
 function error(message) {
     console.error(`${chalk.bgRed('error')} ${chalk.red(message)}`);
@@ -34,9 +34,9 @@ function error(message) {
 
 /**
  * Generic logging with custom colours.
- * @arg {String} colour Chalk colour to use.
- * @arg {String} name Text to display in a coloured box before the message.
- * @arg {String} message Message to log to console.
+ * @param {String} colour Chalk colour to use.
+ * @param {String} name Text to display in a coloured box before the message.
+ * @param {String} message Message to log to console.
  */
 function custom(colour, name, message) {
     if (!chalk[colour]) throw new Error('colour is not a valid chalk colour');
@@ -45,8 +45,8 @@ function custom(colour, name, message) {
 
 /**
  * Error logging with custom names.
- * @arg {String} name Text to display in a coloured box before the error.
- * @arg {String} message Message to log to console.
+ * @param {String} name Text to display in a coloured box before the error.
+ * @param {String} message Message to log to console.
  */
 function customError(name, message) {
     console.error(`${chalk.bgRed(name)} ${chalk.red(message)}`);
