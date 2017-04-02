@@ -128,14 +128,16 @@ module.exports = bot => {
 
             let settings = {
                 id: guildID,
-                warnings: {mentions: 2, copypasta: 2, diacritics: 2},
+                warnings: {mentions: 2, copypasta: 2, diacritics: 2, invites: 2},
                 mentions: {trigger: 5, enabled: false},
                 copypasta: {triggers: [], cooldog: false, enabled: false},
-                diacritics: {trigger: 6},
+                diacritics: {trigger: 6, enabled: false},
+                invites: {enabled: false},
                 exceptions: {
                     mentions: {users: [], channels: [], roles: []},
                     copypasta: {users: [], channels: [], roles: []},
-                    diacritics: {users: [], channels: [], roles: []}
+                    diacritics: {users: [], channels: [], roles: []},
+                    invites: {users: [], channels: [], roles: []}
                 }
             };
 

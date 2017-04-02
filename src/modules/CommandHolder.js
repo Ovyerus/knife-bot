@@ -14,7 +14,6 @@ const PermissionMsgs = {
         author: 'You require the **{{perm}}** permission.',
         self: 'I require the **{{perm}}** permission.'
     },
-
     manageMessages: {
         purge: {
             author: "This chopping board doesn't belong to you.\n**(You require the Manage Messages permission)**",
@@ -281,17 +280,17 @@ class CommandHolder {
                         cmd.subcommands[subcommand].main(this._bot, ctx).then(resolve).catch(reject);
                     } else if (ctx.hasPermission(cmd.permissions.discord, 'both')) {
                         cmd.subcommands[subcommand].main(this._bot, ctx).then(resolve).catch(reject);
-                    } else if (PermissionMsgs[cmd.permissions.discord][ctx.cmd]) {
-                        if (!ctx.hasPermission(permission, 'author')) {
-                            ctx.createMessage(PermissionMsgs[cmd.permissions.discord][ctx.cmd].author).then(resolve).catch(reject);
-                        } else if (!ctx.hasPermission(permission)) {
-                            ctx.createMessage(PermissionMsgs[cmd.permissions.discord][ctx.cmd].self).then(resolve).catch(reject);
+                    } else if (PermissionMsgs[cmd.permissions.discord][cmdName]) {
+                        if (!ctx.hasPermission(cmd.permissions.discord, 'author')) {
+                            ctx.createMessage(PermissionMsgs[cmd.permissions.discord][cmdName].author).then(resolve).catch(reject);
+                        } else if (!ctx.hasPermission(cmd.permissions.discord)) {
+                            ctx.createMessage(PermissionMsgs[cmd.permissions.discord][cmdName].self).then(resolve).catch(reject);
                         }
                     } else {
-                        if (!ctx.hasPermission(permission, 'author')) {
-                            ctx.createMessage(PermissionMsgs.general.author.replace('{{perm}}', PermissionsPrettyPrinted[permission])).then(resolve).catch(reject);
-                        } else if (!ctx.hasPermission(permission)) {
-                            ctx.createMessage(PermissionMsgs.general.self.replace('{{perm}}', PermissionsPrettyPrinted[permission])).then(resolve).catch(reject);
+                        if (!ctx.hasPermission(cmd.permissions.discord, 'author')) {
+                            ctx.createMessage(PermissionMsgs.general.author.replace('{{perm}}', PermissionsPrettyPrinted[cmd.permissions.discord])).then(resolve).catch(reject);
+                        } else if (!ctx.hasPermission(cmd.permissions.discord)) {
+                            ctx.createMessage(PermissionMsgs.general.self.replace('{{perm}}', PermissionsPrettyPrinted[cmd.permissions.discord])).then(resolve).catch(reject);
                         }
                     }
                 }
@@ -305,17 +304,17 @@ class CommandHolder {
                         cmd.main(this._bot, ctx).then(resolve).catch(reject);
                     } else if (ctx.hasPermission(cmd.permissions.discord, 'both')) {
                         cmd.main(this._bot, ctx).then(resolve).catch(reject);
-                    } else if (PermissionMsgs[cmd.permissions.discord][ctx.cmd]) {
-                        if (!ctx.hasPermission(permission, 'author')) {
-                            ctx.createMessage(PermissionMsgs[cmd.permissions.discord][ctx.cmd].author).then(resolve).catch(reject);
-                        } else if (!ctx.hasPermission(permission)) {
-                            ctx.createMessage(PermissionMsgs[cmd.permissions.discord][ctx.cmd].self).then(resolve).catch(reject);
+                    } else if (PermissionMsgs[cmd.permissions.discord] && PermissionMsgs[cmd.permissions.discord][cmdName]) {
+                        if (!ctx.hasPermission(cmd.permissions.discord, 'author')) {
+                            ctx.createMessage(PermissionMsgs[cmd.permissions.discord][cmdName].author).then(resolve).catch(reject);
+                        } else if (!ctx.hasPermission(cmd.permissions.discord)) {
+                            ctx.createMessage(PermissionMsgs[cmd.permissions.discord][cmdName].self).then(resolve).catch(reject);
                         }
                     } else {
-                        if (!ctx.hasPermission(permission, 'author')) {
-                            ctx.createMessage(PermissionMsgs.general.author.replace('{{perm}}', PermissionsPrettyPrinted[permission])).then(resolve).catch(reject);
-                        } else if (!ctx.hasPermission(permission)) {
-                            ctx.createMessage(PermissionMsgs.general.self.replace('{{perm}}', PermissionsPrettyPrinted[permission])).then(resolve).catch(reject);
+                        if (!ctx.hasPermission(cmd.permissions.discord, 'author')) {
+                            ctx.createMessage(PermissionMsgs.general.author.replace('{{perm}}', PermissionsPrettyPrinted[cmd.permissions.discord])).then(resolve).catch(reject);
+                        } else if (!ctx.hasPermission(cmd.permissions.discord)) {
+                            ctx.createMessage(PermissionMsgs.general.self.replace('{{perm}}', PermissionsPrettyPrinted[cmd.permissions.discord])).then(resolve).catch(reject);
                         }
                     }
                 }
@@ -530,7 +529,7 @@ class Context {
 
             // Channel permissionOverwrites
             let everyone = this.guild.roles.find(r => r.name === '@everyone');
-            let chanPerms = this.channelMentions.permissionOverwrites.filter(v => {
+            let chanPerms = this.channel.permissionOverwrites.filter(v => {
                 return (v.type === 'member' && (v.id === this.member.id || v.id === this.guildBot.id)) || (v.type === 'role' && ((~this.member.roles.indexOf(v.id) && ~this.guildBot.roles.indexOf(v.id)) || v.id === everyone.id));
             });
 

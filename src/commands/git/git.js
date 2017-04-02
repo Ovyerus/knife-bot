@@ -67,7 +67,6 @@ exports.pull = {
                     url: user.html_url,
                     icon_url: user.avatar_url
                 },
-
                 fields: [
                     {name: `\`${outer.hash}\``, value: outer.commit.split('\n\n')[1].trim()}
                 ],

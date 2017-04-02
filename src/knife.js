@@ -4,6 +4,8 @@ const config = require(`${__dirname}/config.json`);
 const fs = require('fs');
 const bot = new Eris(config.token, {
     getAllUsers: true,
+    defaultImageFormat: 'png',
+    defaultImageSize: 256,
     disableEvents: {
         TYPING_START: true,
         VOICE_STATE_UPDATE: true
@@ -23,6 +25,7 @@ Promise.config({
 // Bot vars
 bot.config = config;
 bot.redHot = '🔥 1⃣0⃣0⃣0⃣ 🌡 🔪'; 
+bot.hotColour = 16665427;
 bot.commands = new (require(`${__dirname}/modules/CommandHolder`)).CommandHolder(bot);
 bot.db = require('rethinkdbdash')(config.rethinkOptions);
 bot.rest = new Eris('Bot ' + config.token, {
