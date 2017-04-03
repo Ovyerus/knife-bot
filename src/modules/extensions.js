@@ -38,38 +38,34 @@ module.exports = bot => {
      */
     bot.awaitMessage = (channelID, userID, filter=function() {return true;}, timeout=15000) => {
         return new Promise((resolve, reject) => {
-            if (!channelID || typeof channelID !== 'string') {
-                reject(new Error(`Unwanted type of channelID: got "${typeof channelID}" expected "string"`));
-            } else if (!userID || typeof userID !== 'string') {
-                reject(new Error(`Unwanted type of userID: got "${typeof userID}" expected "string"`));
-            } else {
-                var responded, rmvTimeout;
+            if (typeof channelID !== 'string') throw new TypeError('channelID is not a string.');
+            if (typeof userID !== 'string') throw new TypeError('userID is not a string');
+            var responded, rmvTimeout;
 
-                var onCrt = msg => {
-                    if (msg.channel.id === channelID && msg.author.id === userID && filter(msg)) {
-                        responded = true;
-                        return msg;
-                    }
-                };
+            var onCrt = msg => {
+                if (msg.channel.id === channelID && msg.author.id === userID && filter(msg)) {
+                    responded = true;
+                    return msg;
+                }
+            };
 
-                var onCrtWrap = msg => {
-                    var res = onCrt(msg);
-                    if (responded) {
-                        bot.removeListener('messageCreate', onCrtWrap);
-                        clearInterval(rmvTimeout);
-                        resolve(res);
-                    } 
-                };
+            var onCrtWrap = msg => {
+                var res = onCrt(msg);
+                if (responded) {
+                    bot.removeListener('messageCreate', onCrtWrap);
+                    clearInterval(rmvTimeout);
+                    resolve(res);
+                } 
+            };
 
-                bot.on('messageCreate', onCrtWrap);
+            bot.on('messageCreate', onCrtWrap);
 
-                rmvTimeout = setTimeout(() => {
-                    if (!responded) {
-                        bot.removeListener('messageCreate', onCrtWrap);
-                        reject(new Error('Message await expired.'));
-                    }
-                }, timeout);
-            }
+            rmvTimeout = setTimeout(() => {
+                if (!responded) {
+                    bot.removeListener('messageCreate', onCrtWrap);
+                    reject(new Error('Message await expired.'));
+                }
+            }, timeout);
         });
     };
 
@@ -124,7 +120,7 @@ module.exports = bot => {
      */
     bot.initSettings = guildID => {
         return new Promise((resolve, reject) => {
-            if (typeof guildID !== 'string') throw new Error('guildID is not a string.');
+            if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
 
             let settings = {
                 id: guildID,
@@ -132,7 +128,7 @@ module.exports = bot => {
                 mentions: {trigger: 5, enabled: false},
                 copypasta: {triggers: [], cooldog: false, enabled: false},
                 diacritics: {trigger: 6, enabled: false},
-                invites: {enabled: false},
+                invites: {enabled: false, fake: false},
                 exceptions: {
                     mentions: {users: [], channels: [], roles: []},
                     copypasta: {users: [], channels: [], roles: []},
@@ -157,7 +153,7 @@ module.exports = bot => {
      */
     bot.getSettings = guildID => {
         return new Promise((resolve, reject) => {
-            if (typeof guildID !== 'string') throw new Error('guildID is not a string.');
+            if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
 
             if (bot.settings.get(guildID)) {
                 resolve(bot.settings.get(guildID));
@@ -187,8 +183,8 @@ module.exports = bot => {
      */
     bot.editSettings = (guildID, settings={}) => {
         return new Promise((resolve, reject) => {
-            if (typeof guildID !== 'string') throw new Error('guildID is not a string.');
-            if (!settings || typeof settings !== 'object') throw new Error('settings is not an object.');
+            if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
+            if (!settings || typeof settings !== 'object') throw new TypeError('settings is not an object.');
             if (Object.keys(settings).length === 0) throw new Error('settings is empty.');
 
             bot.db.table('guild_settings').get(guildID).update(settings).run().then(() => {
@@ -206,6 +202,16 @@ module.exports = bot => {
         });
     };
 
+    bot.hastePost = str => {
+        return new Promise((resolve, reject) => {
+            if (typeof str !== 'string') throw new TypeError('str is not a string.');
+
+            got('https://hastebin.com/documents', {
+                method: 'POST',
+                body: str
+            }).then(res => resolve(JSON.parse(res.body).key)).catch(reject);
+        });
+    };
 
     bot.isBlacklisted = userID => {
         return JSON.parse(fs.readFileSync(`${__baseDir}/blacklist.json`)).indexOf(userID) !== -1;

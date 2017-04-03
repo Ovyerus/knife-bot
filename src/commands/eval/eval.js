@@ -59,11 +59,7 @@ exports.eval = {
                     if (str.length < 1000) {
                         sendEval(bot, ctx, embed, returned).then(resolve).catch(reject);
                     } else {
-                        got('https://hastebin.com/documents', {
-                            method: 'POST',
-                            body: str
-                        }).then(res => {
-                            let key = JSON.parse(res.body).key;
+                        bot.hastePost(str).then(key => {
                             let url = `https://hastebin.com/${key}.js`;
                             embed.fields[1].value = `Output is too long to display nicely.\nOutput has been uploaded [here](${url})`;
 
@@ -116,16 +112,13 @@ function sendEval(bot, ctx, embed, returned) {
                 strN = strN.replace(ReplaceRegex.token, '(token)');
 
                 if (strN.length >= 1000) {
-                    return got('https://hastebin.com/documents', {
-                        method: 'POST',
-                        body: strN
-                    });
+                    return bot.hastePost(strN);
                 } else {
                     return outer.edit({embed: {
                         title: 'Evaluation Results',
                         color: SuccessCol,
                         fields: [
-                            {name: 'Input', value: generateCodeblock(ctx.suffix)},
+                            {name: 'Input', value: generateCodeblock(ctx.raw)},
                             {name: 'Output', value: generateCodeblock(strN)}
                         ]
                     }});
@@ -134,19 +127,18 @@ function sendEval(bot, ctx, embed, returned) {
         }).then(res => {
             if (!res || res instanceof Eris.Message) return null;
 
-            let key = JSON.parse(res.body).key;
-            let url = `https://hastebin.com/${key}.js`;
+            let url = `https://hastebin.com/${res}.js`;
 
             return outer.edit({embed: {
                 title: 'Evaluation Results',
                 color: SuccessCol,
                 fields: [
-                    {name: 'Input', value: generateCodeblock(ctx.suffix)},
+                    {name: 'Input', value: generateCodeblock(ctx.raw)},
                     {name: 'Output', value: `Output is too long to display nicely.\nOutput has been uploaded [here](${url})`}
                 ]
             }});
         }).then(resolve).catch(err => {
-            if (err.req && err.req._headers.host === 'discordapp.com') {
+            if (err.req && err.req._headers.host === 'discordapp.com' && err.resp && err.resp.statusCode !== 404) {
                 reject(err);
                 return null;
             } else {
@@ -155,7 +147,7 @@ function sendEval(bot, ctx, embed, returned) {
                     title: 'Evaluation Results',
                     color: FailCol,
                     fields: [
-                        {name: 'Input', value: generateCodeblock(ctx.suffix)},
+                        {name: 'Input', value: generateCodeblock(ctx.raw)},
                         {name: 'Error', value: generateCodeblock(err)}
                     ]
                 }});
