@@ -62,11 +62,6 @@ exports.main = {
                         + 'Run `settings exceptions` to view settings.'
                     },
                     {
-                        name: '`Actions`',
-                        value: 'Change when to kick or ban people.\n'
-                        + 'Run `settings actions` to view settings.'
-                    },
-                    {
                         name: '`Log Channel`',
                         value: 'Manage the channel used for logging events.\n'
                         + 'Run `settings channel` to view settings.'
