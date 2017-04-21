@@ -39,7 +39,7 @@ exports.eval = {
             if (ctx.raw.length === 0) {
                 ctx.createMessage('Please give arguments to evaluate.').then(resolve).catch(reject);
             } else {
-                let {args, cmd, raw, cleanRaw, settings, guildBot} = ctx; // eslint-disable-line
+                let {args, cmd, raw, cleanRaw, settings, guildBot, channel, guild} = ctx; // eslint-disable-line
                 try {
                     let returned = eval(ctx.raw);
                     let str = util.inspect(returned, {depth: 1});
@@ -152,6 +152,6 @@ function sendEval(bot, ctx, embed, returned) {
                     ]
                 }});
             }
-        });
+        }).then(res => {if (res) resolve(res);});
     });
 }

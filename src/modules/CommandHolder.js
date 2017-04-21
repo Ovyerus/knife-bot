@@ -9,16 +9,9 @@ const decache = require('decache');
 const logger = require(`${__dirname}/logger`);
 
 const PermissionMsgs = {
-    //node: 'You require the internal {{node}} permission. Check out internal permissions '
-    general: {
-        author: 'You require the **{{perm}}** permission.',
-        self: 'I require the **{{perm}}** permission.'
-    },
     manageMessages: {
-        purge: {
-            author: "This chopping board doesn't belong to you.\n**(You require the Manage Messages permission)**",
-            self: "I can't cleanup this chopping board.\n**(I require the Manage Messages permission)**"
-        }
+        author: "This chopping board doesn't belong to you.\n**(You require the Manage Messages permission)**",
+        self: "I can't cleanup this chopping board.\n**(I require the Manage Messages permission)**"
     }
 };
 
@@ -56,6 +49,9 @@ const PermissionsPrettyPrinted = {
     allVoice: 'All Voice'
 };
 
+let _bot = Symbol();
+let _handlePermissions = Symbol();
+
 /**
  * Holds lots of commands and other shit.
  * 
@@ -80,7 +76,7 @@ class CommandHolder {
         this.commands = {};
         this.aliases = {};
         this.modules = {};
-        this._bot = bot;
+        this[_bot] = bot;
     }
 
     /**
@@ -104,7 +100,7 @@ class CommandHolder {
 
         this.modules[moduleName] = [];
 
-        if (typeof module.init === 'function') module.init(this._bot);
+        if (typeof module.init === 'function') module.init(this[_bot]);
 
         if (module.loadAsSubcommands) {
             let command = Object.assign({owner: false, fixed: false}, module.main, {subcommands: {}});
@@ -118,7 +114,17 @@ class CommandHolder {
             if (!module.main.main) {
                 command.main = (bot, ctx) => {
                     return new Promise((resolve, reject) => {
-                        ctx.msg.channel.createMessage('soon').then(resolve).catch(reject);
+                        let collect = [];
+                        let embed = {title: moduleName};
+
+                        for (let name in command.subcommands) {
+                            let cmd = command.subcommands[name];
+                            collect.push(`${moduleName} ${name}${cmd.usage ? ` ${cmd.usage}` : ''}\n\u200b - ${cmd.desc}`);
+                        }
+
+                        embed.description = `\`${collect.join('\n\n')}\``;
+
+                        ctx.createMessage({embed}).then(resolve).catch(reject);
                     });
                 };
             }
@@ -145,7 +151,7 @@ class CommandHolder {
             }
         }
 
-        return this.modules[moduleName].length;
+        return this.commands[moduleName].subcommands ? Object.keys(this.commands[moduleName].subcommands).length : this.modules[moduleName].length;
     }
 
     /**
@@ -228,8 +234,8 @@ class CommandHolder {
      * @param {Command} cmdObject Object of the command to register.
      */
     reloadCommand(cmdName, cmdObject) {
-        removeCommand(cmdName, true);
-        addCommand(cmdName, cmdObject);
+        this.removeCommand(cmdName, true);
+        this.addCommand(cmdName, cmdObject);
     }
 
     /**
@@ -267,55 +273,40 @@ class CommandHolder {
 
             let cmd = this.getCommand(cmdName);
 
+            // Subcommand checking
             if (cmd.subcommands && cmd.subcommands[ctx.args[0]]) {
+                // Remove subcommand from raw and args.
                 let subcommand = ctx.args.shift();
-                ctx.raw = ctx.raw.substring(subcommand.length);
-                ctx.cleanRaw = ctx.cleanRaw.substring(subcommand.length);
-                if (cmd.subcommands[subcommand].owner && this._bot.isOwner(ctx.author.id)) {
-                    cmd.subcommands[subcommand].main(this._bot, ctx).then(resolve).catch(reject);
+                ctx.raw = ctx.raw.substring(subcommand.length).trim();
+                ctx.cleanRaw = ctx.cleanRaw.substring(subcommand.length).trim();
+
+                // Check if the subcommand is owner only
+                if ((cmd.owner || cmd.subcommands[subcommand].owner) && this[_bot].checkBotPerms(ctx.author.id)) {
+                    cmd.subcommands[subcommand].main(this[_bot], ctx).then(resolve).catch(reject);
                 } else if (cmd.subcommands[subcommand].owner) {
                     resolve('non-owner ran owner command');
                 } else {
-                    if (!cmd.permssions || !cmd.permissions.discord) {
-                        cmd.subcommands[subcommand].main(this._bot, ctx).then(resolve).catch(reject);
-                    } else if (ctx.hasPermission(cmd.permissions.discord, 'both')) {
-                        cmd.subcommands[subcommand].main(this._bot, ctx).then(resolve).catch(reject);
-                    } else if (PermissionMsgs[cmd.permissions.discord][cmdName]) {
-                        if (!ctx.hasPermission(cmd.permissions.discord, 'author')) {
-                            ctx.createMessage(PermissionMsgs[cmd.permissions.discord][cmdName].author).then(resolve).catch(reject);
-                        } else if (!ctx.hasPermission(cmd.permissions.discord)) {
-                            ctx.createMessage(PermissionMsgs[cmd.permissions.discord][cmdName].self).then(resolve).catch(reject);
-                        }
+                    if (!cmd.permissions || typeof cmd.permissions !== 'object') {
+                        // If permissions aren't defined, run the command
+                        cmd.subcommands[subcommand].main(this[_bot], ctx).then(resolve).catch(reject);
                     } else {
-                        if (!ctx.hasPermission(cmd.permissions.discord, 'author')) {
-                            ctx.createMessage(PermissionMsgs.general.author.replace('{{perm}}', PermissionsPrettyPrinted[cmd.permissions.discord])).then(resolve).catch(reject);
-                        } else if (!ctx.hasPermission(cmd.permissions.discord)) {
-                            ctx.createMessage(PermissionMsgs.general.self.replace('{{perm}}', PermissionsPrettyPrinted[cmd.permissions.discord])).then(resolve).catch(reject);
-                        }
+                        // Handle permissions
+                        this[_handlePermissions](cmd, ctx, subcommand).then(resolve).catch(reject);
                     }
                 }
             } else {
-                if (cmd.owner && this._bot.isOwner(ctx.author.id)) {
-                    cmd.main(this._bot, ctx).then(resolve).catch(reject);
+                // Check if the command is owner only
+                if (cmd.owner && this[_bot].checkBotPerms(ctx.author.id)) {
+                    cmd.main(this[_bot], ctx).then(resolve).catch(reject);
                 } else if (cmd.owner) {
                     resolve('non-owner ran owner command');
                 } else {
-                    if (!cmd.permissions || !cmd.permissions.discord) {
-                        cmd.main(this._bot, ctx).then(resolve).catch(reject);
-                    } else if (ctx.hasPermission(cmd.permissions.discord, 'both')) {
-                        cmd.main(this._bot, ctx).then(resolve).catch(reject);
-                    } else if (PermissionMsgs[cmd.permissions.discord] && PermissionMsgs[cmd.permissions.discord][cmdName]) {
-                        if (!ctx.hasPermission(cmd.permissions.discord, 'author')) {
-                            ctx.createMessage(PermissionMsgs[cmd.permissions.discord][cmdName].author).then(resolve).catch(reject);
-                        } else if (!ctx.hasPermission(cmd.permissions.discord)) {
-                            ctx.createMessage(PermissionMsgs[cmd.permissions.discord][cmdName].self).then(resolve).catch(reject);
-                        }
+                    if (!cmd.permissions || typeof cmd.permissions !== 'object') {
+                        // If permissions aren't defined, run the command
+                        cmd.main(this[_bot], ctx).then(resolve).catch(reject);
                     } else {
-                        if (!ctx.hasPermission(cmd.permissions.discord, 'author')) {
-                            ctx.createMessage(PermissionMsgs.general.author.replace('{{perm}}', PermissionsPrettyPrinted[cmd.permissions.discord])).then(resolve).catch(reject);
-                        } else if (!ctx.hasPermission(cmd.permissions.discord)) {
-                            ctx.createMessage(PermissionMsgs.general.self.replace('{{perm}}', PermissionsPrettyPrinted[cmd.permissions.discord])).then(resolve).catch(reject);
-                        }
+                        // Handle permissions
+                        this[_handlePermissions](cmd, ctx).then(resolve).catch(reject);
                     }
                 }
             }
@@ -342,6 +333,113 @@ class CommandHolder {
      */
     checkModule(modName) {
         return this.modules[modName] ? true : false;
+    }
+
+    /**
+     * Handle permissions for commands.
+     * 
+     * @access private
+     * @param {Command} cmd The command to check permissions for.
+     * @param {Context} ctx Context object to use.
+     * @param {String} [subcommand] numa
+     * @returns {Promise} Nuthing boi
+     */
+    [_handlePermissions](cmd, ctx, subcommand) {
+        return new Promise((resolve, reject) => {
+            // Permission checking
+            let permChecks = {both: [], author: [], self: []};
+
+            // Permissions for both
+            if (Array.isArray(cmd.permissions.both)) {
+                cmd.permissions.both.forEach(perm => {
+                    if (ctx.hasPermission(perm, 'both')) permChecks.both.push(perm);
+                });
+            } else if (typeof cmd.permissions.both === 'string' && ctx.hasPermission(cmd.permissions.both, 'both')) {
+                permChecks.both.push(cmd.permissions.both);
+            }
+
+            // Permissions for author
+            if (Array.isArray(cmd.permissions.author)) {
+                cmd.permissions.author.forEach(perm => {
+                    if (ctx.hasPermission(perm, 'author')) permChecks.author.push(perm);
+                });
+            } else if (typeof cmd.permissions.author === 'string' && ctx.hasPermission(cmd.permissions.author, 'author')) {
+                permChecks.author.push(cmd.permissions.author);
+            }
+
+            // Permissions for self
+            if (Array.isArray(cmd.permissions.self)) {
+                cmd.permissions.self.forEach(perm => {
+                    if (ctx.hasPermission(perm)) permChecks.self.push(perm);
+                });
+            } else if (typeof cmd.permissions.self === 'string' && ctx.hasPermission(cmd.permissions.self)) {
+                permChecks.self.push(cmd.permissions.self);
+            }
+
+            // See if all permissions are met
+            let haveAmt = permChecks.both.length + permChecks.author.length + permChecks.self.length;
+            let permAmt = 0;
+
+            for (let key in cmd.permissions) {
+                if (Array.isArray(cmd.permissions[key])) {
+                    permAmt += cmd.permissions[key].length;
+                } else if (typeof cmd.permissions[key] === 'string') {
+                    permAmt += 1;
+                }
+            }
+
+            if (haveAmt === permAmt) {
+                // Run command since all permissions are fulfilled
+                if (subcommand) {
+                    cmd.subcommands[subcommand].main(this[_bot], ctx).then(resolve).catch(reject);
+                } else {
+                    cmd.main(this[_bot], ctx);
+                }
+            } else {
+                // Figure out which permission is missing.
+                let foundPerm;
+                for (let key in cmd.permissions) {
+                    if (Array.isArray(cmd.permissions[key])) {
+                        for (let perm of cmd.permissions[key]) {
+                            if (!~permChecks[key].indexOf(perm)) {
+                                foundPerm = {perm, who: key};
+                                break;
+                            }
+                        }
+                    } else if (typeof cmd.permissions[key] === 'string') {
+                        if (permChecks[key][0] !== cmd.permissions[key]) {
+                            foundPerm = {perm: cmd.permissions[key], who: key};
+                            break;
+                        }
+                    }
+
+                    if (foundPerm) break;
+                }
+
+                if (foundPerm) {
+                    let {perm, who} = foundPerm;
+                    if (who === 'author' && !PermissionMsgs[perm]) {
+                        ctx.createMessage(`You require the **${PermissionsPrettyPrinted[perm]}** permission to use this command.`).then(resolve).catch(reject);
+                    } else if (who === 'author') {
+                        ctx.createMessage(PermissionMsgs[perm].author).then(resolve).catch(reject);
+                    } else if (who === 'self' && !PermissionMsgs[perm]) {
+                        ctx.createMessage(`I do not have the **${PermissionsPrettyPrinted[perm]}** permission.`).then(resolve).catch(reject);
+                    } else if (who === 'self') {
+                        ctx.createMessage(PermissionMsgs[perm].self).then(resolve).catch(reject);
+                    } else if (who === 'both') {
+                        if (!ctx.hasPermission(perm, 'author') && !PermissionMsgs[perm]) {
+                            ctx.createMessage(`You require the **${PermissionsPrettyPrinted[perm]}** permission to use this command.`).then(resolve).catch(reject);
+                        } else if (!ctx.hasPermission(perm, 'author')) {
+                            ctx.createMessage(PermissionMsgs[perm].author).then(resolve).catch(reject);
+                        } else if (!ctx.hasPermission(perm) && !PermissionMsgs[perm]) {
+                            ctx.createMessage(`I do not have the **${PermissionsPrettyPrinted[perm]}** permission.`).then(resolve).catch(reject);
+                        } else if (!ctx.hasPermission(perm)) {
+                            ctx.createMessage(PermissionMsgs[perm].self).then(resolve).catch(reject);
+                        }
+                    }
+                }
+            }
+        });
     }
 
     get length() {
@@ -419,7 +517,7 @@ class Context {
         this[_msg] = options.msg;
 
         // Assign used options into this.
-        Object.keys(options).filter(k => ~USEDOPTIONS.indexOf(k)).forEach(k => {
+        Object.keys(options).filter(k => USEDOPTIONS.includes(k)).forEach(k => {
             this[k] = options[k];
         });
 
@@ -480,7 +578,7 @@ class Context {
     createMessage(content, file, where='channel') {
         return new Promise((resolve, reject) => {
             if (typeof where !== 'string') throw new TypeError('where is not a string.');
-            if (!~['channel', 'author'].indexOf(where)) throw new Error('where is an invalid place. Must either by `channel` or `author`');
+            if (!['channel', 'author'].includes(where)) throw new Error('where is an invalid place. Must either by `channel` or `author`');
             
             if (where === 'channel') {
                 this.channel.createMessage(content, file).then(resolve).catch(reject);
@@ -499,8 +597,8 @@ class Context {
      */
     hasPermission(permission, who='self') {
         // Check if permission actually exists.
-        if (!~Object.keys(Eris.Constants.Permissions).indexOf(permission)) return false;
-        if (!~['self', 'author', 'both'].indexOf(who)) return false;
+        if (!Object.keys(Eris.Constants.Permissions).includes(permission)) return false;
+        if (!['self', 'author', 'both'].includes(who)) return false;
 
         if (who === 'self') {
             if (this.guildBot.permission.has(permission)) return true;
@@ -508,7 +606,7 @@ class Context {
             // Channel overwrites
             let everyone = this.guild.roles.find(r => r.name === '@everyone');
             let chanPerms = this.channel.permissionOverwrites.filter(v => {
-                return (v.type === 'member' && v.id === this.guildBot.id) || (v.type === 'role' && (~this.guildBot.roles.indexOf(v.id) || v.id === everyone.id));
+                return (v.type === 'member' && v.id === this.guildBot.id) || (v.type === 'role' && (this.guildBot.roles.includes(v.id) || v.id === everyone.id));
             });
 
             for (let perm of chanPerms) if (perm.has(permission)) return true;
@@ -519,7 +617,7 @@ class Context {
             // Channel overwrites
             let everyone = this.guild.roles.find(r => r.name === '@everyone');
             let chanPerms = this.channel.permissionOverwrites.filter(v => {
-                return (v.type === 'member' && v.id === this.member.id) || (v.type === 'role' && (~this.member.roles.indexOf(v.id) || v.id === everyone.id));
+                return (v.type === 'member' && v.id === this.member.id) || (v.type === 'role' && (this.member.roles.includes(v.id) || v.id === everyone.id));
             });
 
             for (let perm of chanPerms) if (perm.has(permission)) return true;
@@ -530,7 +628,7 @@ class Context {
             // Channel permissionOverwrites
             let everyone = this.guild.roles.find(r => r.name === '@everyone');
             let chanPerms = this.channel.permissionOverwrites.filter(v => {
-                return (v.type === 'member' && (v.id === this.member.id || v.id === this.guildBot.id)) || (v.type === 'role' && ((~this.member.roles.indexOf(v.id) && ~this.guildBot.roles.indexOf(v.id)) || v.id === everyone.id));
+                return (v.type === 'member' && (v.id === this.member.id || v.id === this.guildBot.id)) || (v.type === 'role' && ((this.member.roles.includes(v.id) && this.guildBot.roles.includes(v.id)) || v.id === everyone.id));
             });
 
 

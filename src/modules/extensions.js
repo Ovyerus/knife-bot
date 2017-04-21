@@ -124,16 +124,22 @@ module.exports = bot => {
 
             let settings = {
                 id: guildID,
-                warnings: {mentions: 2, copypasta: 2, diacritics: 2, invites: 2},
+                actions: {mentions: {kick: 2, ban: 3}, copypasta: {kick: 2, ban: 3}, diacritics: {kick: 2, ban: 3}, invites: {kick: 2, ban: 3}},
                 mentions: {trigger: 5, enabled: false},
                 copypasta: {triggers: [], cooldog: false, enabled: false},
                 diacritics: {trigger: 6, enabled: false},
                 invites: {enabled: false, fake: false},
+                logChannel: null,
                 exceptions: {
-                    mentions: {users: [], channels: [], roles: []},
-                    copypasta: {users: [], channels: [], roles: []},
-                    diacritics: {users: [], channels: [], roles: []},
-                    invites: {users: [], channels: [], roles: []}
+                    users: [],
+                    channels: [],
+                    roles: []
+                },
+                messages: {
+                    invites: '{{mention}} please do not advertise here. Your message has been deleted and future offenses will be dealt with accordingly.',
+                    mentions: '{{mention}} do not mass-mention users. Future offences will be dealt with accordingly.',
+                    copypasta: '{{mention}} please do not post copypastas here. Future offences will be dealt with accordingly.',
+                    diacritics: '{{mention}} please do not post characters or messages that abuse the use of diacritics. Future offences will be dealt with accordingly.'
                 }
             };
 
@@ -202,6 +208,184 @@ module.exports = bot => {
         });
     };
 
+    /**
+     * Get strikes for a user or guild.
+     * 
+     * @param {String} guildID ID of the guild to find strikes for.
+     * @param {String} [userID] ID of the user to get strikes for.
+     * @returns {Promise<(Number|Object[])>} Strikes for the guild or user.
+     */
+    bot.getStrikes = (guildID, userID) => {
+        return new Promise((resolve, reject) => {
+            bot.db.table('strikes').get(guildID).run().then(res => {
+                if (!res) return Promise.all([
+                    bot.db.table('strikes').insert({id: guildID, users: []}),
+                    'adding'
+                ]);
+
+                if (typeof userID === 'string') {
+                    return res.users.find(u => u.id === userID) ? res.users.find(u => u.id === userID).strikes : 0;
+                } else {
+                    return res.users;
+                }
+            }).then(res => {
+                if (res[1] === 'adding') {
+                    if (typeof userID === 'string') {
+                        return res.users.find(u => u.id === userID) ? res.users.find(u => u.id === userID).strikes : 0;
+                    } else {
+                        return res.users;
+                    }  
+                } else return res;
+            }).then(resolve).catch(reject);
+        });
+    };
+
+    /**
+     * Increment someones strike count.
+     * 
+     * @param {String} guildID ID of the guild.
+     * @param {String} userID ID of the user.
+     * @returns {Promise} .
+     */
+    bot.incrementStrikes = (guildID, userID) => {
+        return new Promise((resolve, reject) => {
+            if (typeof guildID !== 'string') throw new TypeError('guildId is not a string.');
+            if (typeof userID !== 'string') throw new TypeError('userID is not a string.');
+
+            bot.db.table('strikes').get(guildID).run().then(res => {
+                if (!res) return Promise.all([
+                    bot.db.table('strikes').insert({id: guildID, users: [{id: userID, strikes: 1}]}).run(),
+                    'adding'
+                ]);
+
+                let i = res.users.indexOf(res.users.find(u => u.id === userID));
+
+                if (i > -1) {
+                    let newNum = ++res.users[i].strikes;
+                    return Promise.all([
+                        bot.db.table('strikes').get(guildID).update(row => {
+                            return {users: row('users').changeAt(i, row('users')(i).merge({strikes: newNum}))};
+                        }).run(),
+                        'updating'
+                    ]);
+                } else {
+                    return Promise.all([
+                        bot.db.table('strikes').get(guildID).update(row => {
+                            return {users: row('users').append({id: userID, strikes: 1})};
+                        }),
+                        'appending'
+                    ]);
+                }
+            }).then(res => {
+                if (res[1] === 'adding') {
+                    return Promise.all([
+                        bot.db.table('strikes').get(guildID).run(),
+                        'updating'
+                    ]);
+                } else return null;
+            }).then(() => resolve()).catch(reject);
+        });
+    };
+
+    /**
+     * Decrement someones strike count.
+     * 
+     * @param {String} guildID ID of the guild.
+     * @param {String} userID ID of the user.
+     * @returns {Promise} .
+     */
+    bot.decrementStrikes = (guildID, userID) => {
+        return new Promise((resolve, reject) => {
+            if (typeof guildID !== 'string') throw new TypeError('guildId is not a string.');
+            if (typeof userID !== 'string') throw new TypeError('userID is not a string.');
+
+            bot.db.table('strikes').get(guildID).run().then(res => {
+                if (!res) return Promise.all([
+                    bot.db.table('strikes').insert({id: guildID, users: [{id: userID, strikes: 0}]}).run(),
+                    'adding'
+                ]);
+
+                let i = res.users.indexOf(res.users.find(u => u.id === userID));
+
+                if (i > -1) {
+                    let newNum = --res.users[i].strikes;
+                    return Promise.all([
+                        bot.db.table('strikes').get(guildID).update(row => {
+                            return {users: row('users').changeAt(i, row('users')(i).merge({strikes: newNum}))};
+                        }).run(),
+                        'updating'
+                    ]);
+                } else {
+                    return Promise.all([
+                        bot.db.table('strikes').get(guildID).update(row => {
+                            return {users: row('users').append({id: userID, strikes: 0})};
+                        }),
+                        'appending'
+                    ]);
+                }
+            }).then(res => {
+                if (res[1] === 'adding') {
+                    return Promise.all([
+                        bot.db.table('strikes').get(guildID).run(),
+                        'updating'
+                    ]);
+                } else return null;
+            }).then(() => resolve()).catch(reject);
+        });
+    };
+
+    /**
+     * Reset someones strike count.
+     * 
+     * @param {String} guildID ID of the guild.
+     * @param {String} userID ID of the user.
+     * @returns {Promise} .
+     */
+    bot.resetStrikes = (guildID, userID) => {
+        return new Promise((resolve, reject) => {
+            if (typeof guildID !== 'string') throw new TypeError('guildId is not a string.');
+            if (typeof userID !== 'string') throw new TypeError('userID is not a string.');
+
+            bot.db.table('strikes').get(guildID).run().then(res => {
+                if (!res) return Promise.all([
+                    bot.db.table('strikes').insert({id: guildID, users: [{id: userID, strikes: 0}]}).run(),
+                    'adding'
+                ]);
+
+                let i = res.users.indexOf(res.users.find(u => u.id === userID));
+
+                if (i > -1) {
+                    return Promise.all([
+                        bot.db.table('strikes').get(guildID).update(row => {
+                            return {users: row('users').changeAt(i, row('users')(i).merge({strikes: 0}))};
+                        }).run(),
+                        'updating'
+                    ]);
+                } else {
+                    return Promise.all([
+                        bot.db.table('strikes').get(guildID).update(row => {
+                            return {users: row('users').append({id: userID, strikes: 0})};
+                        }),
+                        'appending'
+                    ]);
+                }
+            }).then(res => {
+                if (res[1] === 'adding') {
+                    return Promise.all([
+                        bot.db.table('strikes').get(guildID).run(),
+                        'updating'
+                    ]);
+                } else return null;
+            }).then(() => resolve()).catch(reject);
+        });
+    };
+
+    /**
+     * POST something to Hastebin.
+     * 
+     * @param {String} str Content to POST.
+     * @returns {Promise<String>} Returned key.
+     */
     bot.hastePost = str => {
         return new Promise((resolve, reject) => {
             if (typeof str !== 'string') throw new TypeError('str is not a string.');
@@ -214,10 +398,15 @@ module.exports = bot => {
     };
 
     bot.isBlacklisted = userID => {
-        return JSON.parse(fs.readFileSync(`${__baseDir}/blacklist.json`)).indexOf(userID) !== -1;
+        return JSON.parse(fs.readFileSync(`${__baseDir}/blacklist.json`)).includes(userID);
     };
 
     bot.isOwner = userID => {
         return userID === bot.config.owner;
+    };
+
+    bot.hasWantedPerms = msg => {
+        let perms = msg.channel.guild.members.get(bot.user.id).permission;
+        return perms.has('manageMessages') && perms.has('banMembers') && perms.has('kickMembers');
     };
 };

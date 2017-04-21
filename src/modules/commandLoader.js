@@ -43,7 +43,7 @@ function preloadCommands() {
         var deps = [];
         for (let mod of commandFolders) {
             let cmdFiles = fs.readdirSync(`${__baseDir}/${commandsDirectory}/${mod}`);
-            if (cmdFiles.indexOf('package.json') === -1) {
+            if (!cmdFiles.includes('package.json')) {
                 logger.customError('commandLoader/preloadCommands', `Skipping over '${mod}' due to missing package.json`);
                 noLoad.push(mod);
             } else {
@@ -61,7 +61,7 @@ function preloadCommands() {
                         try {
                             require.resolve(dep);
                         } catch(err) {
-                            if (deps.indexOf(dep) === -1) deps.push(dep);
+                            if (!deps.includes(dep)) deps.push(dep);
                         }
                     }
                 }
@@ -85,7 +85,7 @@ function preloadCommands() {
 function loadCommands(bot) {
     return new Promise((resolve, reject) => {
         for (let cmdFolder of commandFolders) {
-            if (noLoad.indexOf(cmdFolder) !== -1 || unloadedCommands.indexOf(cmdFolder) !== -1) continue;
+            if (noLoad.includes(cmdFolder) || unloadedCommands.includes(cmdFolder)) continue;
 
             let command, commandPackage;
 

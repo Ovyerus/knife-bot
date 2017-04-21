@@ -12,13 +12,23 @@ module.exports = bot => {
             return;
         }
 
+        if (/(?:https:\/\/)?(?:discord\.gg|discordapp\.com\/invite)\/((?:[A-Za-z0-9]|-)+)/i.test(msg.content)) {
+            bot.emit('invites', msg);
+            return;
+        }
+        
+        if (msg.mentions.filter(u => u.id !== bot.user.id).length > 0) {
+            bot.emit('mentions', msg);
+            return;
+        }
+
         let outer = {msg};
         parsePrefix(msg.content, bot.config.prefixes).then(content => {
             if (!content) return null;
-
             return parseArgs(content);
         }).then(res => {
             if (!res) return null;
+            if (/^vs$/i.test(res.cmd)) res.cmd = 'vs';
             if (!bot.commands.checkCommand(res.cmd)) return null;
             
             res.cleanRaw = msg.cleanContent.split(res.cmd).slice(1).join(res.cmd);
