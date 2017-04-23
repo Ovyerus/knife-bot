@@ -19,7 +19,7 @@ exports.commands = [
 exports.main = {
     desc: 'Purge messages in a channel.',
     usage: '<type> [amount]',
-    permissions: {discord: 'manageMessages', node: 'moderation.purge'},
+    permissions: {both: 'manageMessages'},
     main(bot, ctx) {
         return new Promise((resolve, reject) => {
             let num = Number(ctx.args[0]);
@@ -290,10 +290,10 @@ exports.regex = {
     }
 };
 
-function deleteDelay(ctx) {
+function deleteDelay(msg) {
     return new Promise((resolve, reject) => {
         setTimeout(() => {
-            ctx.delete().then(resolve).catch(reject);
+            msg.delete().then(resolve).catch(reject);
         }, 1000);
     });
 }
