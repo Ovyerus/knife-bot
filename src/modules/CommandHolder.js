@@ -281,7 +281,7 @@ class CommandHolder {
                 ctx.cleanRaw = ctx.cleanRaw.substring(subcommand.length).trim();
 
                 // Check if the subcommand is owner only
-                if ((cmd.owner || cmd.subcommands[subcommand].owner) && this[_bot].checkBotPerms(ctx.author.id)) {
+                if ((cmd.owner || cmd.subcommands[subcommand].owner) && this[_bot].isOwner(ctx.author.id)) {
                     cmd.subcommands[subcommand].main(this[_bot], ctx).then(resolve).catch(reject);
                 } else if (cmd.subcommands[subcommand].owner) {
                     resolve('non-owner ran owner command');
@@ -296,7 +296,7 @@ class CommandHolder {
                 }
             } else {
                 // Check if the command is owner only
-                if (cmd.owner && this[_bot].checkBotPerms(ctx.author.id)) {
+                if (cmd.owner && this[_bot].isOwner(ctx.author.id)) {
                     cmd.main(this[_bot], ctx).then(resolve).catch(reject);
                 } else if (cmd.owner) {
                     resolve('non-owner ran owner command');
@@ -580,6 +580,8 @@ class Context {
             if (typeof where !== 'string') throw new TypeError('where is not a string.');
             if (!['channel', 'author'].includes(where)) throw new Error('where is an invalid place. Must either by `channel` or `author`');
             
+            if (content && content.embed && !content.embed.color) content.embed.color = 16665427;
+
             if (where === 'channel') {
                 this.channel.createMessage(content, file).then(resolve).catch(reject);
             } else if (where === 'author') {

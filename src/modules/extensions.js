@@ -397,16 +397,52 @@ module.exports = bot => {
         });
     };
 
+    /**
+     * Check if a user is blacklisted.
+     * 
+     * @param {String} userID ID of the user to check.
+     * @returns {Boolean} .
+     */
     bot.isBlacklisted = userID => {
         return JSON.parse(fs.readFileSync(`${__baseDir}/blacklist.json`)).includes(userID);
     };
 
+    /**
+     * Check if a user is the bot owner.
+     * 
+     * @param {String} userID ID of the user to check.
+     * @returns {Boolean} .
+     */
     bot.isOwner = userID => {
         return userID === bot.config.owner;
     };
 
+    /**
+     * Check if the bot has the perms wanted to work properly.
+     * 
+     * @param {Eris.Message} msg Message to use.
+     * @returns {Boolean} .
+    */
     bot.hasWantedPerms = msg => {
         let perms = msg.channel.guild.members.get(bot.user.id).permission;
         return perms.has('manageMessages') && perms.has('banMembers') && perms.has('kickMembers');
+    };
+
+    bot.hasPermission = (permission, channel) => {
+        // Check if permission actually exists
+        if (!Object.keys(Eris.Constants.Permissions).includes(permission)) return false;
+
+        let guildBot = channel.guild.members.get(bot.user.id);
+
+        if (guildBot.permission.has(permission)) return true;
+            
+        // Channel overwrites
+        let everyone = channel.guild.roles.find(r => r.name === '@everyone');
+        let chanPerms = channel.permissionOverwrites.filter(v => {
+            return (v.type === 'member' && v.id === guildBot.id) || (v.type === 'role' && (guildBot.roles.includes(v.id) || v.id === everyone.id));
+        });
+
+        for (let perm of chanPerms) if (perm.has(permission)) return true;
+        return false;
     };
 };

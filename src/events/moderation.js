@@ -23,7 +23,7 @@ module.exports = bot => {
             return Promise.all([msg.delete(), 'deleted']);
         }).then(res => {
             if (!res || res[1] !== 'deleted') return null;
-            return punishChain(bot, msg, res, outside, 'invites');
+            return punishChain(bot, msg, outside, 'invites');
         }).catch(err => {
             if (typeof err.response === 'string' && JSON.parse(err.response).message === 'Unknown Invite') {
                 if (outside.invites.fake && noExcepts(outside, 'invites')) {
@@ -34,21 +34,21 @@ module.exports = bot => {
             }
         }).then(res => {
             if (!res || res[1] !== 'deleted') return null;
-            return punishChain(bot, msg, res, outside, 'invites');
+            return punishChain(bot, msg, outside, 'invites');
         }).catch(err => logger.error(err));
     });
 
     bot.on('log', e => {
-        if (!e.settings.logChannel || !e.guild.channels.get(e.settings.logChannel) || !e.guild.channels.get(e.settings.logChannel).permissions.has('sendMessages')) return;
+        if (!e.settings.logChannel || !e.guild.channels.get(e.settings.logChannel) || !bot.hasPermission('sendMessages', e.guild.channels.get(e.settings.logChannel))) return;
 
         let now = new Date();
         let timestamp = `${now.getUTCDate()} ${Months[now.getUTCMonth()]} ${now.getUTCFullYear()} ${now.getUTCHours()}:${now.getUTCMinutes()}:${now.getUTCSeconds()} UTC`;
         let msg = [
             Actions[e.action][0].toUpperCase() + Actions[e.action].slice(1),
-            bot.formatuser(e.user),
+            bot.formatUser(e.user),
             'for',
             e.reason,
-            'Timestamp:',
+            '\n**Timestamp:**',
             timestamp
         ];
 
@@ -78,7 +78,7 @@ function userExcept(res, user) {
     return res.exceptions.users.includes(user);
 }
 
-function punishChain(bot, msg, res, outside, type, extra) {
+function punishChain(bot, msg, outside, type, extra) {
     return new Promise((resolve, reject) => {
         bot.incrementStrikes(msg.channel.guild.id, msg.author.id).then(() => {
             return bot.getStrikes(msg.channel.guild.id, msg.author.id);

@@ -5,7 +5,9 @@ exports.commands = [
     'invites',
     'mentions',
     'copypasta',
-    'diacritics'
+    'diacritics',
+    'exceptions',
+    'channel'
 ];
 
 exports.main = {
@@ -18,7 +20,6 @@ exports.main = {
                 author: {name: 'Server Settings'},
                 title: 'Page ',
                 description: `Showing current settings for **${ctx.guild.name}**.`,
-                color: bot.hotColour,
                 thumbnail: {url: ctx.guild.iconURL}
             };
 
@@ -82,7 +83,6 @@ exports.invites = {
                 let embed = {
                     title: 'Server Settings - Invites',
                     description: `Showing current invite settings for **${ctx.guild.name}**.`,
-                    color: bot.hotColour,
                     fields: [
                         {
                             name: '`Status`',
@@ -200,7 +200,6 @@ exports.mentions = {
             let embed = {
                 title: 'Server Settings - Mentions',
                 description: `Showing current mass-mention settings for **${ctx.guild.name}**.`,
-                color: bot.hotColour,
                 footer: {text: "'Amount to Trigger' is how many mentions in one message or done fast enough is needed for the bot to be triggered."},
                 fields: [
                     {name: '`Status`', value: States[ctx.settings.mentions.enabled], inline: true},
@@ -220,7 +219,6 @@ exports.copypasta = {
             let embed = {
                 title: 'Server Settings - Copypasta',
                 description: `Showing current copypasta settings for **${ctx.guild.name}**.`,
-                color: bot.hotColour,
                 fields: [
                     {name: '`Status`', value: States[ctx.settings.copypasta.enabled], inline: true},
                     {name: '`Anti-Cooldog`', value: States[ctx.settings.copypasta.cooldog], inline: true},
@@ -245,7 +243,6 @@ exports.diacritics = {
             let embed = {
                 title: 'Server Settings - Diacritics',
                 description: `Showing current diacritic settings for **${ctx.guild.name}**`,
-                color: bot.hotColour,
                 footer: {text: "'Amount to Trigger' is how many diacritics for a character is needed to trigger the bot."},
                 fields: [
                     {name: '`Status`', value: States[ctx.settings.diacritics.enabled], inline: true},
@@ -254,6 +251,67 @@ exports.diacritics = {
             };
 
             ctx.createMessage({embed}).then(resolve).catch(reject);
+        });
+    }
+};
+
+exports.exceptions = {
+    desc: 'uwu',
+    main(bot, ctx) {
+        return ctx.createMessage('h');
+    }
+};
+
+exports.channel = {
+    desc: 'uwu',
+    main(bot, ctx) {
+        return new Promise((resolve, reject) => {
+            if (!ctx.args[0]) {
+                let embed = {
+                    title: 'Server Settings - Log Channel',
+                    description: `Showing current log channel for **${ctx.guild.name}**`,
+                    footer: {text: "Run 'settings channel <channel>' to enable logging or change the channel, or run 'settings channel disable' to remove the log channel."},
+                    fields: [
+                        {name: '`Channel`', value: ctx.settings.logChannel ? `<#${ctx.settings.logChannel}>` : 'None', inline: true}
+                    ]
+                };
+
+                ctx.createMessage({embed}).then(resolve).catch(reject);
+            } else if (ctx.args[0] === 'disable' && ctx.settings.logChannel) {
+                bot.editSettings(ctx.guild.id, {logChannel: null}).then(() => {
+                    return ctx.createMessage('Removed log channel.');
+                }).then(resolve).catch(reject);
+            } else if (ctx.args[0] === 'disable') {
+                ctx.createMessage("There isn't a log channel set.").then(resolve).catch(reject);
+            } else {
+                if (/^\d+$/.test(ctx.args[0]) && ctx.args.length === 1) {
+                    let chan = ctx.guild.channels.get(ctx.args[0]);
+                    
+                    if (chan) {
+                        bot.editSettings(ctx.guild.id, {logChannel: chan.id}).then(() => {
+                            return ctx.createMessage(`Set log channel to <#${chan.id}>`);
+                        }).then(resolve).catch(reject);
+                    } else {
+                        ctx.createMessage('I cannot find that channel. Try mentioning it instead.').then(resolve).catch(reject);
+                    }
+                } else if (ctx.channelMentions[0] && ctx.guild.channels.get(ctx.channelMentions[0])) {
+                    bot.editSettings(ctx.guild.id, {logChannel: ctx.channelMentions[0]}).then(() => {
+                        return ctx.createMessage(`Set log channel to <#${ctx.channelMentions[0]}>`);
+                    }).then(resolve).catch(reject);
+                } else if (ctx.channelMentions[0]) {
+                    ctx.createMessage('That channel does not appear to exist in the server.').then(resolve).catch(reject);
+                } else {
+                    let chan = ctx.guild.channels.find(c => c.name.toLowerCase().includes(ctx.raw.toLowerCase()));
+
+                    if (chan) {
+                        bot.editSettings(ctx.guild.id, {logChannel: chan.id}).then(() => {
+                            return ctx.createMessage(`Set log channel to <#${chan.id}>`);
+                        }).then(resolve).catch(reject);
+                    } else {
+                        ctx.createMessage('I cannot find that channel. Try mentioning it instead.').then(resolve).catch(reject);
+                    }
+                }
+            }
         });
     }
 };
