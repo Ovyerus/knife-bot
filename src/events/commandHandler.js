@@ -12,15 +12,9 @@ module.exports = bot => {
             return;
         }
 
-        if (/(?:https:\/\/)?(?:discord\.gg|discordapp\.com\/invite)\/((?:[A-Za-z0-9]|-)+)/i.test(msg.content)) {
-            bot.emit('invites', msg);
-            return;
-        }
+        if (/(?:https:\/\/)?(?:discord\.gg|discordapp\.com\/invite)\/((?:[A-Za-z0-9]|-)+)/i.test(msg.content)) bot.emit('invites', msg);
         
-        if (msg.mentions.filter(u => u.id !== bot.user.id).length > 0) {
-            bot.emit('mentions', msg);
-            return;
-        }
+        if (msg.mentions.filter(u => u.id !== bot.user.id && u.id !== msg.author.id && !u.bot).length > 0) bot.emit('mentions', msg);
 
         let outer = {msg};
         parsePrefix(msg.content, bot.config.prefixes).then(content => {

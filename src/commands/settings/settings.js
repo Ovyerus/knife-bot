@@ -98,13 +98,13 @@ exports.invites = {
                         },
                         {
                             name: '`Kick At`',
-                            value: `**${ctx.settings.actions.mentions.kick === 0 ? '0 (disabled)' : ctx.settings.actions.invites.kick}** offences.\n`
+                            value: `**${ctx.settings.actions.invites.kick === 0 ? '0 (disabled)' : ctx.settings.actions.invites.kick}** offences.\n`
                             + 'Key `kick <number>`',
                             inline: true
                         },
                         {
                             name: '`Ban At`',
-                            value: `**${ctx.settings.actions.mentions.ban === 0 ? '0 (disabled)' : ctx.settings.actions.invites.ban}** offences.\n`
+                            value: `**${ctx.settings.actions.invites.ban === 0 ? '0 (disabled)' : ctx.settings.actions.invites.ban}** offences.\n`
                             + 'Key `ban <number>`',
                             inline: true
                         }
@@ -148,7 +148,7 @@ exports.invites = {
                 let num = Number(Math.abs(ctx.args[1]).toFixed(0));
 
                 if (isNaN(num)) {
-                    ctx.createMessage('You can only set `kick` to a valid number.').then(resolve).catch(reject);
+                    ctx.createMessage('You can only set kick to a valid number.').then(resolve).catch(reject);
                 } else if (num >= ctx.settings.actions.invites.ban) {
                     ctx.createMessage('You cannot set the kick limit to, or higher than the ban limit.').then(resolve).catch(reject);
                 } else {
@@ -171,7 +171,7 @@ exports.invites = {
                 let num = Number(Math.abs(ctx.args[1]).toFixed(0));
 
                 if (isNaN(num)) {
-                    ctx.createMessage('You can only set `ban` to a valid number.').then(resolve).catch(reject);
+                    ctx.createMessage('You can only set ban to a valid number.').then(resolve).catch(reject);
                 } else if (num <= ctx.settings.actions.invites.kick) {
                     ctx.createMessage('You cannot set the ban limit to, or lower than the kick limit.').then(resolve).catch(reject);
                 } else if (num === 0) {
@@ -197,17 +197,113 @@ exports.mentions = {
     desc: 'uwu',
     main(bot, ctx) {
         return new Promise((resolve, reject) => {
-            let embed = {
-                title: 'Server Settings - Mentions',
-                description: `Showing current mass-mention settings for **${ctx.guild.name}**.`,
-                footer: {text: "'Amount to Trigger' is how many mentions in one message or done fast enough is needed for the bot to be triggered."},
-                fields: [
-                    {name: '`Status`', value: States[ctx.settings.mentions.enabled], inline: true},
-                    {name: '`Amount to Trigger`', value: ctx.settings.mentions.trigger, inline: true}
-                ]
-            };
+            if (!['enable', 'disable', 'trigger', 'kick', 'ban'].includes(ctx.args[0])) {
+                let embed = {
+                    title: 'Server Settings - Mentions',
+                    description: `Showing current mass-mention settings for **${ctx.guild.name}**.`,
+                    footer: {text: "'Amount to Trigger' is how many mentions in one message or done fast enough is needed for the bot to be triggered."},
+                    fields: [
+                        {
+                            name: '`Status`',
+                            value: `**${States[ctx.settings.mentions.enabled]}**\n`
+                            + 'Key: `enable|disable`',
+                            inline: true
+                        },
+                        {
+                            name: '`Amount to Trigger`',
+                            value: `**${ctx.settings.mentions.trigger}**\n`
+                            + 'Key: `trigger <number>`',
+                            inline: true
+                        },
+                        {
+                            name: '`Kick At`',
+                            value: `**${ctx.settings.actions.mentions.kick === 0 ? '0 (disabled)' : ctx.settings.actions.mentions.kick}** offences.\n`
+                            + 'Key `kick <number>`',
+                            inline: true
+                        },
+                        {
+                            name: '`Ban At`',
+                            value: `**${ctx.settings.actions.mentions.ban === 0 ? '0 (disabled)' : ctx.settings.actions.mentions.ban}** offences.\n`
+                            + 'Key `ban <number>`',
+                            inline: true
+                        }
+                    ]
+                };
 
-            ctx.createMessage({embed}).then(resolve).catch(reject);
+                ctx.createMessage({embed}).then(resolve).catch(reject);
+            } else if (ctx.args[0] === 'enable') {
+                if (!ctx.settings.mentions.enabled) {
+                    bot.editSettings(ctx.guild.id, {mentions: {enabled: true, trigger: ctx.settings.mentions.trigger}}).then(() => {
+                        return ctx.createMessage('I will now start cutting through mass mentions.\nPlease make sure that I have the following permissions: **Ban Members**, **Kick Members** and **Manage Messages**.');
+                    }).then(resolve).catch(reject);
+                } else {
+                    ctx.createMessage('I am already cutting through mass mentions.').then(resolve).catch(reject);
+                }
+            } else if (ctx.args[0] === 'disable') {
+                if (ctx.settings.mentions.enabled) {
+                    bot.editSettings(ctx.guild.id, {invites: {enabled: false, fake: ctx.settings.invites.fake}}).then(() => {
+                        return ctx.createMessage('I will now stop cutting through mass mentions.');
+                    }).then(resolve).catch(reject);
+                } else {
+                    ctx.createMessage("I wasn't cutting through mass mentions to begin with.").then(resolve).catch(reject);
+                }
+            } else if (ctx.args[0] === 'trigger') {
+                let num = Number(Math.abs(ctx.args[1]).toFixed(0));
+
+                if (isNaN(num)) {
+                    ctx.createMesage('You can only set trigger to a valid number.').then(resolve).catch(reject);
+                } else if (num === 0) {
+                    ctx.createMessage('You cannot set trigger to 0. If you wish to disable mass mention blocking, run `settings channel disable`.').then(resolve).catch(reject);
+                } else {
+                    bot.editSettings(ctx.guild.id, {mentions: {enabled: ctx.settings.mentions.enabled, trigger: num}}).then(() => {
+                        return ctx.createMessage(`Set trigger limit to **${num}**.`);
+                    }).then(resolve).catch(reject);
+                }
+            } else if (ctx.args[0] === 'kick') {
+                let num = Number(Math.abs(ctx.args[1]).toFixed(0));
+
+                if (isNaN(num)) {
+                    ctx.createMessage('You can only set kick to a valid number.').then(resolve).catch(reject);
+                } else if (num >= ctx.settings.actions.mentions.ban) {
+                    ctx.createMessage('You cannot set the kick limit to, or higher than the ban limit.').then(resolve).catch(reject);
+                } else {
+                    let {invites, mentions, copypasta, diacritics} = ctx.settings.actions;
+                    let settings = Object.assign({}, ctx.settings, {actions: {
+                        invites,
+                        mentions: {kick: num, ban: mentions.kick},
+                        copypasta,
+                        diacritics
+                    }});
+                    bot.editSettings(ctx.guild.id, settings).then(() => {
+                        if (num === 0) {
+                            return ctx.createMessage('Disabled kicking for mentions.');
+                        } else {
+                            return ctx.createMessage(`Set kick limit to **${num}**.`);
+                        }
+                    });
+                }
+            } else if (ctx.args[0] === 'ban') {
+                let num = Number(Math.abs(ctx.args[1]).toFixed(0));
+
+                if (isNaN(num)) {
+                    ctx.createMessage('You can only set ban to a valid number.').then(resolve).catch(reject);
+                } else if (num <= ctx.settings.actions.mentions.kick) {
+                    ctx.createMessage('You cannot set the ban limit to, or lower than the kick limit.').then(resolve).catch(reject);
+                } else if (num === 0) {
+                    ctx.createMessage('You cannot disable banning for mentions (You can however set it to a ridiculously high number).').then(resolve).catch(reject);
+                } else {
+                    let {invites, mentions, copypasta, diacritics} = ctx.settings.actions;
+                    let settings = Object.assign({}, ctx.settings, {actions: {
+                        invites,
+                        mentions: {kick: mentions.kick, ban: num},
+                        copypasta,
+                        diacritics
+                    }});
+                    bot.editSettings(ctx.guild.id, settings).then(() => {
+                        return ctx.createMessage(`Set ban limit to **${num}**.`);
+                    });
+                }
+            }
         });
     }
 };

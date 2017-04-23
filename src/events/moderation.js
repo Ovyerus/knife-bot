@@ -38,6 +38,32 @@ module.exports = bot => {
         }).catch(err => logger.error(err));
     });
 
+    bot.on('mentions', msg => {
+        if (!bot.hasWantedPerms(msg) || msg.author.id === msg.channel.guild.ownerID) return;
+
+        let outside;
+        bot.getSettings(msg.channel.guild.id).then(res => {
+            if (!res.mentions.enabled) return null;
+            
+            console.log('nya')
+
+            let mentions = msg.mentions.filter(u => u.id !== msg.author.id && !u.bot);
+            
+            console.log(mentions.length);
+            console.log(res.mentions.trigger);
+
+            if (mentions.length >= res.mentions.trigger && (noExcepts(res) || !userExcept(res, msg.user.id) || !roleExcept(res, msg) || !channelExcept(res, msg.channel.id))) {
+                outside = res;
+                return Promise.all([msg.delete(), 'deleted']);
+            }
+
+            return null;
+        }).then(res => {
+            if (!res || res[1] !== 'deleted') return null;
+            return punishChain(bot, msg, outside, 'mentions', `(${msg.mentions.filter(u => u.id !== msg.author.id).length} mentions)`);
+        }).catch(err => logger.error(err.stack));
+    });
+
     bot.on('log', e => {
         if (!e.settings.logChannel || !e.guild.channels.get(e.settings.logChannel) || !bot.hasPermission('sendMessages', e.guild.channels.get(e.settings.logChannel))) return;
 
@@ -92,7 +118,7 @@ function punishChain(bot, msg, outside, type, extra) {
                 return Promise.all([msg.channel.createMessage(m), 'warned']);
             }
         }).then(res => {
-            if (!res) return null;
+            if (!res || res[1] === 'warned') return null;
             bot.emit('log', {user: msg.author, action: Actions.indexOf(res[1]), reason: type, settings: outside, guild: msg.channel.guild, extra});
             return null;
         }).then(resolve).catch(reject);
