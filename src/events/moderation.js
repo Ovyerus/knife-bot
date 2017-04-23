@@ -44,13 +44,8 @@ module.exports = bot => {
         let outside;
         bot.getSettings(msg.channel.guild.id).then(res => {
             if (!res.mentions.enabled) return null;
-            
-            console.log('nya')
 
             let mentions = msg.mentions.filter(u => u.id !== msg.author.id && !u.bot);
-            
-            console.log(mentions.length);
-            console.log(res.mentions.trigger);
 
             if (mentions.length >= res.mentions.trigger && (noExcepts(res) || !userExcept(res, msg.user.id) || !roleExcept(res, msg) || !channelExcept(res, msg.channel.id))) {
                 outside = res;
