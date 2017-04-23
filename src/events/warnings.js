@@ -1,6 +1,6 @@
 module.exports = bot => {
     bot.on('guildDelete', () => {
-        bot.editStatus('online', {name: `${currentGame} | ${bot.guilds.size} servers`});
+        bot.editStatus('online', {name: `${bot.currentGame} | ${bot.guilds.size} servers`});
     });
 
     bot.on('error', (err, id) => {

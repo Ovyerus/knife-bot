@@ -8,13 +8,13 @@ exports.vs = {
         return new Promise((resolve, reject) => {
             if (ctx.mentionStrings.length > 0) {
                 banMember(ctx).then(resolve).catch(reject);
-            } else if (/^\d+$/.test(args[0])) {
+            } else if (/^\d+$/.test(ctx.args[0])) {
                 if (ctx.guild.members.get(ctx.args[0])) {
-                    ctx.mentionStrings.push(args[0]);
+                    ctx.mentionStrings.push(ctx.args[0]);
                     banMember(ctx).then(resolve).catch(reject);
                 } else {
                     let tmpUser;
-                    bot.rest.getRESTUser(args[0]).then(u => {
+                    bot.rest.getRESTUser(ctx.args[0]).then(u => {
                         tmpUser = u;
                         return ctx.guild.banMember(u.id);
                     }).then(() => {

@@ -314,6 +314,6 @@ function imageFilter(msg) {
     if (msg.attachments.length > 0) {
         return msg.attachments.filter(atch => ImageRegex.test(atch.url)).length > 0;
     } else {
-        return ImageRegex.test(m.content);
+        return ImageRegex.test(msg.content);
     }
 }

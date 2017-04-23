@@ -31,7 +31,7 @@ function parseArgs(str) {
 
             // Move multi word args into main array
             args.forEach((v, i) => {
-                if (suffix.split(' ')[i].startsWith('"')) args.splice(i + 1, 0, tmp.shift());
+                if (raw.split(' ')[i].startsWith('"')) args.splice(i + 1, 0, tmp.shift());
             });
 
             // Concat rest of multi word args, flatten and filter
