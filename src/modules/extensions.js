@@ -124,10 +124,9 @@ module.exports = bot => {
 
             let settings = {
                 id: guildID,
-                actions: {mentions: {kick: 2, ban: 3}, copypasta: {kick: 2, ban: 3}, diacritics: {kick: 2, ban: 3}, invites: {kick: 2, ban: 3}},
+                actions: {mentions: {kick: 2, ban: 3}, copypasta: {kick: 2, ban: 3}, invites: {kick: 2, ban: 3}},
                 mentions: {trigger: 5, enabled: false},
                 copypasta: {triggers: [], cooldog: false, enabled: false},
-                diacritics: {trigger: 6, enabled: false},
                 invites: {enabled: false, fake: false},
                 logChannel: null,
                 exceptions: {

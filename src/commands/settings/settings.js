@@ -5,7 +5,6 @@ exports.commands = [
     'invites',
     'mentions',
     'copypasta',
-    'diacritics',
     'exceptions',
     'channel'
 ];
@@ -44,12 +43,6 @@ exports.main = {
                         value: 'Prevent stupid copypastas like cooldog and set your own custom ones.\n'
                         + `Status: **${States[ctx.settings.copypasta.enabled]}**\n`
                         + 'Run `settings copypasta` to view settings.'
-                    },
-                    {
-                        name: '`Diacritic Spam`',
-                        value: 'Stop people from pasting messages or characters with an absurd amount of diacritics.\n'
-                        + `Status: **${States[ctx.settings.diacritics.enabled]}**\n`
-                        + 'Run `settings diacritics` to view settings.'
                     }
                 ];
 
@@ -152,12 +145,11 @@ exports.invites = {
                 } else if (num >= ctx.settings.actions.invites.ban) {
                     ctx.createMessage('You cannot set the kick limit to, or higher than the ban limit.').then(resolve).catch(reject);
                 } else {
-                    let {invites, mentions, copypasta, diacritics} = ctx.settings.actions;
+                    let {invites, mentions, copypasta} = ctx.settings.actions;
                     let settings = Object.assign({}, ctx.settings, {actions: {
                         invites: {kick: num, ban: invites.ban},
                         mentions,
-                        copypasta,
-                        diacritics
+                        copypasta
                     }});
                     bot.editSettings(ctx.guild.id, settings).then(() => {
                         if (num === 0) {
@@ -177,12 +169,11 @@ exports.invites = {
                 } else if (num === 0) {
                     ctx.createMessage('You cannot disable banning for invites (You can however set it to a ridiculously high number).').then(resolve).catch(reject);
                 } else {
-                    let {invites, mentions, copypasta, diacritics} = ctx.settings.actions;
+                    let {invites, mentions, copypasta} = ctx.settings.actions;
                     let settings = Object.assign({}, ctx.settings, {actions: {
                         invites: {kick: invites.kick, ban: num},
                         mentions,
-                        copypasta,
-                        diacritics
+                        copypasta
                     }});
                     bot.editSettings(ctx.guild.id, settings).then(() => {
                         return ctx.createMessage(`Set ban limit to **${num}**.`);
@@ -267,12 +258,11 @@ exports.mentions = {
                 } else if (num >= ctx.settings.actions.mentions.ban) {
                     ctx.createMessage('You cannot set the kick limit to, or higher than the ban limit.').then(resolve).catch(reject);
                 } else {
-                    let {invites, mentions, copypasta, diacritics} = ctx.settings.actions;
+                    let {invites, mentions, copypasta} = ctx.settings.actions;
                     let settings = Object.assign({}, ctx.settings, {actions: {
                         invites,
                         mentions: {kick: num, ban: mentions.kick},
-                        copypasta,
-                        diacritics
+                        copypasta
                     }});
                     bot.editSettings(ctx.guild.id, settings).then(() => {
                         if (num === 0) {
@@ -292,12 +282,11 @@ exports.mentions = {
                 } else if (num === 0) {
                     ctx.createMessage('You cannot disable banning for mentions (You can however set it to a ridiculously high number).').then(resolve).catch(reject);
                 } else {
-                    let {invites, mentions, copypasta, diacritics} = ctx.settings.actions;
+                    let {invites, mentions, copypasta} = ctx.settings.actions;
                     let settings = Object.assign({}, ctx.settings, {actions: {
                         invites,
                         mentions: {kick: mentions.kick, ban: num},
-                        copypasta,
-                        diacritics
+                        copypasta
                     }});
                     bot.editSettings(ctx.guild.id, settings).then(() => {
                         return ctx.createMessage(`Set ban limit to **${num}**.`);
@@ -324,25 +313,6 @@ exports.copypasta = {
                         + 'Run `settings copypasta triggers` to see current triggers.',
                         inline: true
                     }
-                ]
-            };
-
-            ctx.createMessage({embed}).then(resolve).catch(reject);
-        });
-    }
-};
-
-exports.diacritics = {
-    desc: 'uwu',
-    main(bot, ctx) {
-        return new Promise((resolve, reject) => {
-            let embed = {
-                title: 'Server Settings - Diacritics',
-                description: `Showing current diacritic settings for **${ctx.guild.name}**`,
-                footer: {text: "'Amount to Trigger' is how many diacritics for a character is needed to trigger the bot."},
-                fields: [
-                    {name: '`Status`', value: States[ctx.settings.diacritics.enabled], inline: true},
-                    {name: '`Amount to Trigger`', value: ctx.settings.diacritics.trigger, inline: true}
                 ]
             };
 
