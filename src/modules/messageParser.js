@@ -105,7 +105,7 @@ function parseTulpa(str) {
     if (typeof str !== 'string') throw new TypeError('str is not a string.');
     if (!TulpaRegex.test(str)) return str;
 
-    return str.match(TulpaRegex)[1];
+    return str.match(TulpaRegex).slice(1).find(v => v != undefined);
 }
 
 module.exports = {parseArgs, parsePrefix, parseTulpa};

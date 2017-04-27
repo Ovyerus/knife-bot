@@ -16,9 +16,8 @@ module.exports = bot => {
         
         if (msg.mentions.filter(u => u.id !== bot.user.id && u.id !== msg.author.id && !u.bot).length > 0) bot.emit('mentions', msg);
 
-        let outer = {msg};
         msg.content = parseTulpa(msg.content);
-        msg.cleanContent = parseTulpa(msg.cleanContent);
+        let outer = {msg};
         parsePrefix(msg.content, bot.config.prefixes).then(content => {
             if (!content) return null;
             return parseArgs(content);
@@ -36,6 +35,7 @@ module.exports = bot => {
             Object.assign(outer, {settings});
             outer.cleanSuffix = msg.cleanContent.split(outer.cmd).slice(1).join(outer.cmd);
             outer.guildBot = msg.channel.guild.members.get(bot.user.id);
+            outer.msg.cleanContent = parseTulpa(msg.cleanContent);
 
             let ctx = new Context(outer);
 
