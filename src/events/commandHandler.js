@@ -1,4 +1,4 @@
-const {parseArgs, parsePrefix} = require(`${__baseDir}/modules/messageParser`);
+const {parseArgs, parsePrefix, parseTulpa} = require(`${__baseDir}/modules/messageParser`);
 const {Context} = require(`${__baseDir}/modules/CommandHolder`);
 
 module.exports = bot => {
@@ -17,6 +17,8 @@ module.exports = bot => {
         if (msg.mentions.filter(u => u.id !== bot.user.id && u.id !== msg.author.id && !u.bot).length > 0) bot.emit('mentions', msg);
 
         let outer = {msg};
+        msg.content = parseTulpa(msg.content);
+        msg.cleanContent = parseTulpa(msg.cleanContent);
         parsePrefix(msg.content, bot.config.prefixes).then(content => {
             if (!content) return null;
             return parseArgs(content);

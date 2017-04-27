@@ -1,4 +1,5 @@
-const QUOTEREGEX = /(")(?:(?=(\\?))\2.)*?\1/g;
+const QuoteRegex = /(")(?:(?=(\\?))\2.)*?\1/g;
+const TulpaRegex = /^(?:\[(.*)\]|\{(.*)\}|~(.*)|\/\/(.*))$/;
 
 /**
  * Parse a string and return arguments for command runner.
@@ -16,8 +17,8 @@ function parseArgs(str) {
         let cmd = tmp.splice(0, 1)[0];
 
         // Match regex for multi word args.
-        tmp = tmp.join(' ').match(QUOTEREGEX);
-        let args = str.split(QUOTEREGEX).filter(v => v !== '' && v !== '"');
+        tmp = tmp.join(' ').match(QuoteRegex);
+        let args = str.split(QuoteRegex).filter(v => v !== '' && v !== '"');
         args[0] = args[0].split(' ').slice(1).join(' ');
 
         if (tmp) {
@@ -94,4 +95,17 @@ function parsePrefix(str, prefixes) {
     });
 }
 
-module.exports = {parseArgs, parsePrefix};
+/**
+ * Parse a string and remove common tulpa wrappers if possible.
+ * 
+ * @param {String} str The string to parse
+ * @returns {String} Parsed string.
+ */
+function parseTulpa(str) {
+    if (typeof str !== 'string') throw new TypeError('str is not a string.');
+    if (!TulpaRegex.test(str)) return str;
+
+    return str.match(TulpaRegex)[1];
+}
+
+module.exports = {parseArgs, parsePrefix, parseTulpa};
