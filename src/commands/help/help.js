@@ -1,12 +1,3 @@
-/*
- * help.js - Display information for all avaliable commands.
- *
- * Contributed by Capuccino and Ovyerus.
- */
-
-/* eslint-env node */
-
-
 exports.commands = ['help'];
 
 exports.help = {
