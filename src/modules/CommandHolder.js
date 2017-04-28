@@ -1,9 +1,3 @@
-/*
- * Clara - command holder file
- *
- * Contributed by Ovyerus
- */
-
 const Eris = require('eris');
 const decache = require('decache');
 const logger = require(`${__dirname}/logger`);
@@ -60,7 +54,7 @@ let _handlePermissions = Symbol();
  * @prop {Object} commands Object mapping command objects to their name.
  * @prop {Number} length Amount of commands currently loaded.
  * @prop {Object} modules Object mapping module names to and array of their commands.
- * @prop {String[]} usedArrayOptions Array of options used by the command handler and loader.
+ * @prop {String[]} usedCommandOptions Array of options used by the command handler and loader.
  */
 
 class CommandHolder {
@@ -314,15 +308,34 @@ class CommandHolder {
     }
 
     /**
-     * Loop through the commands.
-     * @param {Function} callback Function to run on each iteration.
+     * Runs a supplied callback for each command.
+     * 
+     * @param {Function} callback Function to run on each iteration. Accepts two arguements: command object and command name.
      */
     forEach(callback) {
-        if (!callback || typeof callback !== 'function') throw new Error('callback is not a function');
+        if (typeof callback !== 'function') throw new Error('callback is not a function');
 
         for (let cmd in this.commands) {
             callback(this.commands[cmd], cmd);
         }
+    }
+    
+    /**
+     * Returns all the commands which meet the conditions in the callback.
+     * 
+     * @param {Function} callback Function to use to filter. Accepts two arguements: command object and command name.
+     * @returns {Command[]} Filtered commands.
+     */
+    filter(callback) {
+        if (typeof callback !== 'function') throw new Error('callback is not a function');
+
+        let filtered = [];
+
+        this.forEach((cmd, name) => {
+            if (callback(cmd, name)) filtered.push(Object.assign({}, cmd, {name}));
+        });
+
+        return filtered;
     }
 
     /**
@@ -341,7 +354,7 @@ class CommandHolder {
      * @access private
      * @param {Command} cmd The command to check permissions for.
      * @param {Context} ctx Context object to use.
-     * @param {String} [subcommand] numa
+     * @param {String} [subcommand] Name of the subcommand if it is one.
      * @returns {Promise} Nuthing boi
      */
     [_handlePermissions](cmd, ctx, subcommand) {
@@ -451,7 +464,15 @@ class CommandHolder {
     }
 
     get usedCommandOptions() {
-        return ['desc', 'longDesc', 'usage', 'owner', 'fixed', 'main', 'permissions'];
+        return ['desc', 'usage', 'owner', 'fixed', 'main', 'permissions'];
+    }
+
+    /**
+     * Array of options used by the command handler and loader.
+     * @returns {String[]} .
+     */
+    static get usedCommandOptions() {
+        return ['desc', 'usage', 'owner', 'fixed', 'main', 'permissions'];
     }
 }
 
