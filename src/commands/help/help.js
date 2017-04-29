@@ -12,7 +12,7 @@ exports.help = {
                     if (cmd.owner && bot.isOwner(ctx.author.id)) {
                         cmds.push(`🔪 ${name}${cmd.usage ? ` ${cmd.usage}` : ''}`);
                     } else if (cmd.owner) {
-                        return;
+                        return null;
                     } else {
                         cmds.push(`🔪 ${name}${cmd.usage ? ` ${cmd.usage}` : ''}`);
                     }
@@ -65,7 +65,7 @@ exports.help = {
 // TFW cant force JS to gimme a new object when referring to others
 function embedTemplate(bot) {
     this.author = {name: `${bot.user.username} Help`};
-    this.description = 'Run `🔪 help command` to get more information on how to use the command and what it does.'
+    this.description = 'Run `🔪 help command` to get more information on how to use the command and what it does.';
     this.fields = [
         {name: '\u200b', inline: true}
     ];
