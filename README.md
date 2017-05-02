@@ -9,4 +9,6 @@ Simple, open-source moderation bot for Discord.
 - Memes.
 
 The bot requires a `config.json` in the same directory as `bot.js` in order to function. This contains settings such as the bot's token and owner ID.
-I will not be providing an example for this, so you will need to read the code in order to find out what you need?
+I will not be providing an example for this, so you will need to read the code in order to find out what you need.
+
+The bot also requires [RethinkDB](https://www.rethinkdb.com/) for storing settings for guilds and strikes for users.
