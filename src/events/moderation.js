@@ -67,12 +67,11 @@ module.exports = bot => {
         let msg = [
             Actions[e.action][0].toUpperCase() + Actions[e.action].slice(1),
             bot.formatUser(e.user),
-            'for',
-            e.reason,
             '\n**Timestamp:**',
             timestamp
         ];
 
+        if (e.reason) msg.splice(2, 0, 'for', e.reason);
         if (e.extra) msg.splice(4, 0, e.extra);
 
         bot.createMessage(e.settings.logChannel, msg.join(' '));
