@@ -3,7 +3,7 @@ exports.commands = ['vs'];
 exports.vs = {
     desc: 'Cuts through someone and bans them.',
     usage: '<user mention|user id>',
-    permissions: {discord: 'banMembers', node: 'moderation.vs'},
+    permissions: {both: 'banMembers'},
     main(bot, ctx) {
         return new Promise((resolve, reject) => {
             if (ctx.mentionStrings.length > 0) {
