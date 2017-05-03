@@ -113,6 +113,7 @@ class CommandHolder {
 
                         for (let name in command.subcommands) {
                             let cmd = command.subcommands[name];
+                            if ((cmd.owner || cmd.hidden) && !bot.isOwner(ctx.author.id)) continue;
                             collect.push(`${moduleName} ${name}${cmd.usage ? ` ${cmd.usage}` : ''}\n\u200b - ${cmd.desc}`);
                         }
 
@@ -603,6 +604,8 @@ class Context {
             
             if (content && content.embed && !content.embed.color) content.embed.color = 16665427;
 
+            if (!this.hasPermission('embedLinks') && content && content.embed) content = Context.flattenEmbed(content.embed);
+
             if (where === 'channel') {
                 this.channel.createMessage(content, file).then(resolve).catch(reject);
             } else if (where === 'author') {
@@ -612,7 +615,7 @@ class Context {
     }
 
     /**
-     * Check if a user has permission to run a command. Obeys channel permission overwrites for allowing.
+     * Check if a user has permission to run a command. Obeys channel permission overwrites.
      * 
      * @param {String} permission The permission to check.
      * @param {String} [who=self] The user to check. Either 'self', 'author' or 'both'.
@@ -623,40 +626,54 @@ class Context {
         if (!Object.keys(Eris.Constants.Permissions).includes(permission)) return false;
         if (!['self', 'author', 'both'].includes(who)) return false;
 
+        let allowed = false;
+
         if (who === 'self') {
-            if (this.guildBot.permission.has(permission)) return true;
+            if (this.guildBot.permission.has(permission)) allowed = true;
             
             // Channel overwrites
-            let everyone = this.guild.roles.find(r => r.name === '@everyone');
-            let chanPerms = this.channel.permissionOverwrites.filter(v => {
-                return (v.type === 'member' && v.id === this.guildBot.id) || (v.type === 'role' && (this.guildBot.roles.includes(v.id) || v.id === everyone.id));
-            });
+            if (!this.guildBot.permission.has('administrator')) {
+                let everyone = this.guild.roles.find(r => r.name === '@everyone');
+                let chanPerms = this.channel.permissionOverwrites.filter(v => {
+                    return (v.type === 'member' && v.id === this.guildBot.id) || (v.type === 'role' && (this.guildBot.roles.includes(v.id) || v.id === everyone.id));
+                });
 
-            for (let perm of chanPerms) if (perm.has(permission)) return true;
-            return false;
+                chanPerms = chanPerms.map(p => p.json);
+
+                for (let permGroup of chanPerms) {
+                    if (permGroup[permission] === true) {
+                        allowed = true;
+                    } else if (permGroup[permission] === false) {
+                        allowed = false;
+                    }
+                }
+            }
+
+            return allowed;
         } else if (who === 'author') {
-            if (this.member.permission.has(permission)) return true;
+            if (this.member.permission.has(permission)) allowed = true;
 
             // Channel overwrites
-            let everyone = this.guild.roles.find(r => r.name === '@everyone');
-            let chanPerms = this.channel.permissionOverwrites.filter(v => {
-                return (v.type === 'member' && v.id === this.member.id) || (v.type === 'role' && (this.member.roles.includes(v.id) || v.id === everyone.id));
-            });
+            if (!this.member.permission.has('administrator')) {
+                let everyone = this.guild.roles.find(r => r.name === '@everyone');
+                let chanPerms = this.channel.permissionOverwrites.filter(v => {
+                    return (v.type === 'member' && v.id === this.member.id) || (v.type === 'role' && (this.member.roles.includes(v.id) || v.id === everyone.id));
+                });
 
-            for (let perm of chanPerms) if (perm.has(permission)) return true;
-            return false;
+                chanPerms = chanPerms.map(p => p.json);
+
+                for (let permGroup of chanPerms) {
+                    if (permGroup[permission] === true) {
+                        allowed = true;
+                    } else if (permGroup[permission] === false) {
+                        allowed = false;
+                    }
+                }
+            }
+
+            return allowed;
         } else if (who === 'both') {
-            if (this.member.permission.has(permission) && this.guildBot.permission.has(permission)) return true;
-
-            // Channel permissionOverwrites
-            let everyone = this.guild.roles.find(r => r.name === '@everyone');
-            let chanPerms = this.channel.permissionOverwrites.filter(v => {
-                return (v.type === 'member' && (v.id === this.member.id || v.id === this.guildBot.id)) || (v.type === 'role' && ((this.member.roles.includes(v.id) && this.guildBot.roles.includes(v.id)) || v.id === everyone.id));
-            });
-
-
-            for (let perm of chanPerms) if (perm.has(permission)) return true;
-            return false;
+            return this.hasPermission(permission) && this.hasPermission(permission, 'author');
         }
     }
 
@@ -675,6 +692,39 @@ class Context {
 
     get channelMentions() {
         return this[_msg].channelMentions;
+    }
+
+    static flattenEmbed(embed) {
+        let flattened = '';
+
+        if (embed.author) {
+            flattened += `**${embed.author.name}`;
+            flattened += embed.author.url ? ` <${embed.author.url}>**\n` : '**\n';
+        }
+
+        if (embed.title) {
+            flattened += `**${embed.title}`;
+            flattened += embed.url ? ` <${embed.url}>**\n\n` : '**\n\n';
+        }
+
+        if (embed.description) flattened += `${embed.description}\n`;
+        if (embed.fields) embed.fields.forEach(f => {
+            flattened += !f.name.match(/^`.*`$/) ? `**${f.name}**\n` : `${f.name}\n`;
+            flattened += `${f.value}\n`
+        });
+    
+        if (embed.footer && !embed.timestamp) {
+            flattened += `${embed.footer.text}\n`;
+        } else if (!embed.footer && embed.timestamp) {
+            flattened += `${embed.timestamp}\n`;
+        } else {
+            flattened += `\n${embed.footer.text} | ${embed.timestamp}\n`;
+        }
+
+        if (embed.thumbnail) flattened += `${embed.thumbnail.url}\n`;
+        if (embed.image) flattened += `${embed.image.url}\n`;
+
+        return flattened;
     }
 }
 

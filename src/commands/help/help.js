@@ -9,9 +9,9 @@ exports.help = {
                 let cmds = [];
                 
                 bot.commands.forEach((cmd, name) => {
-                    if (cmd.owner && bot.isOwner(ctx.author.id)) {
+                    if ((cmd.owner || cmd.hidden) && bot.isOwner(ctx.author.id)) {
                         cmds.push(`🔪 ${name}${cmd.usage ? ` ${cmd.usage}` : ''}`);
-                    } else if (cmd.owner) {
+                    } else if (cmd.owner || cmd.hidden) {
                         return null;
                     } else {
                         cmds.push(`🔪 ${name}${cmd.usage ? ` ${cmd.usage}` : ''}`);
@@ -26,7 +26,7 @@ exports.help = {
                         cmdCollect.push(cmds[i]);
                         if (i === '29' || Number(i) === cmds.length - 1) {
                             let embed = new embedTemplate(bot);
-                            embed.title = bot.isOwner(ctx.author.id) ? `${bot.commands.length} Commands` : `${bot.commands.length - bot.commands.filter(cmd => cmd.owner).length} Commands`;
+                            embed.title = bot.isOwner(ctx.author.id) ? `${bot.commands.length} Commands` : `${bot.commands.length - bot.commands.filter(cmd => cmd.owner || cmd.hidden).length} Commands`;
 
                             if (cmdCollect.length > 15) {
                                 embed.fields[0].value = `\`${cmdCollect.slice(0, 15).join('\n')}\``;
