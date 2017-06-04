@@ -438,7 +438,7 @@ module.exports = bot => {
             
         // Channel overwrites
         if (!guildBot.permission.has('administrator')) {
-            let everyone = guild.roles.find(r => r.name === '@everyone');
+            let everyone = channel.guild.roles.find(r => r.name === '@everyone');
             let chanPerms = channel.permissionOverwrites.filter(v => {
                 return (v.type === 'member' && v.id === guildBot.id) || (v.type === 'role' && (guildBot.roles.includes(v.id) || v.id === everyone.id));
             });
@@ -495,5 +495,5 @@ module.exports = bot => {
         if (embed.image) flattened += `${embed.image.url}\n`;
 
         return flattened;
-    }
+    };
 };
