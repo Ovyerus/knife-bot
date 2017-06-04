@@ -14,7 +14,8 @@
 
     "globals": {
         "__baseDir": false,
-        "logger" : false
+        "logger" : false,
+        "Promise": false
     },
 
     "ignore": [
