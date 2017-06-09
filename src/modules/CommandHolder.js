@@ -78,6 +78,8 @@ class CommandHolder {
      * Loads a module.
      * 
      * @param {String} moduleName Name of the module.
+     * @throws {TypeError} Argument must be correct type
+     * @throws {Error} Module must not be loaded already.
      */
     loadModule(moduleName) {
         if (typeof moduleName !== 'string') throw new TypeError('moduleName is not a string.');
@@ -166,6 +168,8 @@ class CommandHolder {
      * Unloads a module.
      * 
      * @param {String} moduleName Name of the module to unload.
+     * @throws {TypeError} Argument must be correct type.
+     * @throws {Error} Module must be loaded already.
      */
     unloadModule(moduleName) {
         if (typeof moduleName !== 'string') throw new TypeError('moduleName is not a string.');
@@ -188,6 +192,8 @@ class CommandHolder {
      * Reload a module.
      * 
      * @param {String} moduleName Name of the module to reload.
+     * @throws {TypeError} Argument must be correct type.
+     * @throws {Error} Module must already be loaded.
      */
     reloadModule(moduleName) {
         if (!this.modules[moduleName]) {
@@ -620,6 +626,13 @@ class Context {
         return this[_msg].channelMentions;
     }
 
+    /**
+     * Flattens an embed into plain text.
+     * 
+     * @static
+     * @param {Object} embed Embed to flatten.
+     * @returns {String} Flattened embed.
+     */
     static flattenEmbed(embed) {
         let flattened = '';
 

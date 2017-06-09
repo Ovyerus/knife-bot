@@ -64,7 +64,7 @@ class Lookups {
      * 
      * @param {Context} ctx Context to use.
      * @param {String} who User to try and find. Can be partial name.
-     * @param {Boolean} [notFoundMsg] If `false`, suppresses the default not found message.
+     * @param {Boolean} [notFoundMsg=true] If `false`, suppresses the default not found message.
      * @returns {?Eris.Member} Found member. `null` if none found.
      */
     async memberLookup(ctx, who, notFoundMsg=true) {
@@ -90,6 +90,14 @@ class Lookups {
         return member;
     }
 
+    /**
+     * Find a channel by part of its name.
+     * 
+     * @param {Context} ctx Context to use.
+     * @param {String} what Channel to try and find. Can be partial name.
+     * @param {Boolean} [notFoundMsg=true] If `false`, suppresses the default not found message.
+     * @returns {?Eris.GuildChannel} Found channel. `null` if none found.
+     */
     async channelLookup(ctx, what, notFoundMsg=true) {
         let channel;
 
@@ -113,6 +121,14 @@ class Lookups {
         return channel;
     }
 
+    /**
+     * Find a role by part of its name.
+     * 
+     * @param {Context} ctx Context to use.
+     * @param {String} what Role to try and find. Can be partial name.
+     * @param {Boolean} [notFoundMsg=true] If `false`, suppresses the default not found message.
+     * @returns {?Eris.Role} Found role. `null` if none found.
+     */
     async roleLookup(ctx, what, notFoundMsg=true) {
         let role;
         let roles = ctx.guild.roles.filter(r => r.name.toLowerCase().includes(what.toLowerCase()));
@@ -131,6 +147,14 @@ class Lookups {
         return role;
     }
 
+    /**
+     * Find a guild by part of its name.
+     * 
+     * @param {Context} ctx Context to use.
+     * @param {String} what Guild to try and find. Can be partial name.
+     * @param {Boolean} [notFoundMsg=true] If `false`, suppresses the default not found message.
+     * @returns {?Eris.Guild} Found guild. `null` if none found.
+     */
     async guildLookup(ctx, what, notFoundMsg=true) {
         let guild;
         let guilds = this.bot.guilds.filter(g => g.name.toLowerCase().includes(what.toLowerCase()));
