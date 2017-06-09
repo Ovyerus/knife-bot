@@ -3,60 +3,57 @@ const Months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
 const InviteRegex = /(?:https:\/\/)?(?:discord\.gg|discordapp\.com\/invite)\/((?:[A-Za-z0-9-])+)/i;
 
 module.exports = bot => {
-    bot.on('invites', msg => {
+    bot.on('invites', async msg => {
         if (!bot.hasWantedPerms(msg) || msg.author.id === msg.channel.guild.ownerID) return;
 
-        let outside;
-        bot.getSettings(msg.channel.guild.id).then(res => {
-            if (!res.invites.enabled) return null;
+        let settings = await bot.getSettings(msg.channel.guild.id);
 
-            if (noExcepts(res) || !userExcept(res, msg.user.id) || !roleExcept(res, msg) || !channelExcept(res, msg.channel.id)) {
-                outside = res;
-                let invCode = msg.content.match(InviteRegex)[1];
-                return bot.getInvite(invCode);
-            }
-            
-            return null;
-        }).then(res => {
-            if (!res) return null;
-            if (res.guild.id === msg.channel.guild.id) return 'same guild';
-            return Promise.all([msg.delete(), 'deleted']);
-        }).then(res => {
-            if (!res || res[1] !== 'deleted') return null;
-            return punishChain(bot, msg, outside, 'invites');
-        }).catch(err => {
-            if (typeof err.response === 'string' && JSON.parse(err.response).message === 'Unknown Invite') {
-                if (outside.invites.fake && noExcepts(outside, 'invites')) {
-                    return Promise.all([msg.delete(), 'deleted']);
+        if (!settings.invites.enabled) return;
+        
+        if (noExcepts(settings) || !userExcept(settings, msg.author.id) || !roleExcept(settings, msg) || !channelExcept(settings, msg.channel.id)) {
+            let invCode = msg.content.match(InviteRegex)[1];
+
+            try {
+                let inv = await bot.getInvite(invCode);
+
+                if (inv.guild.id === msg.channel.guild.id) return;
+                
+                await msg.delete();
+                await punishChain(bot, msg, settings, 'invites');
+            } catch(err) {
+                if (err.response && typeof err.response === 'string' && JSON.parse(err.message).message === 'Unknown Invite') {
+                    if (settings.invites.fake && noExcepts(settings)) {
+                        try {
+                            await msg.delete();
+                            await punishChain(bot, msg, settings, 'invites');
+                        } catch(err) {
+                            logger.error(err.stack);
+                        }
+                    }
+                } else {
+                    logger.error(err.stack);
                 }
-            } else {
-                logger.error(err.stack);
             }
-        }).then(res => {
-            if (!res || res[1] !== 'deleted') return null;
-            return punishChain(bot, msg, outside, 'invites');
-        }).catch(err => logger.error(err));
+        }
     });
 
-    bot.on('mentions', msg => {
+    bot.on('mentions', async msg => {
         if (!bot.hasWantedPerms(msg) || msg.author.id === msg.channel.guild.ownerID) return;
 
-        let outside;
-        bot.getSettings(msg.channel.guild.id).then(res => {
-            if (!res.mentions.enabled) return null;
+        let settings = await bot.getSettings(msg.channel.guild.id);
 
-            let mentions = msg.mentions.filter(u => u.id !== msg.author.id && !u.bot);
+        if (!settings.mentions.enabled) return;
 
-            if (mentions.length >= res.mentions.trigger && (noExcepts(res) || !userExcept(res, msg.user.id) || !roleExcept(res, msg) || !channelExcept(res, msg.channel.id))) {
-                outside = res;
-                return Promise.all([msg.delete(), 'deleted']);
+        let mentions = msg.mentions.filter(u => u.id !== msg.author.id && !u.bot);
+
+        if (mentions.length >= settings.mentions.trigger && (noExcepts(settings) || !userExcept(settings, msg.author.id) || !roleExcept(settings, msg) || !channelExcept(settings, msg.channel.id))) {
+            try {
+                await msg.delete();
+                await punishChain(bot, msg, settings, 'mentions', `(${mentions.length} mentions)`);
+            } catch(err) {
+                logger.error(err.stack);
             }
-
-            return null;
-        }).then(res => {
-            if (!res || res[1] !== 'deleted') return null;
-            return punishChain(bot, msg, outside, 'mentions', `(${msg.mentions.filter(u => u.id !== msg.author.id).length} mentions)`);
-        }).catch(err => logger.error(err.stack));
+        }
     });
 
     bot.on('log', e => {
@@ -87,10 +84,7 @@ function channelExcept(res, channel) {
 }
 
 function roleExcept(res, msg) {
-    for (let role of msg.member.roles) {
-        if (res.exceptions.roles.includes(role)) return true;
-    }
-
+    for (let role of msg.member.roles) if (res.exceptions.roles.includes(role)) return true;
     return false;
 }
 
@@ -98,23 +92,21 @@ function userExcept(res, user) {
     return res.exceptions.users.includes(user);
 }
 
-function punishChain(bot, msg, outside, type, extra) {
-    return new Promise((resolve, reject) => {
-        bot.incrementStrikes(msg.channel.guild.id, msg.author.id).then(() => {
-            return bot.getStrikes(msg.channel.guild.id, msg.author.id);
-        }).then(res => {
-            if (outside.actions[type].kick > 0 && res === outside.actions[type].kick) {
-                return Promise.all([msg.member.kick(), 'kicked']);
-            } else if (outside.actions[type].ban > 0 && outside.actions[type].ban > outside.actions[type].kick && res === outside.actions[type].ban) {
-                return Promise.all([msg.member.ban(1), 'banned', bot.resetStrikes(msg.channel.guild.id, msg.member.id)]);
-            } else {
-                let m = outside.messages[type].replace(/\{\{mention\}\}/gi, msg.author.mention);
-                return Promise.all([msg.channel.createMessage(m), 'warned']);
-            }
-        }).then(res => {
-            if (!res || res[1] === 'warned') return null;
-            bot.emit('log', {user: msg.author, action: Actions.indexOf(res[1]), reason: type, settings: outside, guild: msg.channel.guild, extra});
-            return null;
-        }).then(resolve).catch(reject);
-    });
+async function punishChain(bot, msg, settings, type, extra) {
+    await bot.incrementStrikes(msg.channel.guild.id, msg.author.id);
+    let strikes = await bot.getStrikes(msg.channel.guild.id, msg.author.id);
+
+    if (settings.actions[type].kick > 0 && strikes === settings.actions[type].kick) {
+        await msg.member.kick(type);
+        
+        bot.emit('log', {user: msg.author, action: 0, reason: type, settings, guild: msg.channel.guild, extra});
+    } else if (settings.actions[type].ban > 0 && settings.actions[type].ban > settings.actions[type].kick && strikes === settings.actions[type].ban) {
+        await Promise.all([msg.member.ban(1, type), bot.resetStrikes(msg.channel.guild.id, msg.author.id)]);
+
+        bot.emit('log', {user: msg.author, action: 1, reason: type, settings, guild: msg.channel.guild, extra});
+    } else {
+        let m = settings.messages[type].replace(/\{\{mention\}\}/gi, msg.author.mention);
+
+        await msg.channel.createMessage(m);
+    }
 }

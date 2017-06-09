@@ -38,51 +38,46 @@ function getDirectories(dir) {
     });
 }
 
-function preloadCommands() {
-    return new Promise(resolve => {
-        var deps = [];
-        for (let mod of commandFolders) {
-            let cmdFiles = fs.readdirSync(`${__baseDir}/${commandsDirectory}/${mod}`);
-            if (!cmdFiles.includes('package.json')) {
-                logger.customError('commandLoader/preloadCommands', `Skipping over '${mod}' due to missing package.json`);
-                noLoad.push(mod);
-            } else {
-                let json = fs.readFileSync(`${__baseDir}/${commandsDirectory}/${mod}/package.json`);
-                let pkg;
-                try {
-                    pkg = JSON.parse(json);
-                } catch(err) {
-                    logger.customError('commandLoader/preloadCommands', `Skipping over '${mod}' due to error parsing package.json\n${err}`);
-                }
+async function preloadCommands() {
+    let deps = [];
+    for (let mod of commandFolders) {
+        let cmdFiles = fs.readdirSync(`${__baseDir}/${commandsDirectory}/${mod}`);
+        if (!cmdFiles.includes('package.json')) {
+            logger.customError('commandLoader/preloadCommands', `Skipping over '${mod}' due to missing package.json`);
+            noLoad.push(mod);
+        } else {
+            let json = fs.readFileSync(`${__baseDir}/${commandsDirectory}/${mod}/package.json`);
+            let pkg;
+            try {
+                pkg = JSON.parse(json);
+            } catch(err) {
+                logger.customError('commandLoader/preloadCommands', `Skipping over '${mod}' due to error parsing package.json\n${err}`);
+            }
 
-                if (pkg.dependencies == null) continue;
-                if (Object.keys(pkg.dependencies).length > 0) {
-                    for (let dep in pkg.dependencies) {
-                        try {
-                            require.resolve(dep);
-                        } catch(err) {
-                            if (!deps.includes(dep)) deps.push(dep);
-                        }
+            if (pkg.dependencies == null) continue;
+            if (Object.keys(pkg.dependencies).length > 0) {
+                for (let dep in pkg.dependencies) {
+                    try {
+                        require.resolve(dep);
+                    } catch(err) {
+                        if (!deps.includes(dep)) deps.push(dep);
                     }
                 }
             }
         }
+    }
 
-        if (deps.length > 0) {
-            deps = deps.join(' ');
-            logger.custom('blue', 'commandLoader/preloadCommands', `Installing dependencies for commands, this may take a while...\nDependencies: ${deps}`);
-            cp.exec(`npm i ${deps}`, (err, stdout, stderr) => {
-                if (err) logger.customError('commandLoader/preloadCommands', `Error when trying to install dependencies: ${err}`);
-                if (stderr) logger.customError('commandLoader/preloadCommands', `Error when trying to install dependencies: ${stderr}`);
-                resolve();
-            });
-        } else {
-            resolve();
-        }
-    });
+    if (deps.length > 0) {
+        deps = deps.join(' ');
+        logger.custom('blue', 'commandLoader/preloadCommands', `Installing dependencies for commands, this may take a while...\nDependencies: ${deps}`);
+        cp.exec(`npm i ${deps}`, (err, stdout, stderr) => {
+            if (err) logger.customError('commandLoader/preloadCommands', `Error when trying to install dependencies: ${err}`);
+            if (stderr) logger.customError('commandLoader/preloadCommands', `Error when trying to install dependencies: ${stderr}`);
+        });
+    }
 }
 
-function loadCommands(bot) {
+async function loadCommands(bot) {
     return new Promise((resolve, reject) => {
         for (let cmdFolder of commandFolders) {
             if (noLoad.includes(cmdFolder) || unloadedCommands.includes(cmdFolder)) continue;
@@ -91,7 +86,7 @@ function loadCommands(bot) {
 
             try {
                 commandPackage = require(`${__baseDir}/${commandsDirectory}/${cmdFolder}/package.json`);
-                command = require(`${__baseDir}/${commandsDirectory}/${cmdFolder}/${commandPackage.main}`);
+                command = `${__baseDir}/${commandsDirectory}/${cmdFolder}/${commandPackage.main}`;
             } catch(err) {
                 logger.customError('commandLoader/loadCommands', `Experienced error while loading module '${cmdFolder}', skipping...\n${err}`);
                 unloadedCommands.push(cmdFolder);
@@ -99,7 +94,7 @@ function loadCommands(bot) {
 
             if (command) {
                 try {
-                    bot.commands.addModule(cmdFolder, command);
+                    bot.commands.loadModule(command);
                 } catch(err) {
                     logger.customError('commandLoader/loadCommands', `Experienced error while loading module '${cmdFolder}', skipping...\n${err}`);
                     unloadedCommands.push(cmdFolder);

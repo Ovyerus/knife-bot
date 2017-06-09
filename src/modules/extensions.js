@@ -1,6 +1,7 @@
 const got = require('got');
 const Eris = require('eris');
 const fs = require('fs');
+const {AwaitTimeout} = require(`${__dirname}/helpers`);
 
 const games = [
     '🔪 help',
@@ -63,7 +64,7 @@ module.exports = bot => {
             rmvTimeout = setTimeout(() => {
                 if (!responded) {
                     bot.removeListener('messageCreate', onCrtWrap);
-                    reject(new Error('Message await expired.'));
+                    reject(new AwaitTimeout('Message await expired.'));
                 }
             }, timeout);
         });
@@ -118,36 +119,35 @@ module.exports = bot => {
      * @param {String} guildID The ID of the guild
      * @returns {Promise<Object>} Settings for the guild.
      */
-    bot.initSettings = guildID => {
-        return new Promise((resolve, reject) => {
-            if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
+    bot.initSettings = async guildID => {
+        if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
 
-            let settings = {
-                id: guildID,
-                actions: {mentions: {kick: 2, ban: 3}, copypasta: {kick: 2, ban: 3}, invites: {kick: 2, ban: 3}},
-                mentions: {trigger: 5, enabled: false},
-                copypasta: {triggers: [], cooldog: false, enabled: false},
-                invites: {enabled: false, fake: false},
-                logChannel: null,
-                exceptions: {
-                    users: [],
-                    channels: [],
-                    roles: []
-                },
-                messages: {
-                    invites: '{{mention}} please do not advertise here. Your message has been deleted and future offenses will be dealt with accordingly.',
-                    mentions: '{{mention}} do not mass-mention users. Future offences will be dealt with accordingly.',
-                    copypasta: '{{mention}} please do not post copypastas here. Future offences will be dealt with accordingly.',
-                    diacritics: '{{mention}} please do not post characters or messages that abuse the use of diacritics. Future offences will be dealt with accordingly.'
-                }
-            };
+        let settings = {
+            id: guildID,
+            actions: {mentions: {kick: 2, ban: 3}, copypasta: {kick: 2, ban: 3}, invites: {kick: 2, ban: 3}},
+            mentions: {trigger: 5, enabled: false},
+            copypasta: {triggers: [], cooldog: false, enabled: false},
+            invites: {enabled: false, fake: false},
+            logChannel: null,
+            exceptions: {
+                users: [],
+                channels: [],
+                roles: []
+            },
+            messages: {
+                invites: '{{mention}} please do not advertise here. Your message has been deleted and future offenses will be dealt with accordingly.',
+                mentions: '{{mention}} do not mass-mention users. Future offences will be dealt with accordingly.',
+                copypasta: '{{mention}} please do not post copypastas here. Future offences will be dealt with accordingly.',
+                diacritics: '{{mention}} please do not post characters or messages that abuse the use of diacritics. Future offences will be dealt with accordingly.'
+            }
+        };
 
-            bot.settings.add(settings);
-            bot.db.table('guild_settings').get(guildID).run().then(res => {
-                if (res) return res;
-                return bot.db.table('guild_settings').insert(settings).run();
-            }).then(resolve).catch(reject);
-        });
+        bot.settings.add(settings);
+        
+        let res = await bot.db.table('guild_settings').get(guildID).run();
+
+        if (res) return res;
+        return await bot.db.table('guild_settings').insert(settings).run();
     };
 
     /**
@@ -156,27 +156,18 @@ module.exports = bot => {
      * @param {String} guildID The ID of the guild
      * @returns {Promise<Object>} Settings for the guild.
      */
-    bot.getSettings = guildID => {
-        return new Promise((resolve, reject) => {
-            if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
+    bot.getSettings = async guildID => {
+        if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
 
-            if (bot.settings.get(guildID)) {
-                resolve(bot.settings.get(guildID));
-            } else {
-                bot.db.table('guild_settings').get(guildID).run().then(res => {
-                    if (!res) return bot.initSettings(guildID);
+        if (bot.settings.get(guildID)) {
+            return bot.settings.get(guildID);
+        } else {
+            let res = await bot.db.table('guild_settings').get(guildID).run();
 
-                    bot.settings.add(res);
-                    resolve(res);
-                    return null;
-                }).then(res => {
-                    if (!res) return null;
-
-                    resolve(res);
-                    return null;
-                }).catch(reject);
-            }
-        });
+            if (!res) return await bot.initSettings(guildID);
+            bot.settings.add(res);
+            return res;
+        }
     };
 
     /**
@@ -186,25 +177,22 @@ module.exports = bot => {
      * @param {Object} settings The settings to edit
      * @returns {Promise<Object>} Settings for the guild.
      */
-    bot.editSettings = (guildID, settings={}) => {
-        return new Promise((resolve, reject) => {
-            if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
-            if (!settings || typeof settings !== 'object') throw new TypeError('settings is not an object.');
-            if (Object.keys(settings).length === 0) throw new Error('settings is empty.');
+    bot.editSettings = async (guildID, settings={}) => {
+        if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
+        if (!settings || typeof settings !== 'object') throw new TypeError('settings is not an object.');
+        if (Object.keys(settings).length === 0) throw new Error('settings is empty.');
 
-            bot.db.table('guild_settings').get(guildID).update(settings).run().then(() => {
-                return bot.db.table('guild_settings').get(guildID);
-            }).then(res => {
-                if (!bot.settings.get(guildID)) {
-                    bot.settings.add(res);
-                } else {
-                    bot.settings.remove(res);
-                    bot.settings.add(res);
-                }
-                
-                return res;
-            }).then(resolve).catch(reject);
-        });
+        await bot.db.table('guild_settings').get(guildID).update(settings).run();
+        let res = await bot.db.table('guild_settings').get(guildID);
+
+        if (!bot.settings.get(guildID)) {
+            bot.settings.add(res);
+        } else {
+            bot.settings.remove(res);
+            bot.settings.add(res);
+        }
+
+        return res;
     };
 
     /**
@@ -214,76 +202,51 @@ module.exports = bot => {
      * @param {String} [userID] ID of the user to get strikes for.
      * @returns {Promise<(Number|Object[])>} Strikes for the guild or user.
      */
-    bot.getStrikes = (guildID, userID) => {
-        return new Promise((resolve, reject) => {
-            bot.db.table('strikes').get(guildID).run().then(res => {
-                if (!res) return Promise.all([
-                    bot.db.table('strikes').insert({id: guildID, users: []}),
-                    'adding'
-                ]);
+    bot.getStrikes = async (guildID, userID) => {
+        let res = bot.db.table('strikes').get(guildID).run();
 
-                if (typeof userID === 'string') {
-                    return res.users.find(u => u.id === userID) ? res.users.find(u => u.id === userID).strikes : 0;
-                } else {
-                    return res.users;
-                }
-            }).then(res => {
-                if (res[1] === 'adding') {
-                    if (typeof userID === 'string') {
-                        return res.users.find(u => u.id === userID) ? res.users.find(u => u.id === userID).strikes : 0;
-                    } else {
-                        return res.users;
-                    }  
-                } else return res;
-            }).then(resolve).catch(reject);
-        });
+        if (!res) {
+            await bot.db.table('strikes').insert({id: guildID, users: []});
+
+            return [];
+        } else {
+            if (typeof userID === 'string') {
+                return res.users.find(u => u.id === userID) ? res.users.find(u => u.id === userID).strikes : 0;
+            } else {
+                return res.users;
+            }
+        }
     };
 
-    /**
+    /** 
      * Increment someones strike count.
      * 
      * @param {String} guildID ID of the guild.
      * @param {String} userID ID of the user.
-     * @returns {Promise} .
      */
-    bot.incrementStrikes = (guildID, userID) => {
-        return new Promise((resolve, reject) => {
-            if (typeof guildID !== 'string') throw new TypeError('guildId is not a string.');
-            if (typeof userID !== 'string') throw new TypeError('userID is not a string.');
+    bot.incrementStrikes = async (guildID, userID) => {
+        if (typeof guildID !== 'string') throw new TypeError('guildId is not a string.');
+        if (typeof userID !== 'string') throw new TypeError('userID is not a string.');
 
-            bot.db.table('strikes').get(guildID).run().then(res => {
-                if (!res) return Promise.all([
-                    bot.db.table('strikes').insert({id: guildID, users: [{id: userID, strikes: 1}]}).run(),
-                    'adding'
-                ]);
+        let res = await bot.db.table('strikes').get(guildID).run();
 
-                let i = res.users.indexOf(res.users.find(u => u.id === userID));
+        if (!res) {
+            await bot.db.table('strikes').insert({id: guildID, users: [{id: userID, strikes: 1}]});
+        } else {
+            let i = res.users.indexOf(res.users.find(u => u.id === userID));
 
-                if (i > -1) {
-                    let newNum = ++res.users[i].strikes;
-                    return Promise.all([
-                        bot.db.table('strikes').get(guildID).update(row => {
-                            return {users: row('users').changeAt(i, row('users')(i).merge({strikes: newNum}))};
-                        }).run(),
-                        'updating'
-                    ]);
-                } else {
-                    return Promise.all([
-                        bot.db.table('strikes').get(guildID).update(row => {
-                            return {users: row('users').append({id: userID, strikes: 1})};
-                        }),
-                        'appending'
-                    ]);
-                }
-            }).then(res => {
-                if (res[1] === 'adding') {
-                    return Promise.all([
-                        bot.db.table('strikes').get(guildID).run(),
-                        'updating'
-                    ]);
-                } else return null;
-            }).then(() => resolve()).catch(reject);
-        });
+            if (i > -1) {
+                let newNum = ++res.users[i].strikes;
+
+                await bot.db.table('strikes').get(guildID).update(row => {
+                    return {users: row('users').changeAt(i, row('users')(i).merge({strikes: newNum}))};
+                }).run();
+            } else {
+                await bot.db.table('strikes').get(guildID).update(row => {
+                    return {users: row('users').append({id: userID, strikes: 1})};
+                });
+            }
+        }
     };
 
     /**
@@ -291,46 +254,30 @@ module.exports = bot => {
      * 
      * @param {String} guildID ID of the guild.
      * @param {String} userID ID of the user.
-     * @returns {Promise} .
      */
-    bot.decrementStrikes = (guildID, userID) => {
-        return new Promise((resolve, reject) => {
-            if (typeof guildID !== 'string') throw new TypeError('guildId is not a string.');
-            if (typeof userID !== 'string') throw new TypeError('userID is not a string.');
+    bot.decrementStrikes = async (guildID, userID) => {
+        if (typeof guildID !== 'string') throw new TypeError('guildId is not a string.');
+        if (typeof userID !== 'string') throw new TypeError('userID is not a string.');
 
-            bot.db.table('strikes').get(guildID).run().then(res => {
-                if (!res) return Promise.all([
-                    bot.db.table('strikes').insert({id: guildID, users: [{id: userID, strikes: 0}]}).run(),
-                    'adding'
-                ]);
+        let res = await bot.db.table('strikes').get(guildID).run();
 
-                let i = res.users.indexOf(res.users.find(u => u.id === userID));
+        if (!res) {
+            await bot.db.table('strikes').insert({id: guildID, users: [{id: userID, strikes: 0}]}).run();
+        } else {
+            let i = res.users.indexOf(res.users.find(u => u.id === userID));
 
-                if (i > -1) {
-                    let newNum = --res.users[i].strikes;
-                    return Promise.all([
-                        bot.db.table('strikes').get(guildID).update(row => {
-                            return {users: row('users').changeAt(i, row('users')(i).merge({strikes: newNum}))};
-                        }).run(),
-                        'updating'
-                    ]);
-                } else {
-                    return Promise.all([
-                        bot.db.table('strikes').get(guildID).update(row => {
-                            return {users: row('users').append({id: userID, strikes: 0})};
-                        }),
-                        'appending'
-                    ]);
-                }
-            }).then(res => {
-                if (res[1] === 'adding') {
-                    return Promise.all([
-                        bot.db.table('strikes').get(guildID).run(),
-                        'updating'
-                    ]);
-                } else return null;
-            }).then(() => resolve()).catch(reject);
-        });
+            if (i > -1) {
+                let newNum = --res.users[i].strikes;
+
+                await bot.db.table('strikes').get(guildID).update(row => {
+                    return {users: row('users').changeAt(i, row('users')(i).merge({strikes: newNum}))};
+                }).run();
+            } else {
+                await bot.db.table('strikes').get(guildID).update(row => {
+                    return {users: row('users').append({id: userID, strikes: 0})};
+                }).run();
+            }
+        }
     };
 
     /**
@@ -338,62 +285,45 @@ module.exports = bot => {
      * 
      * @param {String} guildID ID of the guild.
      * @param {String} userID ID of the user.
-     * @returns {Promise} .
      */
-    bot.resetStrikes = (guildID, userID) => {
-        return new Promise((resolve, reject) => {
-            if (typeof guildID !== 'string') throw new TypeError('guildId is not a string.');
-            if (typeof userID !== 'string') throw new TypeError('userID is not a string.');
+    bot.resetStrikes = async (guildID, userID) => {
+        if (typeof guildID !== 'string') throw new TypeError('guildId is not a string.');
+        if (typeof userID !== 'string') throw new TypeError('userID is not a string.');
 
-            bot.db.table('strikes').get(guildID).run().then(res => {
-                if (!res) return Promise.all([
-                    bot.db.table('strikes').insert({id: guildID, users: [{id: userID, strikes: 0}]}).run(),
-                    'adding'
-                ]);
+        let res = await bot.db.table('strikes').get(guildID).run();
 
-                let i = res.users.indexOf(res.users.find(u => u.id === userID));
+        if (!res) {
+            await bot.db.table('strikes').insert({id: guildID, users: [{id: userID, strikes: 0}]}).run();
+        } else {
+            let i = res.users.indexOf(res.users.find(u => u.id === userID));
 
-                if (i > -1) {
-                    return Promise.all([
-                        bot.db.table('strikes').get(guildID).update(row => {
-                            return {users: row('users').changeAt(i, row('users')(i).merge({strikes: 0}))};
-                        }).run(),
-                        'updating'
-                    ]);
-                } else {
-                    return Promise.all([
-                        bot.db.table('strikes').get(guildID).update(row => {
-                            return {users: row('users').append({id: userID, strikes: 0})};
-                        }),
-                        'appending'
-                    ]);
-                }
-            }).then(res => {
-                if (res[1] === 'adding') {
-                    return Promise.all([
-                        bot.db.table('strikes').get(guildID).run(),
-                        'updating'
-                    ]);
-                } else return null;
-            }).then(() => resolve()).catch(reject);
-        });
+            if (i > -1) {
+                await bot.db.table('strikes').get(guildID).update(row => {
+                    return {users: row('users').changeAt(i, row('users')(i).merge({strikes: 0}))};
+                }).run();
+            } else {
+                await bot.db.table('strikes').get(guildID).update(row => {
+                    return {users: row('users').append({id: userID, strikes: 0})};
+                }).run();
+            }
+        }
     };
 
     /**
      * POST something to Hastebin.
      * 
      * @param {String} str Content to POST.
-     * @returns {Promise<String>} Returned key.
+     * @returns {String} Returned key.
      */
-    bot.hastePost = str => {
-        return new Promise((resolve, reject) => {
-            if (typeof str !== 'string') throw new TypeError('str is not a string.');
+    bot.hastePost = async str => {
+        if (typeof str !== 'string') throw new TypeError('str is not a string.');
 
-            got('https://hastebin.com/documents', {
-                method: 'POST',
-                body: str
-            }).then(res => resolve(JSON.parse(res.body).key)).catch(reject);
+        let res = await got('https://hastebin.com/documents', {
+            method: 'POST',
+            body: str
         });
+
+        return JSON.parse(res.body).key;
     };
 
     /**
@@ -480,7 +410,7 @@ module.exports = bot => {
         if (embed.description) flattened += `${embed.description}\n`;
         if (embed.fields) embed.fields.forEach(f => {
             flattened += !f.name.match(/^`.*`$/) ? `**${f.name}**\n` : `${f.name}\n`;
-            flattened += `${f.value}\n`
+            flattened += `${f.value}\n`;
         });
     
         if (embed.footer && !embed.timestamp) {
