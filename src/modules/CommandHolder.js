@@ -148,7 +148,7 @@ class CommandHolder {
                     this.commands[command] = cmd;
 
                     if (Array.isArray(cmd.aliases)) {
-                        for (let alias in cmd.aliases) {
+                        for (let alias of cmd.aliases) {
                             this.aliases[alias] = this.commands[command];
                             loadedAliases.push(alias);
                         }
