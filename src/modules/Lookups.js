@@ -80,10 +80,8 @@ class Lookups {
             } else if (members.length === 1) {
                 member = member[0];
             } else {
-                if (notFoundMsg) {
-                    await ctx.createMessage('User not found.');
-                    member = null;
-                }
+                if (notFoundMsg) await ctx.createMessage('User not found.');
+                member = null;
             }
         }
 
@@ -111,10 +109,8 @@ class Lookups {
             } else if (channels.length === 1) {
                 channel = channels[0];
             } else {
-                if (notFoundMsg) {
-                    await ctx.createMessage('Channel not found.');
-                    channel = null;
-                }
+                if (notFoundMsg) await ctx.createMessage('Channel not found.');
+                channel = null;
             }
         }
 
@@ -138,10 +134,8 @@ class Lookups {
         } else if (roles.length === 1) {
             role = roles[0];
         } else {
-            if (notFoundMsg) {
-                await ctx.send('Role not found.');
-                role = null;
-            }
+            if (notFoundMsg) await ctx.send('Role not found.');
+            role = null;
         }
 
         return role;
@@ -164,10 +158,8 @@ class Lookups {
         } else if (guilds.length === 1) {
             guild = guilds[0];
         } else {
-            if (notFoundMsg) {
-                await ctx.send('Server not found.');
-                guild = null;
-            }
+            if (notFoundMsg) await ctx.send('Server not found.');
+            guild = null;
         }
 
         return guild;
