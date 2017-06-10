@@ -78,7 +78,7 @@ module.exports = bot => {
                         value: '```js\n'
                         + `Code: ${resp.code}\n`
                         + `Message: ${resp.message}\n`
-                        + '```'
+                        + '```\n\u200b\n'
                         + 'This has been logged, but if you wish to report this now so it can get fixed faster, you can join my [**support server**](https://discord.gg/oneshot).'
                     }
                 ]
@@ -104,7 +104,7 @@ module.exports = bot => {
                         name: '\u200b',
                         value: '```js\n'
                         + `${err}\n`
-                        + '```'
+                        + '```\n\u200b\n'
                         + 'This has been logged, but if you wish to report this now so it can get fixed faster, you can join my [**support server**](https://discord.gg/oneshot).'
                     }
                 ]
