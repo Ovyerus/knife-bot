@@ -83,16 +83,19 @@ class CommandHolder {
      */
     loadModule(moduleName) {
         if (typeof moduleName !== 'string') throw new TypeError('moduleName is not a string.');
-        if (this.modules[moduleName]) throw new Error(`Module '${moduleName}' is already loaded.`);
+
+        let name = moduleName.split(/\\|\//).slice(-1)[0].slice(0, -3);
+
+        if (this.modules[name]) throw new Error(`Module '${name}' is already loaded.`);
 
         let module = require(moduleName);
 
         if (!module.commands) {
             delete require.cache[moduleName];
-            throw new Error(`Module '${moduleName.split(/\/|\\/g).slice(-1)[0]}' does not have a commands array.`);
+            throw new Error(`Module '${name}' does not have a commands array.`);
         } else if (!Array.isArray(module.commands)) {
             delete require.cache[moduleName];
-            throw new Error(`Command array for '${moduleName.split(/\/|\\/g).slice(-1)[0]}' is not an array.`);
+            throw new Error(`Command array for '${name}' is not an array.`);
         }
 
         if (typeof module.init === 'function') module.init(this[_bot]);
@@ -112,12 +115,12 @@ class CommandHolder {
             if (!module.main.main) {
                 command.main = async (bot, ctx) => {
                     let collect = [];
-                    let embed = {title: moduleName};
+                    let embed = {title: name};
 
                     for (let name in command.subcommands) {
                         let cmd = command.subcommands[name];
                         if ((cmd.owner || cmd.hidden) && !bot.isOwner(ctx.author.id)) continue;
-                        collect.push(`${moduleName} ${name}${cmd.usage ? ` ${cmd.usage}` : ''}\n\u200b - ${cmd.desc}`);
+                        collect.push(`${name} ${name}${cmd.usage ? ` ${cmd.usage}` : ''}\n\u200b - ${cmd.desc}`);
                     }
 
                     embed.description = `\`${collect.join('\n\n')}\``;
@@ -126,8 +129,8 @@ class CommandHolder {
                 };
             }
 
-            this.commands[moduleName] = command;
-            this.modules[moduleName] = [moduleName];
+            this.commands[name] = command;
+            this.modules[name] = [name];
         } else {
             for (let command of module.commands) {
                 let cmd = module[command];
@@ -152,16 +155,16 @@ class CommandHolder {
                 }
             }
 
-            this.modules[moduleName] = loadedCommands.concat(loadedAliases);
+            this.modules[name] = loadedCommands.concat(loadedAliases);
         }
 
-        if (!this.modules[moduleName]) {
-            delete this.modules[moduleName];
-            delete require.cache[moduleName];
+        if (!this.modules[name]) {
+            delete this.modules[name];
+            delete require.cache[name];
             return;
         }
 
-        logger.custom('blue', 'CommandHolder/loadModule', `Loaded module '${moduleName.split(/\/|\\/g).slice(-1)[0]}'`);
+        logger.custom('blue', 'CommandHolder/loadModule', `Loaded module '${name}'`);
     }
 
     /**
@@ -173,9 +176,12 @@ class CommandHolder {
      */
     unloadModule(moduleName) {
         if (typeof moduleName !== 'string') throw new TypeError('moduleName is not a string.');
-        if (!this.modules[moduleName]) throw new Error(`Module '${moduleName}' is not loaded.`);
 
-        for (let cmd of this.modules[moduleName]) {
+        let name = moduleName.split(/\\|\//).slice(-1)[0].slice(0, -3);
+
+        if (!this.modules[name]) throw new Error(`Module '${name}' is not loaded.`);
+
+        for (let cmd of this.modules[name]) {
             if (this.aliases[cmd]) {
                 delete this.aliases[cmd];
             } else if (this.commands[cmd]) {
@@ -183,9 +189,9 @@ class CommandHolder {
             }
         }
 
-        delete this.modules[moduleName];
+        delete this.modules[name];
         delete require.cache[moduleName];
-        logger.custom('blue', 'CommandHolder/removeModule', `Removed module '${moduleName}'`);
+        logger.custom('blue', 'CommandHolder/removeModule', `Removed module '${name}'`);
     }
 
     /**
@@ -196,7 +202,7 @@ class CommandHolder {
      * @throws {Error} Module must already be loaded.
      */
     reloadModule(moduleName) {
-        if (!this.modules[moduleName]) {
+        if (!this.modules[moduleName.split(/\/|\\/).slice(-1)[0].slice(0, -3)]) {
             this.loadModule(moduleName);
             return;
         }
