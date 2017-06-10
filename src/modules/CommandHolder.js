@@ -51,6 +51,9 @@ let _handlePermissions = Symbol();
  * 
  * @prop {Object} aliases Object mapping aliases to the name of their command.
  * @prop {Number} aliasesLength Amount of aliases currently registered.
+ * @prop {String[]} allAliases Sorted list of all names of aliases.
+ * @prop {String[]} allCommands Sorted list of all names of commands.
+ * @prop {String[]} allModules Sorted list of all names of modules.
  * @prop {Object} commands Object mapping command objects to their name.
  * @prop {Number} length Amount of commands currently loaded.
  * @prop {Object} modules Object mapping module names to and array of their commands.
@@ -407,6 +410,18 @@ class CommandHolder {
 
     get usedCommandOptions() {
         return ['desc', 'usage', 'owner', 'fixed', 'main', 'permissions'];
+    }
+
+    get allCommands() {
+        return Object.keys(this.commands).sort();
+    }
+
+    get allAliases() {
+        return Object.keys(this.aliases).sort();
+    }
+
+    get allModules() {
+        return Object.keys(this.modules).sort();
     }
 
     /**
