@@ -6,6 +6,10 @@ const PermissionMsgs = {
     manageMessages: {
         author: "This chopping board doesn't belong to you.\n**(You require the Manage Messages permission)**",
         self: "I can't cleanup this chopping board.\n**(I require the Manage Messages permission)**"
+    },
+    banMembers: {
+        author: 'You need heat-proof gloves to handle me.\n**(You require the Ban Members permission)**',
+        self: "I'm not hot enough to cut.\n**(I require the Ban Members permission)**"
     }
 };
 
@@ -205,6 +209,7 @@ class CommandHolder {
      * @throws {Error} Module must already be loaded.
      */
     reloadModule(moduleName) {
+        if (typeof moduleName !== 'string') throw new TypeError('moduleName is not a string.');
         if (!this.modules[moduleName.split(/\/|\\/).slice(-1)[0].slice(0, -3)]) {
             this.loadModule(moduleName);
             return;
@@ -250,11 +255,11 @@ class CommandHolder {
         } else if (cmd.owner && !this[_bot].isOwner(ctx.author.id)) {
             return; // eslint-disable-line
         } else {
-            if (!cmd.perissions || typeof cmd.permissions !== 'object') {
+            if (!cmd.permissions || typeof cmd.permissions !== 'object') {
                 await cmd.main(this[_bot], ctx);
                 logger.cmd(`${loggerPrefix(this[_bot], ctx)}Ran command '${ctx.cmd}'\n${ctx.cleanRaw}`);
             } else {
-                await this[_handlePermissions](ctx);
+                await this[_handlePermissions](cmd, ctx);
             }
         }
     }
