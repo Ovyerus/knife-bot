@@ -124,9 +124,8 @@ module.exports = bot => {
 
         let settings = {
             id: guildID,
-            actions: {mentions: {kick: 2, ban: 3}, copypasta: {kick: 2, ban: 3}, invites: {kick: 2, ban: 3}},
+            actions: {mentions: {kick: 2, ban: 3}, invites: {kick: 2, ban: 3}},
             mentions: {trigger: 5, enabled: false},
-            copypasta: {triggers: [], cooldog: false, enabled: false},
             invites: {enabled: false, fake: false},
             logChannel: null,
             exceptions: {
@@ -136,9 +135,7 @@ module.exports = bot => {
             },
             messages: {
                 invites: '{{mention}} please do not advertise here. Your message has been deleted and future offenses will be dealt with accordingly.',
-                mentions: '{{mention}} do not mass-mention users. Future offences will be dealt with accordingly.',
-                copypasta: '{{mention}} please do not post copypastas here. Future offences will be dealt with accordingly.',
-                diacritics: '{{mention}} please do not post characters or messages that abuse the use of diacritics. Future offences will be dealt with accordingly.'
+                mentions: '{{mention}} do not mass-mention users. Future offences will be dealt with accordingly.'
             }
         };
 
@@ -355,6 +352,20 @@ module.exports = bot => {
     bot.hasWantedPerms = msg => {
         let perms = msg.channel.guild.members.get(bot.user.id).permission;
         return perms.has('manageMessages') && perms.has('banMembers') && perms.has('kickMembers');
+    };
+
+    /**
+     * Check if a user is what appears to be a moderator.
+     * 
+     * @param {Eris.Member} member Member to check.
+     */
+    bot.isModerator = member => {
+        let isModerator = false;
+        let roles = member.roles.map(r => member.guild.roles.get(r));
+
+        for (let role of roles) {
+            
+        }
     };
 
     bot.hasPermission = (permission, channel) => {
