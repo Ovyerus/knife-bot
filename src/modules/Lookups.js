@@ -88,7 +88,7 @@ class Lookups {
             if (members.length > 1) {
                 member = await this.__prompt(ctx, who, members, 'members');
             } else if (members.length === 1) {
-                member = member[0];
+                member = members[0];
             } else {
                 if (notFoundMsg) await ctx.createMessage('User not found.');
                 member = null;

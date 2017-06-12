@@ -1,6 +1,7 @@
 const Actions = ['kicked', 'banned'];
 const Months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const InviteRegex = /(?:https:\/\/)?(?:discord\.gg|discordapp\.com\/invite)\/((?:[A-Za-z0-9-])+)/i;
+const DiacriticRegex = /[\u{0300}-\u{036F}]/u;
 
 module.exports = bot => {
     bot.on('invites', async msg => {

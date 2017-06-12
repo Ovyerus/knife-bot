@@ -415,7 +415,7 @@ exports.exceptions = {
             let channel = await bot.lookups.channelLookup(ctx, ctx.raw.split(' ').slice(2).join(' '));
 
             if (!channel) return;
-            if (channel.type !== 2) return await ctx.createMessage('I cannot add exceptions for voice channels.');
+            if (channel.type === 2) return await ctx.createMessage('I cannot add exceptions for voice channels.');
 
             let settings = ctx.settings;
 
