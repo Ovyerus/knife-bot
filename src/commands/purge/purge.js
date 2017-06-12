@@ -56,7 +56,7 @@ exports.all = {
             let m = await ctx.createMessage(`Purged **${amt}** message${amt === 1 ? '' : 's'}.`);
             await deleteDelay(m);
         } else if (num <= 100 && num >= 1) {
-            let amt = await ctx.channel.purge(num)
+            let amt = await ctx.channel.purge(num);
             let m = await ctx.createMessage(`Purged **${amt}** message${amt === 1 ? '' : 's'}.`);
             await deleteDelay(m);
         } else {

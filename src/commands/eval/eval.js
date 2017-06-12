@@ -96,7 +96,7 @@ async function sendEval(bot, ctx, embed, returned) {
     if ((returned instanceof IncomingMessage || returned instanceof PassThrough) && returned.requestUrl) {
         strN = returned.headers['content-type'].split(';')[0] === 'application/json' ? util.inspect(JSON.parse(returned.body), {depth: 1}) : returned.body;
     } else {
-        strN = util.inspect(returned, {depth: 1})
+        strN = util.inspect(returned, {depth: 1});
     }
 
     strN = strN.replace(ReplaceRegex.token, '(token)');

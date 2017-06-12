@@ -10,9 +10,7 @@ module.exports = bot => {
     });
 
     bot.on('guildDelete', g => {
-        if (g.members.filter(m => m.bot).length >= Math.ceil(g.memberCount / 2)) {
-            return;
-        } else {
+        if (!(g.members.filter(m => m.bot).length >= Math.ceil(g.memberCount / 2))) {
             bot.editStatus('online', {name: `${bot.currentGame} | ${bot.guilds.size} servers`});
             bot.postGuildCount();
         }
