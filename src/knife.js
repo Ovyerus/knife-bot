@@ -27,6 +27,7 @@ bot.config = config;
 bot.redHot = '🔥 1⃣0⃣0⃣0⃣ 🌡 🔪'; 
 bot.hotColour = 16665427;
 bot.commands = new (require(`${__dirname}/modules/CommandHolder`)).CommandHolder(bot);
+bot.lookups = new (require(`${__dirname}/modules/Lookups`))(bot);
 bot.db = require('rethinkdbdash')(config.rethinkOptions);
 bot.rest = new Eris('Bot ' + config.token, {
     restMode: true
