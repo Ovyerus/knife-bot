@@ -135,7 +135,8 @@ module.exports = bot => {
             },
             messages: {
                 invites: '{{mention}} please do not advertise here. Your message has been deleted and future offenses will be dealt with accordingly.',
-                mentions: '{{mention}} do not mass-mention users. Future offences will be dealt with accordingly.'
+                mentions: '{{mention}} do not mass-mention users. Future offences will be dealt with accordingly.',
+                diacritics: '{{mention}} please do not post characters or messages that abuse the use of diacritics. Future offences will be dealt with accordingly.'
             }
         };
 
@@ -360,12 +361,14 @@ module.exports = bot => {
      * @param {Eris.Member} member Member to check.
      */
     bot.isModerator = member => {
-        let isModerator = false;
         let roles = member.roles.map(r => member.guild.roles.get(r));
 
-        for (let role of roles) {
-            
-        }
+        roles = roles.filter(r => {
+            return /mod(s|erators?)?|admin(s|trators?)?/i.test(r.name.replace(/\u200b/g, '')) ||
+            (r.permissions.has('banMembers') && r.permissions.has('kickMembers') && r.permissions.has('manageMessages'));
+        });
+
+        return roles.length > 0;
     };
 
     bot.hasPermission = (permission, channel) => {
