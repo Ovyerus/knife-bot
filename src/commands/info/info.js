@@ -5,23 +5,21 @@ exports.commands = ['info'];
 exports.info = {
     desc: 'Display information about the bot.',
     permissions: {node: 'general.info'},
-    main(bot, ctx) {
-        return new Promise((resolve, reject) => {
-            let roleColour = ctx.guildBot.roles.sort((a, b) => ctx.guild.roles.get(b).position - ctx.guild.roles.get(a).position)[0];
-            roleColour = roleColour ? ctx.guild.roles.get(roleColour).colour : 0;
+    async main(bot, ctx) {
+        let roleColour = ctx.guildBot.roles.sort((a, b) => ctx.guild.roles.get(b).position - ctx.guild.roles.get(a).position)[0];
+        roleColour = roleColour ? ctx.guild.roles.get(roleColour).colour : 0;
 
-            ctx.createMessage({embed: {
-                title: `${bot.user.username} Info`,
-                thumbnail: {url: bot.user.dynamicAvatarURL('png', 1024)},
-                color: roleColour,
-                fields: [
-                    {name: 'Guilds', value: bot.guilds.size, inline: true},
-                    {name: 'Users Seen', value: bot.users.size, inline: true},
-                    {name: 'Uptime', value: msToTime(bot.uptime), line: true},
-                    {name: 'Memory Usage', value: prettyBytes(process.memoryUsage().rss), inline: true}
-                ]
-            }}).then(resolve).catch(reject);
-        });
+        await ctx.createMessage({embed: {
+            title: `${bot.user.username} Info`,
+            thumbnail: {url: bot.user.dynamicAvatarURL('png', 1024)},
+            color: roleColour,
+            fields: [
+                {name: 'Guilds', value: bot.guilds.size, inline: true},
+                {name: 'Users Seen', value: bot.users.size, inline: true},
+                {name: 'Uptime', value: msToTime(bot.uptime), line: true},
+                {name: 'Memory Usage', value: prettyBytes(process.memoryUsage().rss), inline: true}
+            ]
+        }});
     }
 };
 
