@@ -201,7 +201,7 @@ module.exports = bot => {
      * @returns {Promise<(Number|Object[])>} Strikes for the guild or user.
      */
     bot.getStrikes = async (guildID, userID) => {
-        let res = bot.db.table('strikes').get(guildID).run();
+        let res = await bot.db.table('strikes').get(guildID).run();
 
         if (!res) {
             await bot.db.table('strikes').insert({id: guildID, users: []});

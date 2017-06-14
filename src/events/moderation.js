@@ -1,7 +1,7 @@
 const Actions = ['kicked', 'banned'];
 const Months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const InviteRegex = /(?:https:\/\/)?(?:discord\.gg|discordapp\.com\/invite)\/((?:[A-Za-z0-9-])+)/i;
-const DiacriticRegex = /[\u{0300}-\u{036F}]/u;
+const DiacriticRegex = /[\u{0300}-\u{036F}\u{0489}]/u;
 
 module.exports = bot => {
     bot.on('invites', async msg => {
@@ -22,7 +22,7 @@ module.exports = bot => {
                 await msg.delete();
                 await punishChain(bot, msg, settings, 'invites');
             } catch(err) {
-                if (err.response && typeof err.response === 'string' && JSON.parse(err.message).message === 'Unknown Invite') {
+                if (err.response && typeof err.response === 'string' && JSON.parse(err.response).message === 'Unknown Invite') {
                     if (settings.invites.fake && noExcepts(settings)) {
                         try {
                             await msg.delete();
@@ -85,7 +85,10 @@ function channelExcept(res, channel) {
 }
 
 function roleExcept(res, msg) {
-    for (let role of msg.member.roles) if (res.exceptions.roles.includes(role)) return true;
+    for (let role of msg.member.roles) {
+        if (res.exceptions.roles.includes(role)) return true;
+    }
+
     return false;
 }
 
