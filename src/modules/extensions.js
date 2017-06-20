@@ -201,6 +201,8 @@ module.exports = bot => {
      * @returns {Promise<(Number|Object[])>} Strikes for the guild or user.
      */
     bot.getStrikes = async (guildID, userID) => {
+        if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
+
         let res = await bot.db.table('strikes').get(guildID).run();
 
         if (!res) {
@@ -223,7 +225,7 @@ module.exports = bot => {
      * @param {String} userID ID of the user.
      */
     bot.incrementStrikes = async (guildID, userID) => {
-        if (typeof guildID !== 'string') throw new TypeError('guildId is not a string.');
+        if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
         if (typeof userID !== 'string') throw new TypeError('userID is not a string.');
 
         let res = await bot.db.table('strikes').get(guildID).run();
@@ -254,7 +256,7 @@ module.exports = bot => {
      * @param {String} userID ID of the user.
      */
     bot.decrementStrikes = async (guildID, userID) => {
-        if (typeof guildID !== 'string') throw new TypeError('guildId is not a string.');
+        if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
         if (typeof userID !== 'string') throw new TypeError('userID is not a string.');
 
         let res = await bot.db.table('strikes').get(guildID).run();
@@ -359,6 +361,7 @@ module.exports = bot => {
      * Check if a user is what appears to be a moderator.
      * 
      * @param {Eris.Member} member Member to check.
+     * @returns {Boolean} .
      */
     bot.isModerator = member => {
         let roles = member.roles.map(r => member.guild.roles.get(r));
@@ -369,36 +372,6 @@ module.exports = bot => {
         });
 
         return roles.length > 0;
-    };
-
-    bot.hasPermission = (permission, channel) => {
-        // Check if permission actually exists
-        if (!Object.keys(Eris.Constants.Permissions).includes(permission)) return false;
-
-        let allowed = false;
-        let guildBot = channel.guild.members.get(bot.user.id);
-
-        if (guildBot.permission.has(permission)) allowed = true;
-            
-        // Channel overwrites
-        if (!guildBot.permission.has('administrator')) {
-            let everyone = channel.guild.roles.find(r => r.name === '@everyone');
-            let chanPerms = channel.permissionOverwrites.filter(v => {
-                return (v.type === 'member' && v.id === guildBot.id) || (v.type === 'role' && (guildBot.roles.includes(v.id) || v.id === everyone.id));
-            });
-
-            chanPerms = chanPerms.map(p => p.json);
-
-            for (let permGroup of chanPerms) {
-                if (permGroup[permission] === true) {
-                    allowed = true;
-                } else if (permGroup[permission] === false) {
-                    allowed = false;
-                }
-            }
-        }
-
-        return allowed;
     };
 
     /**

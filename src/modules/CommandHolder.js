@@ -584,52 +584,10 @@ class Context {
         if (!Object.keys(Eris.Constants.Permissions).includes(permission)) return false;
         if (!['self', 'author', 'both'].includes(who)) return false;
 
-        let allowed = false;
-
         if (who === 'self') {
-            if (this.guildBot.permission.has(permission)) allowed = true;
-            
-            // Channel overwrites
-            if (!this.guildBot.permission.has('administrator')) {
-                let everyone = this.guild.roles.find(r => r.name === '@everyone');
-                let chanPerms = this.channel.permissionOverwrites.filter(v => {
-                    return (v.type === 'member' && v.id === this.guildBot.id) || (v.type === 'role' && (this.guildBot.roles.includes(v.id) || v.id === everyone.id));
-                });
-
-                chanPerms = chanPerms.map(p => p.json);
-
-                for (let permGroup of chanPerms) {
-                    if (permGroup[permission] === true) {
-                        allowed = true;
-                    } else if (permGroup[permission] === false) {
-                        allowed = false;
-                    }
-                }
-            }
-
-            return allowed;
+            return this.channel.permissionsOf(this.client.user.id).has(permission);
         } else if (who === 'author') {
-            if (this.member.permission.has(permission)) allowed = true;
-
-            // Channel overwrites
-            if (!this.member.permission.has('administrator')) {
-                let everyone = this.guild.roles.find(r => r.name === '@everyone');
-                let chanPerms = this.channel.permissionOverwrites.filter(v => {
-                    return (v.type === 'member' && v.id === this.member.id) || (v.type === 'role' && (this.member.roles.includes(v.id) || v.id === everyone.id));
-                });
-
-                chanPerms = chanPerms.map(p => p.json);
-
-                for (let permGroup of chanPerms) {
-                    if (permGroup[permission] === true) {
-                        allowed = true;
-                    } else if (permGroup[permission] === false) {
-                        allowed = false;
-                    }
-                }
-            }
-
-            return allowed;
+            return this.channel.permissionsOf(this.author.id).has(permission);
         } else if (who === 'both') {
             return this.hasPermission(permission) && this.hasPermission(permission, 'author');
         }
