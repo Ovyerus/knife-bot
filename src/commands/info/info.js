@@ -4,7 +4,6 @@ exports.commands = ['info'];
 
 exports.info = {
     desc: 'Display information about the bot.',
-    permissions: {node: 'general.info'},
     async main(bot, ctx) {
         let roleColour = ctx.guildBot.roles.sort((a, b) => ctx.guild.roles.get(b).position - ctx.guild.roles.get(a).position)[0];
         roleColour = roleColour ? ctx.guild.roles.get(roleColour).colour : 0;
@@ -16,7 +15,7 @@ exports.info = {
             fields: [
                 {name: 'Guilds', value: bot.guilds.size, inline: true},
                 {name: 'Users Seen', value: bot.users.size, inline: true},
-                {name: 'Uptime', value: msToTime(bot.uptime), line: true},
+                {name: 'Uptime', value: msToTime(bot.uptime), inline: true},
                 {name: 'Memory Usage', value: prettyBytes(process.memoryUsage().rss), inline: true}
             ]
         }});
