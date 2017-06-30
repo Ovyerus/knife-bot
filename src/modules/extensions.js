@@ -124,9 +124,10 @@ module.exports = bot => {
 
         let settings = {
             id: guildID,
-            actions: {mentions: {kick: 2, ban: 3}, invites: {kick: 2, ban: 3}},
+            actions: {mentions: {kick: 2, ban: 3}, invites: {kick: 2, ban: 3}, diacritics: {kick: 2, ban: 3}},
             mentions: {trigger: 5, enabled: false},
             invites: {enabled: false, fake: false},
+            diacritics: {trigger: 10, enabled: false},
             logChannel: null,
             exceptions: {
                 users: [],
@@ -330,7 +331,7 @@ module.exports = bot => {
      * Check if a user is blacklisted.
      * 
      * @param {String} userID ID of the user to check.
-     * @returns {Boolean} .
+     * @returns {Boolean} If the user is blacklisted
      */
     bot.isBlacklisted = userID => {
         return JSON.parse(fs.readFileSync(`${__baseDir}/blacklist.json`)).includes(userID);
@@ -340,7 +341,7 @@ module.exports = bot => {
      * Check if a user is the bot owner.
      * 
      * @param {String} userID ID of the user to check.
-     * @returns {Boolean} .
+     * @returns {Boolean} If the user is the bot owner or not.
      */
     bot.isOwner = userID => {
         return userID === bot.config.owner;
@@ -350,7 +351,7 @@ module.exports = bot => {
      * Check if the bot has the perms wanted to work properly.
      * 
      * @param {Eris.Message} msg Message to use.
-     * @returns {Boolean} .
+     * @returns {Boolean} If the bot has the wanted perms or not.
     */
     bot.hasWantedPerms = msg => {
         let perms = msg.channel.guild.members.get(bot.user.id).permission;
@@ -361,7 +362,7 @@ module.exports = bot => {
      * Check if a user is what appears to be a moderator.
      * 
      * @param {Eris.Member} member Member to check.
-     * @returns {Boolean} .
+     * @returns {Boolean} If the member seems to be a moderator or not.
      */
     bot.isModerator = member => {
         let roles = member.roles.map(r => member.guild.roles.get(r));
