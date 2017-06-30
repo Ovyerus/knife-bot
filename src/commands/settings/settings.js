@@ -448,7 +448,7 @@ exports.exceptions = {
 
                 await bot.editSettings(ctx.guild.id, settings);
                 await ctx.createMessage(`Added exception for role ${role.mentionable ? `**${role.name}**`: role.mention}.`);
-            } else if (settings.exceptions.roless.includes(role.id) && ctx.args[1] === 'add') {
+            } else if (settings.exceptions.roles.includes(role.id) && ctx.args[1] === 'add') {
                 await ctx.createMessage('There is already an exception for that role.');
             } else if (settings.exceptions.roles.includes(role.id) && ctx.args[1] === 'remove') {
                 settings.exceptions.roles.splice(settings.exceptions.indexOf(role.id), 1);
