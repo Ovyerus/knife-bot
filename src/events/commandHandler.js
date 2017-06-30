@@ -4,22 +4,16 @@ const {Context} = require(`${__baseDir}/modules/CommandHolder`);
 module.exports = bot => {
     bot.on('messageCreate', async msg => {
         if (!msg.author) console.log(msg);
-
         if (!bot.useCommands || !msg.author || msg.author.id === bot.user.id) return;
-
         if (!msg.channel.guild) {
             logger.custom('cyan', 'dm', `${loggerPrefix(msg)}${msg.cleanContent}`);
             return;
         }
-
         if (/(?:https:\/\/)?(?:discord\.gg|discordapp\.com\/invite)\/((?:[A-Za-z0-9]|-)+)/i.test(msg.content)) bot.emit('invites', msg);
-
         if (msg.mentions.filter(u => u.id !== bot.user.id && u.id !== msg.author.id && !u.bot).length > 0) bot.emit('mentions', msg);
-
         if (bot.isBlacklisted(msg.author.id) || msg.author.bot) return;
 
         msg.content = parseTulpa(msg.content);
-
         let cleaned = parsePrefix(msg.content, bot.config.prefixes);
 
         if (cleaned === msg.content) return;
