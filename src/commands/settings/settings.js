@@ -388,9 +388,15 @@ exports.exceptions = {
         } else if (ctx.args[0] === 'users') {
             if (!ctx.raw.split(' ').slice(2).join(' ')) return await ctx.createMesage(`Please give me a user to ${ctx.args[1]} an exception for.`);
 
-            let user = await bot.lookups.memberLookup(ctx, ctx.raw.split(' ').slice(2).join(' '));
+            let user = await bot.lookups.memberLookup(ctx, ctx.raw.split(' ').slice(2).join(' '), false);
 
-            if (!user) return;
+            if (!user) {
+                try {
+                    user = await bot.rest.getRESTUser(ctx.raw.split(' ').slice(2).join(' '));
+                } catch(_) {
+                    return await ctx.createMessage('User not found.');
+                }
+            }
 
             let settings = ctx.settings;
 
@@ -402,7 +408,7 @@ exports.exceptions = {
             } else if (settings.exceptions.users.includes(user.id) && ctx.args[1] === 'add') {
                 await ctx.createMessage('There is already an exception for that user.');
             } else if (settings.exceptions.users.includes(user.id) && ctx.args[1] === 'remove') {
-                settings.exceptions.users.splice(settings.exceptions.indexOf(user.id), 1);
+                settings.exceptions.users.splice(settings.exceptions.users.indexOf(user.id), 1);
 
                 await bot.editSettings(ctx.guild.id, settings);
                 await ctx.createMessage(`Removed exception for user **${bot.formatUser(user)}**.`);
@@ -427,7 +433,7 @@ exports.exceptions = {
             } else if (settings.exceptions.channels.includes(channel.id) && ctx.args[1] === 'add') {
                 await ctx.createMessage('There is already an exception for that channel.');
             } else if (settings.exceptions.channels.includes(channel.id) && ctx.args[1] === 'remove') {
-                settings.exceptions.channels.splice(settings.exceptions.indexOf(channel.id), 1);
+                settings.exceptions.channels.splice(settings.exceptions.channels.indexOf(channel.id), 1);
 
                 await bot.editSettings(ctx.guild.id, settings);
                 await ctx.createMessage(`Removed exception for channel <#${channel.id}>.`);
@@ -451,7 +457,7 @@ exports.exceptions = {
             } else if (settings.exceptions.roles.includes(role.id) && ctx.args[1] === 'add') {
                 await ctx.createMessage('There is already an exception for that role.');
             } else if (settings.exceptions.roles.includes(role.id) && ctx.args[1] === 'remove') {
-                settings.exceptions.roles.splice(settings.exceptions.indexOf(role.id), 1);
+                settings.exceptions.roles.splice(settings.exceptions.users.indexOf(role.id), 1);
 
                 await bot.editSettings(ctx.guild.id, settings);
                 await ctx.createMessage(`Removed exception for role ${role.mentionable ? `**${role.name}**`: role.mention}.`);
