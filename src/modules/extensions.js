@@ -373,44 +373,4 @@ module.exports = bot => {
 
         return roles.length > 0;
     };
-
-    /**
-     * Flattens an embed into plain text to use when the bot can't use embeds.
-     * 
-     * @param {Object} embed The embed to flatten. Must be a valid Discord embed object.
-     * @returns {String} The flattened embed.
-     * @see https://discordapp.com/developers/docs/resources/channel#embed-object
-     */
-    bot.flattenEmbed = embed => {
-        let flattened = '';
-
-        if (embed.author) {
-            flattened += `**${embed.author.name}`;
-            flattened += embed.author.url ? ` <${embed.author.url}>**\n` : '**\n';
-        }
-
-        if (embed.title) {
-            flattened += `**${embed.title}`;
-            flattened += embed.url ? ` <${embed.url}>**\n\n` : '**\n\n';
-        }
-
-        if (embed.description) flattened += `${embed.description}\n`;
-        if (embed.fields) embed.fields.forEach(f => {
-            flattened += !f.name.match(/^`.*`$/) ? `**${f.name}**\n` : `${f.name}\n`;
-            flattened += `${f.value}\n`;
-        });
-    
-        if (embed.footer && !embed.timestamp) {
-            flattened += `${embed.footer.text}\n`;
-        } else if (!embed.footer && embed.timestamp) {
-            flattened += `${embed.timestamp}\n`;
-        } else {
-            flattened += `\n${embed.footer.text} | ${embed.timestamp}\n`;
-        }
-
-        if (embed.thumbnail) flattened += `${embed.thumbnail.url}\n`;
-        if (embed.image) flattened += `${embed.image.url}\n`;
-
-        return flattened;
-    };
 };

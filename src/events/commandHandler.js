@@ -85,7 +85,7 @@ module.exports = bot => {
             };
 
             if (!bot.hasPermission('embedLinks', msg.channel)) {
-                let content = bot.flattenEmbed(embed);
+                let content = Context.flattenEmbed(embed);
                 await msg.channel.createMessage(content);
             } else {
                 await msg.channel.createMessage({embed});
@@ -111,7 +111,7 @@ module.exports = bot => {
             };
 
             if (!bot.hasPermission('embedLinks', msg.channel)) {
-                let content = bot.flattenEmbed(embed);
+                let content = Context.flattenEmbed(embed);
                 await msg.channel.createMessage(content);
             } else {
                 await msg.channel.createMessage({embed});
