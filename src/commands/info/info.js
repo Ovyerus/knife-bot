@@ -10,7 +10,7 @@ exports.info = {
 
         await ctx.createMessage({embed: {
             title: `${bot.user.username} Info`,
-            thumbnail: {url: bot.user.dynamicAvatarURL('png', 1024)},
+            thumbnail: {url: bot.user.avatarURL},
             color: roleColour,
             fields: [
                 {name: 'Guilds', value: bot.guilds.size, inline: true},
