@@ -1,7 +1,7 @@
 const Actions = ['kicked', 'banned'];
 const Months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const InviteRegex = /(?:https:\/\/)?(?:discord\.gg|discordapp\.com\/invite)\/((?:[A-Za-z0-9-])+)/i;
-const DiacriticRegex = /[\u{0300}-\u{036F}\u{0489}]/u; // eslint-disable-line
+const DiacriticRegex = /[\u{0300}-\u{036F}\u{0489}]/gu; // eslint-disable-line
 
 module.exports = bot => {
     bot.on('invites', async msg => {
@@ -56,6 +56,27 @@ module.exports = bot => {
         }
     });
 
+    bot.on('diacritics', async msg => {
+        if (!bot.hasWantedPerms(msg) || msg.author.id === msg.channel.guild.ownerID) return;
+
+        let settings = await bot.getSettings(msg.channel.guild.id);
+
+        if (!settings.diacritics.enabled) return;
+        if (userExcept(settings, msg.author.id) || roleExcept(settings, msg) || channelExcept(settings, msg.channel.id)) return;
+
+        let diacritics = msg.content.replace(DiacriticRegex, '');
+
+        if (msg.content.length == diacritics.length) return;
+        if (msg.content.length - diacritics.length >= settings.diacritics.trigger) {
+            try {
+                await msg.delete();
+                await punishChain(bot, msg, settings, 'diacritics', `(${diacritics.length} diacritics)`);
+            } catch(err) {
+                logger.error(err.stack);
+            }
+        }
+    });
+
     bot.on('log', e => {
         if (!e.settings.logChannel || !e.guild.channels.get(e.settings.logChannel) || !e.guild.channels.get(e.settings.logChannel).permissionsOf(bot.user.id).has('sendMessages')) return;
 
@@ -81,7 +102,6 @@ function userExcept(res, user) {
 
 function roleExcept(res, msg) {
     for (let role of msg.member.roles) if (res.exceptions.roles.includes(role)) return true;
-
     return false;
 }
 
