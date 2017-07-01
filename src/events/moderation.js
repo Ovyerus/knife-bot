@@ -66,7 +66,7 @@ module.exports = bot => {
 
         let diacritics = msg.content.replace(DiacriticRegex, '');
 
-        if (msg.content.length == diacritics.length) return;
+        if (msg.content.length === diacritics.length) return;
         if (msg.content.length - diacritics.length >= settings.diacritics.trigger) {
             try {
                 await msg.delete();
