@@ -1,0 +1,16 @@
+{
+    "ignore": [
+        "/commands/*",
+        "/logs/*",
+        "/node_modules/*",
+        "/unloadedCommands.json",
+        "/blacklist.json"
+    ],
+    "watch": [
+        "knife.js"
+    ],
+    "env": {
+        "NODE_ENV": "development"
+    },
+    "verbose": true
+}

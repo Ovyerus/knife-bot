@@ -1,0 +1,5 @@
+/commands/*
+/logs/*
+/node_modules/*
+/unloadedCommands.json
+/blacklist.json
