@@ -4,6 +4,7 @@ exports.loadAsSubcommands = true;
 exports.commands = [
     'invites',
     'mentions',
+    'diacritics',
     'exceptions',
     'channel'
 ];
@@ -35,6 +36,12 @@ exports.main = {
                     value: 'Prevent people from mass-mentioning/spam-mentioning roles and users.\n'
                     + `Status: **${States[ctx.settings.mentions.enabled]}**\n`
                     + 'Run `settings mentions` to view settings.'
+                },
+                {
+                    name: '`Spammy Diacritics`',
+                    value: 'Prevent people from using potentially spammy diacritics.\n'
+                    + `Status: **${States[ctx.settings.diacritics.enabled]}**\n`
+                    + 'Run `settings diacritics` to view settings.'
                 }
             ];
 
@@ -132,10 +139,11 @@ exports.invites = {
             } else if (num >= ctx.settings.actions.invites.ban) {
                 await ctx.createMessage('You cannot set the kick limit to, or higher than the ban limit.');
             } else {
-                let {invites, mentions} = ctx.settings.actions;
+                let {invites, mentions, diacritics} = ctx.settings.actions;
                 let settings = Object.assign({}, ctx.settings, {actions: {
                     invites: {kick: num, ban: invites.ban},
-                    mentions
+                    mentions,
+                    diacritics
                 }});
 
                 await bot.editSettings(ctx.guild.id, settings);
@@ -156,10 +164,11 @@ exports.invites = {
             } else if (num === 0) {
                 await ctx.createMessage('You cannot disable banning for invites (You can however set it to a ridiculously high number. This is a result of the dev being lazy atm. Might change in the future.).');
             } else {
-                let {invites, mentions} = ctx.settings.actions;
+                let {invites, mentions, diacritics} = ctx.settings.actions;
                 let settings = Object.assign({}, ctx.settings, {actions: {
                     invites: {kick: invites.kick, ban: num},
-                    mentions
+                    mentions,
+                    diacritics
                 }});
 
                 await bot.editSettings(ctx.guild.id, settings);
@@ -216,7 +225,7 @@ exports.mentions = {
             }
         } else if (ctx.args[0] === 'disable') {
             if (ctx.settings.mentions.enabled) {
-                await bot.editSettings(ctx.guild.id, {invites: {enabled: false, fake: ctx.settings.invites.fake}});
+                await bot.editSettings(ctx.guild.id, {mentions: {enabled: true, trigger: ctx.settings.mentions.trigger}});
                 await ctx.createMessage('I will now stop cutting through mass mentions.');
             } else {
                 await ctx.createMessage("I wasn't cutting through mass mentions to begin with.");
@@ -227,7 +236,7 @@ exports.mentions = {
             if (isNaN(num)) {
                 await ctx.createMesage('You can only set trigger to a valid number.');
             } else if (num === 0) {
-                await ctx.createMessage('You cannot set trigger to 0. If you wish to disable mass mention blocking, run `settings channel disable`.');
+                await ctx.createMessage('You cannot set trigger to 0. If you wish to disable mass mention blocking, run `settings mentions disable`.');
             } else {
                 await bot.editSettings(ctx.guild.id, {mentions: {enabled: ctx.settings.mentions.enabled, trigger: num}});
                 await ctx.createMessage(`Set trigger limit to **${num}**.`);
@@ -240,10 +249,11 @@ exports.mentions = {
             } else if (num >= ctx.settings.actions.mentions.ban) {
                 await ctx.createMessage('You cannot set the kick limit to, or higher than the ban limit.');
             } else {
-                let {invites, mentions} = ctx.settings.actions;
+                let {invites, mentions, diacritics} = ctx.settings.actions;
                 let settings = Object.assign({}, ctx.settings, {actions: {
                     invites,
-                    mentions: {kick: num, ban: mentions.kick}
+                    mentions: {kick: num, ban: mentions.kick},
+                    diacritics
                 }});
 
                 await bot.editSettings(ctx.guild.id, settings);
@@ -264,10 +274,121 @@ exports.mentions = {
             } else if (num === 0) {
                 await ctx.createMessage('You cannot disable banning for mentions (You can however set it to a ridiculously high number).');
             } else {
-                let {invites, mentions} = ctx.settings.actions;
+                let {invites, mentions, diacritics} = ctx.settings.actions;
                 let settings = Object.assign({}, ctx.settings, {actions: {
                     invites,
-                    mentions: {kick: mentions.kick, ban: num}
+                    mentions: {kick: mentions.kick, ban: num},
+                    diacritics
+                }});
+
+                await bot.editSettings(ctx.guild.id, settings);
+                await  ctx.createMessage(`Set ban limit to **${num}**.`);
+            }
+        }
+    }
+};
+
+exports.diacritics = {
+    desc: 'Edit diacritics settings for the bot.',
+    usage: '[enable | disable | trigger <amount> | kick <amount> | ban <amount>]',
+    async main(bot, ctx) {
+        if (!['enable', 'disable', 'trigger'].includes(ctx.args[0])) {
+            let embed = {
+                title: 'Server Settings - Diacritics',
+                description: `Showing current diacritics settings for **${ctx.guild.name}**.`,
+                footer: {text: "'Amount to Trigger' is how many diacritics are needed in one message in order to trigger."},
+                fields: [
+                    {
+                        name: '`Status`',
+                        value: `**${States[ctx.settings.diacritics.enabled]}**\n`
+                        + 'Key: `enable|disable`',
+                        inline: true
+                    },
+                    {
+                        name: '`Amount to Trigger`',
+                        value: `**${ctx.settings.diacritics.trigger}**\n`
+                        + 'Key: `trigger <number>`',
+                        inline: true
+                    },
+                    {
+                        name: '`Kick At`',
+                        value: `**${ctx.settings.actions.diacritics.kick === 0 ? '0 (disabled)' : ctx.settings.actions.diacritics.kick}** offences.\n`
+                        + 'Key `kick <number>`',
+                        inline: true
+                    },
+                    {
+                        name: '`Ban At`',
+                        value: `**${ctx.settings.actions.diacritics.ban === 0 ? '0 (disabled)' : ctx.settings.actions.diacritics.ban}** offences.\n`
+                        + 'Key `ban <number>`',
+                        inline: true
+                    }
+                ]
+            };
+
+            await ctx.createMessage({embed});
+        } else if (ctx.args[0] === 'enable') {
+            if (!ctx.settings.diacritics.enabled) {
+                await bot.editSettings(ctx.guild.id, {diacritics: {enabled: true, trigger: ctx.settings.diacritics.trigger}});
+                await ctx.createMessage('I will now start cutting through spammy diacritic usage.\nPlease make sure that I have the following permissions: **Ban Members**, **Kick Members** and **Manage Messages**.');
+            } else {
+                await ctx.createMessage('I am already cutting through spammy diacritics.');
+            }
+        } else if (ctx.args[0] === 'disable') {
+            if (ctx.settings.diacritics.enabled) {
+                await bot.editSettings(ctx.guild.id, {diacritics: {enabled: false, fake: ctx.settings.diacritics.fake}});
+                await ctx.createMessage('I will now stop cutting through spammy diacritics.');
+            } else {
+                await ctx.createMessage("I wasn't cutting through spammy diacritics to begin with.");
+            }
+        } else if (ctx.args[0] === 'trigger') {
+            let num = Number(Math.abs(ctx.args[1]).toFixed(0));
+
+            if (isNaN(num)) {
+                await ctx.createMesage('You can only set trigger to a valid number.');
+            } else if (num === 0) {
+                await ctx.createMessage('You cannot set trigger to 0. If you wish to disable spammy diacritics blocking, run `settings diacritics disable`.');
+            } else {
+                await bot.editSettings(ctx.guild.id, {diacritics: {enabled: ctx.settings.diacritics.enabled, trigger: num}});
+                await ctx.createMessage(`Set trigger limit to **${num}**.`);
+            }
+        } else if (ctx.args[0] === 'kick') {
+            let num = Number(Math.abs(ctx.args[1]).toFixed(0));
+
+            if (isNaN(num)) {
+                await ctx.createMessage('You can only set kick to a valid number.');
+            } else if (num >= ctx.settings.actions.diacritics.ban) {
+                await ctx.createMessage('You cannot set the kick limit to, or higher than the ban limit.');
+            } else {
+                let {invites, mentions, diacritics} = ctx.settings.actions;
+                let settings = Object.assign({}, ctx.settings, {actions: {
+                    invites,
+                    mentions,
+                    diacritics: {kick: num, ban: diacritics.kick}
+                }});
+
+                await bot.editSettings(ctx.guild.id, settings);
+
+                if (num === 0) {
+                    await ctx.createMessage('Disabled kicking for diacritics.');
+                } else {
+                    await ctx.createMessage(`Set kick limit to **${num}**.`);
+                }
+            }
+        } else if (ctx.args[0] === 'ban') {
+            let num = Number(Math.abs(ctx.args[1]).toFixed(0));
+
+            if (isNaN(num)) {
+                await ctx.createMessage('You can only set ban to a valid number.');
+            } else if (num <= ctx.settings.actions.diacritics.kick) {
+                await ctx.createMessage('You cannot set the ban limit to, or lower than the kick limit.');
+            } else if (num === 0) {
+                await ctx.createMessage('You cannot disable banning for diacritics (You can however set it to a ridiculously high number).');
+            } else {
+                let {invites, mentions, diacritics} = ctx.settings.actions;
+                let settings = Object.assign({}, ctx.settings, {actions: {
+                    invites,
+                    mentions,
+                    diacritics: {kick: diacritics.kick, ban: num}
                 }});
 
                 await bot.editSettings(ctx.guild.id, settings);

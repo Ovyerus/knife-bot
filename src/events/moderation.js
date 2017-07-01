@@ -70,7 +70,7 @@ module.exports = bot => {
         if (msg.content.length - diacritics.length >= settings.diacritics.trigger) {
             try {
                 await msg.delete();
-                await punishChain(bot, msg, settings, 'diacritics', `(${diacritics.length} diacritics)`);
+                await punishChain(bot, msg, settings, 'diacritics', `(${msg.content.length - diacritics.length} diacritics)`);
             } catch(err) {
                 logger.error(err.stack);
             }
