@@ -3,6 +3,7 @@ exports.commands = ['vs'];
 exports.vs = {
     desc: 'Cuts through someone and bans them.',
     usage: '<user mention|user id>',
+    aliases: ['ban'],
     permissions: {both: 'banMembers'},
     async main(bot, ctx) {
         if (ctx.mentionStrings.length > 0) {

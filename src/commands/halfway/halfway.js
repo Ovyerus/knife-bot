@@ -3,6 +3,7 @@ exports.commands = ['halfway'];
 exports.halfway = {
     desc: 'Slice through someone halfway, allowing them to come back.',
     usage: '<user mention|user id>',
+    aliases: ['softban'],
     permissions: {both: 'banMembers'},
     main(bot, ctx) {
         return new Promise((resolve, reject) => {
