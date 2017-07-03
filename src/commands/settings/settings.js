@@ -6,7 +6,8 @@ exports.commands = [
     'mentions',
     'diacritics',
     'exceptions',
-    'channel'
+    'channel',
+    'messages'
 ];
 
 exports.main = {
@@ -58,6 +59,11 @@ exports.main = {
                     name: '`Log Channel`',
                     value: 'Manage the channel used for logging events.\n'
                     + 'Run `settings channel` to view settings.'
+                },
+                {
+                    name: '`Messages`',
+                    value: 'Manage messages for warnings for the various events.\n'
+                    + 'Run `settings messages` to view settings.'
                 }
             ];
 
@@ -496,7 +502,7 @@ exports.exceptions = {
                     } else if (bot.users.get(id)) {
                         embed.fields[0].value.push(`**${bot.users.get(id).username}** (Not in server) (${id})`);
                     } else {
-                        embed.fields[0].value.push(`**Unknown role** (${id})`);
+                        embed.fields[0].value.push(`**Unknown user** (${id})`);
                     }
                 });
 
@@ -599,7 +605,11 @@ exports.channel = {
                 description: `Showing current log channel for **${ctx.guild.name}**`,
                 footer: {text: "Run 'settings channel <channel>' to enable logging or change the channel, or run 'settings channel disable' to remove the log channel."},
                 fields: [
-                    {name: '`Channel`', value: ctx.settings.logChannel ? `<#${ctx.settings.logChannel}>` : 'None', inline: true}
+                    {
+                        name: '`Channel`', 
+                        value: ctx.settings.logChannel ? `<#${ctx.settings.logChannel}>` : 'None',
+                        inline: true
+                    }
                 ]
             };
 
@@ -616,6 +626,74 @@ exports.channel = {
 
             await bot.editSettings(ctx.guild.id, {logChannel: channel.id});
             await ctx.createMessage(`Set log channel to <#${channel.id}>`);
+        }
+    }
+};
+
+exports.messages = {
+    desc: 'Edit log messages for the different events.',
+    usage: '[invites | mentions | diacritics]',
+    async main(bot, ctx) {
+        if (!['invites', 'mentions', 'diacritics'].includes(ctx.args[0])) {
+            let embed = {
+                title: 'Server Settings - Messages',
+                description: `Showing current messages for **${ctx.guild.name}**\nNote: any occurances of \`{{mention}}\` will be replaced with an @mention of the user.`,
+                footer: {text: "Run 'settings messages <type> <message>' to change the message for the particular type."},
+                fields: [
+                    {
+                        name: 'Invites',
+                        value: ctx.settings.messages.invites
+                    },
+                    {
+                        name: 'Mentions',
+                        value: ctx.settings.messages.mentions
+                    },
+                    {
+                        name: 'Diacritics',
+                        value: ctx.settings.messages.diacritics
+                    }
+                ]
+            };
+
+            await ctx.createMessage({embed});
+        } else if (!ctx.args[1]) {
+            await ctx.createMessage('Please give a something to set the message as.');
+        } else if (ctx.args[0] === 'invites') {
+            let msg = ctx.raw.split(' ').slice(1).join(' ');
+            let {mentions, diacritics} = ctx.settings.mentions;
+            let settings = Object.assign({}, ctx.settings, {messages: {
+                invites: msg,
+                mentions,
+                diacritics
+            }});
+
+            await bot.editSettings(ctx.guild.id, settings);
+            await ctx.createMessage('Successfully edited message for `invites`. Sending test message...');
+            await ctx.createMessage(msg.replace(/{{mention}}/g, ctx.author.mention));
+        } else if (ctx.args[0] === 'mentions') {
+            let msg = ctx.raw.split(' ').slice(1).join(' ');
+            let {invites, diacritics} = ctx.settings.mentions;
+            let settings = Object.assign({}, ctx.settings, {messages: {
+                invites,
+                mentions: msg,
+                diacritics
+            }});
+
+            await bot.editSettings(ctx.guild.id, settings);
+            await ctx.createMessage('Successfully edited message for `mentions`. Sending test message...');
+            await ctx.createMessage(msg.replace(/{{mention}}/g, ctx.author.mention)); 
+        } else {
+            let msg = ctx.raw.split(' ').slice(1).join(' ');
+            let {invites, mentions} = ctx.settings.mentions;
+            let settings = Object.assign({}, ctx.settings, {messages: {
+                invites,
+                mentions,
+                diacritics: msg
+            }});
+
+            await bot.editSettings(ctx.guild.id, settings);
+            await ctx.createMessage('Successfully edited message for `diacritics`. Sending test message...');
+            await ctx.createMessage(msg.replace(/{{mention}}/g, ctx.author.mention));
         }
     }
 };
