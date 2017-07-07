@@ -6,7 +6,7 @@ class Lookups {
         this.bot = bot;
     }
 
-    async __prompt(ctx, what, whatArr, type) {
+    async _prompt(ctx, what, whatArr, type) {
         let formatArr;
 
         if (type === 'members') {
@@ -80,13 +80,22 @@ class Lookups {
 
         let member;
 
-        if (ctx.mentions.length > 0) {
-            member = ctx.guild.members.get(ctx.mentions[0].id);
+        if (/^<@!?\d+>$/.test(who)) {
+            let id = who.match(/^<@!?(\d+)>$/)[1];
+            member = ctx.guild.members.get(id);
         } else {
-            let members = ctx.guild.members.filter(m => m.username.toLowerCase().includes(who.toLowerCase()) || (m.nick && m.nick.toLowerCase().includes(who.toLowerCase())));
+            let members;
+
+            if (!isNaN(who) && who.length !== 4) {
+                members = ctx.guild.members.filter(m => m.id.includes(who) || m.username.includes(who) || (m.nick && m.nick.includes(who)));
+            } else if (!isNaN(who) && who.length === 4) {
+                members = ctx.guild.members.filter(m => who === m.discriminator);
+            } else {
+                members = ctx.guild.members.filter(m => m.username.toLowerCase().includes(who.toLowerCase()) || (m.nick && m.nick.toLowerCase().includes(who.toLowerCase())));
+            }
 
             if (members.length > 1) {
-                member = await this.__prompt(ctx, who, members, 'members');
+                member = await this._prompt(ctx, who, members, 'members');
             } else if (members.length === 1) {
                 member = members[0];
             } else {
@@ -113,13 +122,20 @@ class Lookups {
         
         let channel;
 
-        if (ctx.channelMentions.length > 0) {
-            channel = ctx.guild.channels.get(ctx.channelMentions[0]);
+        if (/^<#\d+>$/.test(what)) {
+            let id = what.match(/^<#(\d+)>$/)[1];
+            channel = ctx.guild.channels.get(id);
         } else {
-            let channels = ctx.guild.channels.filter(c => c.name.toLowerCase().includes(what.toLowerCase()));
+            let channels;
+
+            if (!isNaN(what)) {
+                channels = ctx.guild.channels.filter(c => c.id.includes(what) || c.name.includes(what));
+            } else {
+                channels = ctx.guild.channels.filter(c => c.name.toLowerCase().includes(what.toLowerCase()));
+            }
 
             if (channels.length > 1) {
-                channel = await this.__prompt(ctx, what, channels, 'channels');
+                channel = await this._prompt(ctx, what, channels, 'channels');
             } else if (channels.length === 1) {
                 channel = channels[0];
             } else {
@@ -145,15 +161,27 @@ class Lookups {
         if (typeof notFoundMsg !== 'boolean') throw new TypeError('notFoundMsg is not a boolean.');
         
         let role;
-        let roles = ctx.guild.roles.filter(r => r.name.toLowerCase().includes(what.toLowerCase()));
 
-        if (roles.length > 1) {
-            role = await this.__prompt(ctx, what, roles, 'roles');
-        } else if (roles.length === 1) {
-            role = roles[0];
+        if (/^<@&\d+>$/.test(what)) {
+            let id = what.match(/^<@&(\d+)>$/)[1];
+            role = ctx.guild.roles.get(id);
         } else {
-            if (notFoundMsg) await ctx.createMessage('Role not found.');
-            role = null;
+            let roles;
+
+            if (!isNaN(what)) {
+                roles = ctx.guild.roles.filter(r => r.id.includes(what) || r.name.includes(what));
+            } else {
+                roles = ctx.guild.roles.filter(r => r.name.toLowerCase().includes(what.toLowerCase()));
+            }
+
+            if (roles.length > 1) {
+                role = await this._prompt(ctx, what, roles, 'roles');
+            } else if (roles.length === 1) {
+                role = roles[0];
+            } else {
+                if (notFoundMsg) await ctx.createMessage('Role not found.');
+                role = null;
+            }
         }
 
         return role;
@@ -173,10 +201,16 @@ class Lookups {
         if (typeof notFoundMsg !== 'boolean') throw new TypeError('notFoundMsg is not a boolean.');
 
         let guild;
-        let guilds = this.bot.guilds.filter(g => g.name.toLowerCase().includes(what.toLowerCase()));
+        let guilds;
+
+        if (!isNaN(what)) {
+            guilds = this.bot.guilds.filter(g => g.id.includes(what) || g.name.includes(what));
+        } else {
+            guilds = this.bot.guilds.filter(g => g.name.toLowerCase().includes(what.toLowerCase()));
+        }
 
         if (guilds.length > 1) {
-            guild = await this.__prompt(ctx, what, guilds, 'guilds');
+            guild = await this._prompt(ctx, what, guilds, 'guilds');
         } else if (guilds.length === 1) {
             guild = guilds[0];
         } else {
