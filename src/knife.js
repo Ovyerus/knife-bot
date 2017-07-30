@@ -5,7 +5,7 @@ const fs = require('fs');
 const bot = new Eris(config.token, {
     getAllUsers: true,
     defaultImageFormat: 'png',
-    defaultImageSize: 256,
+    defaultImageSize: 512,
     disableEvents: {
         TYPING_START: true,
         VOICE_STATE_UPDATE: true
