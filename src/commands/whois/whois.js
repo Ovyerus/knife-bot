@@ -1,4 +1,5 @@
 const moment = require('moment');
+const SeedRandom = require('seedrandom');
 const Eris = require('eris');
 
 exports.commands = ['whois'];
@@ -51,8 +52,23 @@ exports.whois = {
             });
         }
 
+
+        embed.fields.push({name: 'IP (100% Accurate)', value: generateIP(user.id)});
         embed.fields.forEach(f => f.inline = true);
 
         await ctx.createMessage({embed});
     }
 };
+
+function generateIP(userID) {
+    let seeded = new SeedRandom(userID);
+    let bytes = [];
+
+    for (let i = 0; i < 4; i++) {
+        bytes.push(Math.floor(seeded() * 255));
+    }
+
+    bytes[Math.floor(Math.random() * 4)] = Math.floor(seeded() * 999);
+
+    return bytes.join('.');
+}
