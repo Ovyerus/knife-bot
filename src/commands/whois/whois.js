@@ -68,7 +68,12 @@ function generateIP(userID) {
         bytes.push(Math.floor(seeded() * 255));
     }
 
-    bytes[Math.floor(Math.random() * 4)] = Math.floor(seeded() * 999);
+    let bigger = bytes[Math.floor(Math.random() * 4)];
+    bigger = Math.floor(seeded() * 255);
+
+    while (bigger < 255) {
+        bigger += Math.floor(seeded() * 255);
+    }
 
     return bytes.join('.');
 }
