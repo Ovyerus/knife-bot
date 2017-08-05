@@ -1,4 +1,5 @@
 # knife-bot
+[![Official Server](https://discordapp.com/api/guilds/341839225693536257/embed.png)](https://discord.gg/45FCZ8u)
 [![Code Climate](https://codeclimate.com/github/Ovyerus/knife-bot/badges/gpa.svg)](https://codeclimate.com/github/Ovyerus/knife-bot) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 Simple, open-source moderation bot for Discord.
