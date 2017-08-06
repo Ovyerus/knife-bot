@@ -1,4 +1,4 @@
-const Actions = ['kicked', 'banned'];
+const Actions = ['kicked', 'banned', 'softbanned'];
 const Months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const InviteRegex = /(?:https:\/\/)?(?:discord\.gg|discordapp\.com\/invite)\/((?:[A-Za-z0-9-])+)/i;
 const DiacriticRegex = /[\u{0300}-\u{036F}\u{0489}]/gu; // eslint-disable-line
@@ -91,6 +91,10 @@ module.exports = bot => {
 
         if (e.reason) msg.splice(2, 0, 'for', e.reason);
         if (e.extra) msg.splice(4, 0, e.extra);
+        if (e.blame) {
+            msg.splice(0, 0, bot.formatUser(e.blame.user));
+            msg[1] = Actions[e.action];
+        }
 
         bot.createMessage(e.settings.logChannel, msg.join(' '));
     });
@@ -116,11 +120,25 @@ async function punishChain(bot, msg, settings, type, extra) {
     if (settings.actions[type].kick > 0 && strikes === settings.actions[type].kick) {
         await msg.member.kick(type);
         
-        bot.emit('log', {user: msg.author, action: 0, reason: type, settings, guild: msg.channel.guild, extra});
+        bot.emit('log', {
+            user: msg.author,
+            action: 0,
+            reason: type,
+            settings,
+            guild: msg.channel.guild,
+            extra
+        });
     } else if (settings.actions[type].ban > 0 && settings.actions[type].ban > settings.actions[type].kick && strikes === settings.actions[type].ban) {
         await Promise.all([msg.member.ban(1, type), bot.resetStrikes(msg.channel.guild.id, msg.author.id)]);
 
-        bot.emit('log', {user: msg.author, action: 1, reason: type, settings, guild: msg.channel.guild, extra});
+        bot.emit('log', {
+            user: msg.author,
+            action: 1,
+            reason: type,
+            settings,
+            guild: msg.channel.guild,
+            extra
+        });
     } else {
         let m = settings.messages[type].replace(/\{\{mention\}\}/gi, msg.author.mention);
 

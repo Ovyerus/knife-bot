@@ -2,13 +2,13 @@ exports.commands = ['vs'];
 
 exports.vs = {
     desc: 'Cuts through someone and bans them.',
-    usage: '<user mention|user id>',
+    usage: '<user> [for <reason>]',
     aliases: ['ban'],
     permissions: {both: 'banMembers'},
     async main(bot, ctx) {
         if (!ctx.raw) return await ctx.createMessage('Please give me a user to cut through.');
 
-        let user = await bot.lookups.memberLookup(ctx, ctx.raw, false);
+        let user = await bot.lookups.memberLookup(ctx, ctx.raw.split(' for')[0], false);
 
         if (!user && !isNaN(ctx.raw)) {
             try {
@@ -16,9 +16,26 @@ exports.vs = {
             } catch(e) {
                 return await ctx.createMessage('User not found.');
             }
+        } else if (!user) {
+            return await ctx.createMessage('User not found.');
         }
 
-        await banMember(user, ctx);
+        if (ctx.raw.split('for').length === 1) {
+            await banMember(user, ctx);
+        } else {
+            await banMember(user, ctx);
+
+            if (!ctx.guild.members.map(m => m.id).includes(user.id)) {
+                bot.emit('log', {
+                    user,
+                    action: 1,
+                    reason: ctx.raw.split(' for').slice(1).join(' for').trim(),
+                    settings: ctx.settings,
+                    guild: ctx.guild,
+                    blame: ctx.member
+                });
+            }
+        }
     }
 };
 
@@ -36,7 +53,12 @@ async function banMember(user, ctx) {
 
         if (ctx.author.id === ctx.guild.ownerID || (userTopRolePos > mentionTopRolePos && userTopRolePos !== mentionTopRolePos)) {
             try {
-                await ctx.guild.banMember(user.id, 7, ctx.client.formatUser(ctx.author));
+                if (ctx.raw.split(' for').length === 1) {
+                    await ctx.guild.banMember(user.id, 7, ctx.client.formatUser(ctx.author));
+                } else {
+                    await ctx.guild.banMember(user.id, 7, `${ctx.client.formatUser(ctx.author)}: ${ctx.raw.split(' for').slice(1).join(' for').trim()}`);
+                }
+
                 await ctx.createMessage(`Cut all the way through **${ctx.client.formatUser(user)}**!`);
             } catch(err) {
                 if (err.resp && err.resp.statusCode === 403) {
