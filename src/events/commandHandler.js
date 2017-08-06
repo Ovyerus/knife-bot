@@ -1,5 +1,6 @@
 const {parsePrefix, parseTulpa} = require(`${__baseDir}/modules/messageParser`);
 const {Context} = require(`${__baseDir}/modules/CommandHolder`);
+const crypto = require('crypto');
 
 module.exports = bot => {
     bot.on('messageCreate', async msg => {
@@ -59,58 +60,31 @@ module.exports = bot => {
                 logger.warn(`Couldn't get DM channel for/send DM to ${bot.formatUser(msg.author)} (${msg.author.id})`);
             }
         } else if (resp && resp.code !== 50013) {
-            logger.warn(`${loggerPrefix(msg)}Discord error while running command "${cmd}":\n${err.stack}`);
+            let errorCode = crypto.createHash('md5').update(msg.author.id + msg.channel.guild.id + Date.now()).digest('hex').slice(0, 10);
 
-            let embed = {
-                title: 'Error',
-                description: 'A Discord error occurred while trying to execute command `${ctx.cmd}`',
-                color: 0xF44336,
-                timestamp: new Date(),
-                footer: {text: 'Powered by Knife Bot'},
-                fields: [
-                    {
-                        name: '\u200b',
-                        value: '```js\n'
-                        + `Code: ${resp.code}\n`
-                        + `Message: ${resp.message}\n`
-                        + '```\n\u200b\n'
-                        + 'This has been logged, but if you wish to report this now so it can get fixed faster, you can join my [**support server**](https://discord.gg/G9nUSZt).'
-                    }
-                ]
-            };
+            await bot.createMessage(bot.config.errorChannel, '**New Error**\n\n'
+            + `**Code**: \`${errorCode}\`\n`
+            + `**Guild**: \`${msg.channel.guild.name} (${msg.channel.guild.id})\`\n`
+            + `**User**: \`${bot.formatUser(msg.author)} (${msg.author.id})\`\n`
+            + '```js\n'
+            + `${resp.code}: ${resp.message}\n`
+            + '```');
 
-            if (!msg.channel.permissionsOf(bot.user.id).has('embedLinks')) {
-                let content = Context.flattenEmbed(embed);
-                await msg.channel.createMessage(content);
-            } else {
-                await msg.channel.createMessage({embed});
-            }
+            await msg.channel.createMessage('**Woops! An error occurred.**\n\n'
+            + `This has been logged and reported to the bot author, but if you wish to let them know faster, join the official server through \`🔪 invite\` and refer the code \`${errorCode}\``);
         } else {
-            logger.error(`${loggerPrefix(msg)}Error running command "${cmd}":\n${err.stack}`);
-
-            let embed = {
-                title: 'Error',
-                description: 'An error occurred while trying to execute command `${ctx.cmd}`',
-                color: 0xF44336,
-                timestamp: new Date(),
-                footer: {text: 'Powered by Knife Bot'},
-                fields: [
-                    {
-                        name: '\u200b',
-                        value: '```js\n'
-                        + `${err}\n`
-                        + '```\n\u200b\n'
-                        + 'This has been logged, but if you wish to report this now so it can get fixed faster, you can join my [**support server**](https://discord.gg/G9nUSZt).'
-                    }
-                ]
-            };
-
-            if (!msg.channel.permissionsOf(bot.user.id).has('embedLinks')) {
-                let content = Context.flattenEmbed(embed);
-                await msg.channel.createMessage(content);
-            } else {
-                await msg.channel.createMessage({embed});
-            }
+            let errorCode = crypto.createHash('md5').update(msg.author.id + msg.channel.guild.id + Date.now()).digest('hex').slice(0, 10);
+            
+            await bot.createMessage(bot.config.errorChannel, '**New Error**\n\n'
+            + `**Code**: \`${errorCode}\`\n`
+            + `**Guild**: \`${msg.channel.guild.name} (${msg.channel.guild.id})\`\n`
+            + `**User**: \`${bot.formatUser(msg.author)} (${msg.author.id})\`\n`
+            + '```js\n'
+            + `${err}\n`
+            + '```');
+            
+            await msg.channel.createMessage('**Woops! An error occurred.**\n\n'
+            + `This has been logged and reported to the bot author, but if you wish to let them know faster, join the official server through \`🔪 invite\` and refer the code \`${errorCode}\``);
         }
     }
 };
