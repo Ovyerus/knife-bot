@@ -80,7 +80,7 @@ module.exports = bot => {
             + `**Guild**: \`${msg.channel.guild.name} (${msg.channel.guild.id})\`\n`
             + `**User**: \`${bot.formatUser(msg.author)} (${msg.author.id})\`\n`
             + '```js\n'
-            + `${err}\n`
+            + `${err.stack}\n`
             + '```');
             
             await msg.channel.createMessage('**Woops! An error occurred.**\n\n'
