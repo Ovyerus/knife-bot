@@ -49,7 +49,7 @@ module.exports = bot => {
     async function handleCmdErr(msg, cmd, err) {
         let resp = typeof err.response === 'string' && /^\{'code':\d+, 'message':.*\}$/.test(err.response) ? JSON.parse(err.response) : null;
 
-        if (resp && resp.code === 50013 && !msg.channel.guild.members.get(bot.user.id).permissions.has('sendMessages')) {
+        if (resp && resp.code === 50013 && msg.channel.guild.id !== '110373943822540800') {
             logger.warn(`Can't send message in '#${msg.channel.name}' (${msg.channel.id}), cmd from user '${bot.formatUser(msg.author)}' (${msg.author.id})`);
 
             let dm = await msg.author.getDMChannel();
