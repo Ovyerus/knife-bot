@@ -64,6 +64,7 @@ module.exports = bot => {
 
             await bot.createMessage(bot.config.errorChannel, '**New Error**\n\n'
             + `**Code**: \`${errorCode}\`\n`
+            + `**Command**: \`${cmd}\`\n`
             + `**Guild**: \`${msg.channel.guild.name} (${msg.channel.guild.id})\`\n`
             + `**User**: \`${bot.formatUser(msg.author)} (${msg.author.id})\`\n`
             + '```js\n'
@@ -77,6 +78,7 @@ module.exports = bot => {
             
             await bot.createMessage(bot.config.errorChannel, '**New Error**\n\n'
             + `**Code**: \`${errorCode}\`\n`
+            + `**Command**: \`${cmd}\`\n`
             + `**Guild**: \`${msg.channel.guild.name} (${msg.channel.guild.id})\`\n`
             + `**User**: \`${bot.formatUser(msg.author)} (${msg.author.id})\`\n`
             + '```js\n'
