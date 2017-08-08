@@ -17,7 +17,7 @@ exports.commands = [
 ];
 
 exports.main = {
-    desc: 'Purge messages in a channel.',
+    desc: 'Purge messages in a channel. This only works for messages younger than two weeks.',
     usage: '<type> [amount]',
     aliases: ['prune'],
     permissions: {both: 'manageMessages'},
@@ -39,7 +39,8 @@ exports.main = {
                 + 'purge attachments [1-100]\n'
                 + 'purge images [1-100]\n'
                 + 'purge regex <regex> [1-100]**',
-                color: IncorrectUse
+                color: IncorrectUse,
+                footer: {text: 'Note: This cannot delete any messages that are older than two weeks.'}
             }});
         }
     }
@@ -52,9 +53,7 @@ exports.all = {
         let num = Number(ctx.args[0]);
 
         if (isNaN(num)) {
-            let amt = await ctx.channel.purge(100);
-            let m = await ctx.createMessage(`Purged **${amt}** message${amt === 1 ? '' : 's'}.`);
-            await deleteDelay(m);
+            await purge(ctx, null, 'Purged **amt** message(s).');
         } else if (num <= 100 && num >= 1) {
             let amt = await ctx.channel.purge(num);
             let m = await ctx.createMessage(`Purged **${amt}** message${amt === 1 ? '' : 's'}.`);
@@ -67,7 +66,7 @@ exports.all = {
 
 exports.author = {
     desc: 'Purges all messages from a specific user.',
-    usage: '<author ID|author mention> [1-100]',
+    usage: '<user> [1-100]',
     async main(bot, ctx) {
         if (!ctx.args[0]) {
             await ctx.createMessage({embed: {
@@ -84,14 +83,10 @@ exports.author = {
                 let num = Number(ctx.args[1]);
 
                 if (isNaN(num)) {
-                    let amt = await ctx.channel.purge(100, m => m.author.id === user.id);
-                    let m = await  ctx.createMessage(`Purged **${amt}** message${amt === 1 ? '' : 's'} from **${bot.formatUser(user)}**.`);
-                    await deleteDelay(m);
+                    await purge(ctx, m => m.author.id === user.id, `Purged **amt** message(s) from **${bot.formatUser(user)}**.`);
                 } else if (num <= 100 && num >= 1) {
                     let i = 0;
-                    let amt = await ctx.channel.purge(100, m => m.author.id === user.id && ++i <= num);
-                    let m = await ctx.createMessage(`Purged **${amt}** message${amt === 1 ? '' : 's'} from **${bot.formatUser(user)}**.`);
-                    await deleteDelay(m);
+                    await purge(ctx, m => m.author.id === user.id && ++i <= num, `Purged **amt** message(s) from **${bot.formatUser(user)}**.`);
                 } else {
                     await tooSpicy(ctx);
                 }
@@ -107,14 +102,10 @@ exports.bots = {
         let num = Number(ctx.args[0]);
 
         if (isNaN(num)) {
-            let amt = await ctx.channel.purge(100, m => m.author.bot);
-            let m = await ctx.createMessage(`Purged **${amt}** bot message${amt === 1 ? '' : 's'}.`);
-            await deleteDelay(m);
+            await purge(ctx, m => m.author.bot, 'Purged **amt** bot message(s)');
         } else if (num <= 100 && num >= 100) {
             let i = 0;
-            let amt = await ctx.channel.purge(100, m => m.author.bot && ++i <= num);
-            let m = await ctx.createMessage(`Purged **${amt}** bot message${amt === 1 ? '' : 's'}.`);
-            await deleteDelay(m);
+            await purge(ctx, m => m.author.bot && ++i <= num, 'Purged **amt** bot messag(s)');
         } else {
             await tooSpicy(ctx);
         }
@@ -133,17 +124,13 @@ exports.including = {
             }});
         } else {
             let num = Number(ctx.args[1]);
-            let inc = ctx.args[0];
+            let inc = ctx.args[0].toLowerCase();
 
             if (isNaN(num)) {
-                let amt = await ctx.channel.purge(100, m => m.content.toLowerCase().includes(inc.toLowerCase()));
-                let m = await ctx.createMessage(`Purged **${amt}** message${amt === 1 ? '' : 's'}.`);
-                await deleteDelay(m);
+                await purge(ctx, m => m.content.toLowerCase().includes(inc), 'Purged **amt** message(s).');
             } else if (num <= 100 && num >= 1) {
                 let i = 0;
-                let amt = await ctx.channel.purge(100, m => m.content.toLowerCase().includes(inc.toLowerCase()) && ++i <= num);
-                let m = await ctx.createMessage(`Purged **${amt}** message${amt === 1 ? '' : 's'}.`);
-                await deleteDelay(m);
+                await purge(ctx, m => m.content.toLowerCase().includes(inc) && ++i <= num, 'Purged **amt** message(s).');
             } else {
                 await tooSpicy(ctx);
             }
@@ -158,14 +145,10 @@ exports.embeds = {
         let num = Number(ctx.args[0]);
 
         if (isNaN(num)) {
-            let amt = await ctx.channel.purge(100, m => m.embeds.length > 0);
-            let m = await ctx.createMessage(`Purged **${amt}** embed${amt === 1 ? '' : 's'}.`);
-            await deleteDelay(m);
+            await purge(ctx, m => m.embeds.length > 0, 'Purged **amt** embed(s).');
         } else if (num <= 100 && num >= 1) {
             let i = 0;
-            let amt = await ctx.channel.purge(100, m => m.embeds.length > 0 && ++i <= num);
-            let m = await ctx.createMessage(`Purged **${amt}** embed${amt === 1 ? '' : 's'}.`);
-            await deleteDelay(m);
+            await purge(ctx, m => m.embeds.length > 0 && ++i <= num, 'Purged **amt** embed(s).');
         } else {
             await tooSpicy(ctx);
         }
@@ -179,14 +162,10 @@ exports.codeblocks = {
         let num = Number(ctx.args[0]);
 
         if (isNaN(num)) {
-            let amt = await ctx.channel.purge(100, codeblockFilter);
-            let m = await ctx.createMessage(`Purged **${amt}** codeblock${amt === 1 ? '' : 's'}.`);
-            await deleteDelay(m);
+            await purge(ctx, codeblockFilter, 'Purged **amt** codeblock(s).');
         } else if (num <= 100 && num >= 1) {
             let i = 0;
-            let amt = await ctx.channel.purge(100, m => codeblockFilter(m) && ++i <= num);
-            let m = await ctx.createMessage(`Purged **${amt}** codeblock${amt === 1 ? '' : 's'}.`);
-            await deleteDelay(m);
+            await purge(ctx, m => codeblockFilter(m) && ++i <= num, 'Purged **amt** codeblock(s).');
         } else {
             await tooSpicy(ctx);
         }
@@ -200,14 +179,10 @@ exports.attachments = {
         let num = Number(ctx.args[0]);
 
         if (isNaN(num)) {
-            let amt = await ctx.channel.purge(100, m => m.attachments.length > 0);
-            let m = await  ctx.createMessage(`Purged **${amt}** attachment${amt === 1 ? '' : 's'}.`);
-            await deleteDelay(m);
+            await purge(ctx, m => m.attachments.length > 0, 'Purged **amt** attachment(s).');
         } else if (num <= 100 && num >= 1) {
             let i = 0;
-            let amt = await ctx.channel.purge(100, m => m.attachments.length > 0 && ++i <= num);
-            let m =  ctx.createMessage(`Purged **${amt}** attachment${amt === 1 ? '' : 's'}.`);
-            await deleteDelay(m);
+            await purge(ctx, m => m.attachments.length > 0 && ++i <= num, 'Purged **amt** attachment(s).');
         } else {
             await tooSpicy(ctx);
         }
@@ -221,14 +196,10 @@ exports.images = {
         let num = Number(ctx.args[0]);
 
         if (isNaN(num)) {
-            let amt = await ctx.channel.purge(100, imageFilter);
-            let m = ctx.createMessage(`Purged **${amt}** image${amt === 1 ? '' : 's'}.`);
-            await deleteDelay(m);
+            await purge(ctx, imageFilter, 'Purged **amt** image(s).');
         } else if (num <= 100 && num >= 1) {
             let i = 0;
-            let amt = await ctx.channel.purge(100, m => imageFilter(m) && ++i <= num);
-            let m = await ctx.createMessage(`Purged **${amt}** image${amt === 1 ? '' : 's'}.`);
-            await deleteDelay(m);
+            await purge(ctx, m => imageFilter(m) && ++i <= num, 'Purged **amt** image(s).');
         } else {
             await tooSpicy(ctx);
         }
@@ -253,14 +224,10 @@ exports.regex = {
                 let num = Number(ctx.args[1]);
 
                 if (isNaN(num)) {
-                    let amt = await ctx.channel.purge(100, m => purgeRegex.test(m.content));
-                    let m = await ctx.createMessage(`Purged **${amt}** message${amt === 1 ? '' : 's'}.`);
-                    await deleteDelay(m);
+                    await purge(ctx, m => purgeRegex.test(m.content), 'Purged **amt** message(s).');
                 } else if (num <= 100 && num >= 1) {
                     let i = 0;
-                    let amt = await ctx.channel.purge(100, m => purgeRegex.test(m.content) && ++i <= num);
-                    let m = await ctx.createMessage(`Purged **${amt}** message${amt === 1 ? '' : 's'}.`);
-                    await deleteDelay(m);
+                    await purge(ctx, m => purgeRegex.test(m.content) && ++i <= num, 'Purged **amt** message(s).');
                 } else {
                     await tooSpicy(ctx);
                 }
@@ -281,6 +248,27 @@ async function tooSpicy(ctx) {
     await ctx.createMessage('Woah there, way too spicy. I only accept numbers between `1` and `100`');
 }
 
+async function purge(ctx, filter, msg) {
+    let canPurge = await checkAges(ctx, 100);
+
+    if (canPurge) {
+        let amt = await ctx.channel.purge(100, filter);
+        let m = await ctx.createMessage(msg.replace('amt', amt));
+
+        await deleteDelay(m);
+    } else {
+        await ctx.createMessage('Unable to delete messages, as amount to purge would include messages that are two weeks old.\n'
+        + 'There is nothing I can do about this as it is a limitation with Discord. :(');
+    }
+}
+
+async function checkAges(ctx, i) {
+    let msgs = await ctx.channel.getMessages(i);
+    msgs = msgs.filter(m => Date.now() - m.timestamp >= 1000 * 60 * 60 * 24 * 7 * 2); // Filter messages that are younger than two weeks
+
+    return msgs.length === 0;
+}
+
 function codeblockFilter(msg) {
     let split = msg.content.split('```');
     if (split.length >= 3) return true;
@@ -289,9 +277,9 @@ function codeblockFilter(msg) {
 
 function imageFilter(msg) {
     if (msg.attachments.length > 0) {
-        return msg.attachments.filter(atch => ImageRegex.test(atch.url)).length > 0;
+        return msg.attachments.filter(a => a.height).length > 0;
     } else if (msg.embeds.length > 0) {
-        return msg.embeds.filter(e => e.type === 'embed').length > 0;
+        return msg.embeds.filter(e => e.type === 'image').length > 0;
     } else {
         return ImageRegex.test(msg.content);
     }
