@@ -3,6 +3,7 @@ exports.commands = ['help'];
 exports.help = {
     desc: 'Show bot help.',
     usage: '[command]',
+    aliases: ['commands'],
     async main(bot, ctx) {
         if (!ctx.args[0]) {
             let cmds = [];
@@ -49,7 +50,7 @@ exports.help = {
             } else {
                 let cmd = bot.commands.getCommand(ctx.args[0]);
                 let embed = {
-                    description: `\`🔪 ${ctx.args[0]}${cmd.usage ? ` ${cmd.usage}` : ''}\n\u200b - ${cmd.desc}\``
+                    description: `\`🔪 ${ctx.args[0]}${cmd.usage ? ` ${cmd.usage}` : ''}\n\u200b - ${cmd.desc}\n\u200b\n\u200b - Aliases: ${cmd.aliases.map(a => `"${a}"`).join(', ')}\``
                 };
 
                 await ctx.createMessage({embed});
