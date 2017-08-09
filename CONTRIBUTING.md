@@ -1,5 +1,5 @@
 # Contributing
-If you wish to contribute to knife-bot, make sure to follow the guidelines. If it doesn't the PR will most likely not get merged.
+If you wish to contribute to knife-bot, make sure to follow the guidelines. If it doesn't, the PR will most likely not get merged.
 
 ## Code Style
 Please make sure that any code submitted follows the code style of the rest of the project.  
