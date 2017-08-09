@@ -10,6 +10,10 @@ const PermissionMsgs = {
     banMembers: {
         author: 'You need heat-proof gloves to handle me.\n**(You require the Ban Members permission)**',
         self: "I'm not hot enough to cut.\n**(I require the Ban Members permission)**"
+    },
+    kickMembers: {
+        author: 'The handle is too hot for you.\n**(You require the Kick Members permission)**',
+        self: "I'm missing a handle.\n**(I require the Kick Members permissions)**"
     }
 };
 
