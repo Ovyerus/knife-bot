@@ -123,7 +123,20 @@ module.exports = bot => {
 
         let settings = {
             id: guildID,
-            actions: {mentions: {kick: 2, ban: 3}, invites: {kick: 2, ban: 3}, diacritics: {kick: 2, ban: 3}},
+            actions: {
+                mentions: {
+                    kick: 2,
+                    ban: 3
+                },
+                invites: {
+                    kick: 2,
+                    ban: 3
+                },
+                diacritics: {
+                    kick: 2,
+                    ban: 3
+                }
+            },
             mentions: {trigger: 5, enabled: false},
             invites: {enabled: false, fake: false},
             diacritics: {trigger: 10, enabled: false},
@@ -137,7 +150,9 @@ module.exports = bot => {
                 invites: '{{mention}} please do not advertise here. Your message has been deleted and future offenses will be dealt with accordingly.',
                 mentions: '{{mention}} do not mass-mention users. Future offences will be dealt with accordingly.',
                 diacritics: '{{mention}} please do not post characters or messages that abuse the use of diacritics. Future offences will be dealt with accordingly.'
-            }
+            },
+            muteRoles: [],
+            rolebanRole: null
         };
 
         bot.settings.add(settings);
@@ -145,7 +160,9 @@ module.exports = bot => {
         let res = await bot.db.table('guild_settings').get(guildID).run();
 
         if (res) return res;
-        return await bot.db.table('guild_settings').insert(settings).run();
+        await bot.db.table('guild_settings').insert(settings).run();
+
+        return await bot.db.table('guild_settings').get(guildID).run();
     };
 
     /**
