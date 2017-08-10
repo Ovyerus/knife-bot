@@ -13,7 +13,8 @@ exports.commands = [
     'codeblocks',
     'attachments',
     'images',
-    'regex'
+    'regex',
+    'reactions'
 ];
 
 exports.main = {
@@ -38,7 +39,8 @@ exports.main = {
                 + 'purge codeblocks [1-100]\n'
                 + 'purge attachments [1-100]\n'
                 + 'purge images [1-100]\n'
-                + 'purge regex <regex> [1-100]**',
+                + 'purge regex <regex> [1-100]**\n'
+                + '**purge reactions [1-250]**',
                 color: IncorrectUse,
                 footer: {text: 'Note: This cannot delete any messages that are older than two weeks.'}
             }});
@@ -236,6 +238,42 @@ exports.regex = {
     }
 };
 
+exports.reactions = {
+    desc: 'Remove all reactions from messages.',
+    usage: '[1-250]',
+    aliases: ['finebros'], // inb4 road complains
+    async main(bot, ctx) {
+        let num = Number(ctx.args[0]);
+
+        if (isNaN(num)) {
+            let msgs = await ctx.channel.getMessages(250);
+            msgs = msgs.filter(m => Object.keys(m.reactions).length > 0);
+            let _msgs = [];
+
+            for (let m of msgs) _msgs.push(m.removeReactions());
+
+            await Promise.all(_msgs);
+
+            let m = await ctx.createMessage(`Removed all reactions from **${msgs.length}** messsage(s).`);
+            await deleteDelay(m);
+        } else if (num <= 250 && num >= 1) {
+            let i = 0;
+            let msgs = await ctx.channel.getMessages(250);
+            msgs = msgs.filter(m => Object.keys(m.reactions).length > 0 && ++i <= num);
+            let _msgs = [];
+
+            for (let m of msgs) _msgs.push(m.removeReactions());
+
+            await Promise.all(_msgs);
+
+            let m = await ctx.createMessage(`Removed all reactions from **${i}** message(s).`);
+            await deleteDelay(m);
+        } else {
+            await ctx.createMessage('Woah there, way too spicy. I only accept numbers between `1` and `250`.');
+        }
+    }
+};
+
 function deleteDelay(msg) {
     return new Promise((resolve, reject) => {
         setTimeout(() => {
@@ -245,7 +283,7 @@ function deleteDelay(msg) {
 }
 
 async function tooSpicy(ctx) {
-    await ctx.createMessage('Woah there, way too spicy. I only accept numbers between `1` and `100`');
+    await ctx.createMessage('Woah there, way too spicy. I only accept numbers between `1` and `100`.');
 }
 
 async function purge(ctx, filter, msg) {
