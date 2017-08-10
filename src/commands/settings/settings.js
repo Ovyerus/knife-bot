@@ -12,7 +12,7 @@ exports.commands = [
 
 exports.main = {
     desc: 'Edit settings for the bot.',
-    usage: '[setting [option <arguments>]]',
+    usage: '[setting [option <arguments>] | page]',
     permissions: {author: 'manageGuild'},
     async main(bot, ctx) {
         let embed = {
@@ -240,7 +240,7 @@ exports.mentions = {
             let num = Number(Math.abs(ctx.args[1]).toFixed(0));
 
             if (isNaN(num)) {
-                await ctx.createMesage('You can only set trigger to a valid number.');
+                await ctx.createMessage('You can only set trigger to a valid number.');
             } else if (num === 0) {
                 await ctx.createMessage('You cannot set trigger to 0. If you wish to disable mass mention blocking, run `settings mentions disable`.');
             } else {
@@ -350,7 +350,7 @@ exports.diacritics = {
             let num = Number(Math.abs(ctx.args[1]).toFixed(0));
 
             if (isNaN(num)) {
-                await ctx.createMesage('You can only set trigger to a valid number.');
+                await ctx.createMessage('You can only set trigger to a valid number.');
             } else if (num === 0) {
                 await ctx.createMessage('You cannot set trigger to 0. If you wish to disable spammy diacritics blocking, run `settings diacritics disable`.');
             } else {
@@ -513,7 +513,7 @@ exports.exceptions = {
 
             await ctx.createMessage({embed});
         } else if (ctx.args[0] === 'users') {
-            if (!ctx.raw.split(' ').slice(2).join(' ')) return await ctx.createMesage(`Please give me a user to ${ctx.args[1]} an exception for.`);
+            if (!ctx.raw.split(' ').slice(2).join(' ')) return await ctx.createMessage(`Please give me a user to ${ctx.args[1]} an exception for.`);
 
             let user = await bot.lookups.memberLookup(ctx, ctx.raw.split(' ').slice(2).join(' '), false);
 
@@ -543,7 +543,7 @@ exports.exceptions = {
                 await ctx.createMessage("There isn't an exception for that user.");
             }
         } else if (ctx.args[0] === 'channels') {
-            if (!ctx.raw.split(' ').slice(2).join(' ')) return await ctx.createMesage(`Please give me a channel to ${ctx.args[1]} an exception for.`);
+            if (!ctx.raw.split(' ').slice(2).join(' ')) return await ctx.createMessage(`Please give me a channel to ${ctx.args[1]} an exception for.`);
 
             let channel = await bot.lookups.channelLookup(ctx, ctx.raw.split(' ').slice(2).join(' '));
 
@@ -568,7 +568,7 @@ exports.exceptions = {
                 await ctx.createMessage("There isn't an exception for that channel.");
             }
         } else if (ctx.args[0] === 'roles') {
-            if (!ctx.raw.split(' ').slice(2).join(' ')) return await ctx.createMesage('Please give me a role to add an exception for.');
+            if (!ctx.raw.split(' ').slice(2).join(' ')) return await ctx.createMessage('Please give me a role to add an exception for.');
 
             let role = await bot.lookups.roleLookup(ctx, ctx.raw.split(' ').slice(2).join(' '));
 
