@@ -1,3 +1,5 @@
+const {AwaitTimeout} = require(`${__baseDir}/modules/helpers`);
+
 const States = {true: '<:check:314349398811475968> Enabled', false: '<:xmark:314349398824058880> Disabled'};
 
 exports.loadAsSubcommands = true;
@@ -7,7 +9,8 @@ exports.commands = [
     'diacritics',
     'exceptions',
     'channel',
-    'messages'
+    'messages',
+    'roles'
 ];
 
 exports.main = {
@@ -64,6 +67,11 @@ exports.main = {
                     name: '`Messages`',
                     value: 'Manage messages for warnings for the various events.\n'
                     + 'Run `settings messages` to view settings.'
+                },
+                {
+                    name: '`Special Roles`',
+                    value: 'Manage the various roles used by the bot.\n'
+                    + 'Run `settings roles` to view settings.'
                 }
             ];
 
@@ -694,6 +702,238 @@ exports.messages = {
             await bot.editSettings(ctx.guild.id, settings);
             await ctx.createMessage('Successfully edited message for `diacritics`. Sending test message...');
             await ctx.createMessage(msg.replace(/{{mention}}/g, ctx.author.mention));
+        }
+    }
+};
+
+exports.roles = {
+    desc: 'Manage special roles used by the bot.',
+    usage: '<mute <options>| roleban <options>>',
+    async main(bot, ctx) {
+        let embed = {
+            title: 'Server Settings - Roles',
+            description: `Showing current special roles for **${ctx.guild.name}**`,
+            fields: [
+                {
+                    name: 'Muted',
+                    value: 'Roles used to mute people.\n'
+                    + 'Run `settings roles mute` for more options.',
+                    inline: true
+                },
+                {
+                    name: 'Rolebanned',
+                    value: 'Role used for rolebanning.\n'
+                    + 'Run `settings roles roleban` for more options.',
+                    inline: true
+                }
+            ]
+        };
+
+        if (!['mute', 'roleban'].includes(ctx.args[0])) {
+            await ctx.createMessage({embed});
+        } else if (ctx.args[0] === 'mute' && !['add', 'remove', 'list', 'generate'].includes(ctx.args[1])) {
+            embed.title = 'Server Settings - Muted Roles';
+            embed.description = embed.description.replace('special roles', 'mute roles');
+            embed.fields = [
+                {
+                    name: 'List Roles',
+                    value: 'Run `settings roles mute list` to view all roles assigned for muting.',
+                    inline: true
+                },
+                {
+                    name: 'Add Role',
+                    value: 'Run `settings roles mute add <role>` to assign a role for muting.',
+                    inline: true
+                },
+                {
+                    name: 'Remove Role',
+                    value: 'Run `settings roles mute remove <role>` to remove a muted role.',
+                    inline: true
+                },
+                {
+                    name: 'Generate Role',
+                    value: 'Run `settings roles mute generate` to automatically generate a muted role.',
+                    inline: true
+                }
+            ];
+
+            await ctx.createMessage({embed});
+        } else if (ctx.args[0] === 'mute' && ctx.args[1] === 'add' && ctx.args[2]) {
+            let role = await bot.lookups.roleLookup(ctx, ctx.raw.split(' ').slice(2).join(' '));
+
+            if (ctx.settings.muteRoles.includes(role.id)) return await ctx.createMessage('That role is already a muted role.');
+
+            ctx.settings.muteRoles.push(role.id);
+
+            await bot.editSettings(ctx.guild.id, ctx.settings);
+            await ctx.createMessage(`Assigned ${role.mentionable ? `**${role.name}**` : `<@&${role.id}>`} as a muted role.`);
+        } else if (ctx.args[0] === 'mute' && ctx.args[1] === 'add') {
+            await ctx.createMessage('Please give me a role to add as a muted role.');
+        } else if (ctx.args[0] === 'mute' && ctx.args[1] === 'remove' && ctx.args[2]) {
+            if (ctx.settings.muteRoles.length === 0) return await ctx.createMessage('There are no muted roles.');
+
+            let role = await bot.lookups.roleLookup(ctx, ctx.raw.split(' ').slice(2).join(' '), false);
+
+            if (!role && !isNaN(ctx.args[2]) && ctx.settings.muteRoles.includes(ctx.args[2])) {
+                // Role is deleted, but user used ID that is added as mute role.
+                ctx.settings.muteRoles = ctx.settings.muteRoles.filter(r => r !== ctx.args[2]);
+
+                await bot.editSettings(ctx.guild.id, ctx.settings);
+
+                await ctx.createMessage('Removed **deleted role** from muted roles.');
+            } else if (!role) {
+                await ctx.createMessage('That role could not be found.');
+            } else if (role && !ctx.settings.muteRoles.includes(role.id)) {
+                await ctx.createMessage('That role is not a muted role.');
+            } else {
+                // There is a role.
+                ctx.settings.muteRoles = ctx.settings.muteRoles.filter(r => r !== role.id);
+
+                await bot.editSettings(ctx.guild.id, ctx.settings);
+
+                await ctx.createMessage(`Removed ${role.mentionable ? `**${role.name}**` : `<@&${role.id}>`} from muted roles.`);
+            }
+        } else if (ctx.args[0] === 'mute' && ctx.args[1] === 'remove') {
+            await ctx.createMessage('Please give me a role to remove as a muted role.');
+        } else if (ctx.args[0] === 'mute' && ctx.args[1] === 'list') {
+            let roles = ctx.settings.muteRoles.map(r => ctx.guild.roles.get(r) ? `**${ctx.guild.roles.get(r).name} (${r})**` : `**Deleted Role (${r})**`);
+            roles = roles.join('\n') || 'No muted roles.';
+
+            embed.title = 'Server Settings - Muted Roles - List';
+            embed.description = roles;
+            embed.fields = [];
+
+            await ctx.createMessage({embed});
+        } else if (ctx.args[0] === 'mute' && ctx.args[1] === 'generate') {
+            if (!ctx.hasPermission('manageRoles', 'author')) {
+                return await ctx.createMessage('You need the **Manage Roles** permission.');
+            } else if (!ctx.hasPermission('manageRoles')) {
+                return await ctx.createMessage('I need the **Manage Roles** permission.');
+            } else if (!ctx.hasPermission('manageChannels')) {
+                return await ctx.createMessage('I need the **Manage Channels** permission.');
+            } else if (ctx.settings.muteRoles[0]) {
+                return await ctx.createMessage('There is already a muted role.');
+            }
+
+            await ctx.createMessage('Creating role and editing permissions for all channels. Please be patient...');
+
+            let role = await ctx.guild.createRole({
+                name: 'Muted',
+                color: 0xF21904
+            }, `${bot.formatUser(ctx.author)}: Auto-generating muted role.`);
+
+            await ctx.guild.channels.asyncForEach(async c => {
+                await c.editPermission(role.id, 0, 2048, 'role', `${bot.formatUser(ctx.author)}: Editing permission overwrites for auto-generated muted role.`);
+            });
+
+            ctx.settings.muteRoles.push(role.id);
+
+            await bot.editSettings(ctx.guild.id, ctx.settings);
+            await ctx.createMessage(`Created muted role <@&${role.id}> and edited permissions for each channel.\n`
+            + 'You are now free to edit its name, colour, settings and permissions for channels.');
+        } else if (ctx.args[0] === 'roleban' && !['set', 'remove', 'generate'].includes(ctx.args[1])) {
+            embed.description = embed.description.replace('special roles', 'roleban role');
+            embed.fields = [
+                {
+                    name: 'Role',
+                    value: !ctx.settings.rolebanRole ? 'None' : ctx.guild.roles.get(ctx.settings.rolebanRole) ? `${ctx.guild.roles.get(ctx.settings.rolebanRole).name} (${ctx.settings.rolebanRole})` : `Deleted Role (${ctx.settings.rolebanRole})`,
+                    inline: true
+                },
+                {
+                    name: 'Set Role',
+                    value: 'Run `settings roles roleban set <role>` to set the rolebanned role.',
+                    inline: true
+                },
+                {
+                    name: 'Remove Role',
+                    value: 'Run `settings roles roleban remove` to remove the rolebanned role.',
+                    inline: true
+                },
+                {
+                    name: 'Generate Role',
+                    value: 'Run `settings roles roleban generate` to automatically generate a rolebanned role.',
+                    inline: true
+                }
+            ];
+
+            await ctx.createMessage({embed});
+        } else if (ctx.args[0] === 'roleban' && ctx.args[1] === 'set' && ctx.args[2]) {
+            let role = await bot.lookups.roleLookup(ctx, ctx.raw.split(' ').slice(2).join(' '));
+
+            if (!role) return;
+
+            if (ctx.settings.rolebanRole) {
+                await ctx.createMessage('There is already a role set for rolebanning. Would you like to replace it?');
+                let m;
+
+                try {
+                    m = await bot.awaitMessage(ctx.channel.id, ctx.author.id);
+                } catch(err) {
+                    if (err instanceof AwaitTimeout) {
+                        return await ctx.createMessage('Await timeout expired.');
+                    } else {
+                        throw err;
+                    }
+                }
+
+                if (/^no?$/i.test(m.content)) {
+                    return await ctx.createMessage("Ok, I won't update the role.");
+                } else if (!/^y(es)?$/i.test(m.content)) {
+                    return await ctx.createMessage('Invalid response.');
+                }
+
+                ctx.settings.rolebanRole = role.id;
+
+                await bot.editSettings(ctx.guild.id, ctx.settings);
+                await ctx.createMessage(`Set ${role.mentionable ? `**${role.name}**` : `<@&${role.id}>`} as the roleban role.\n`
+                + 'Make sure to give it only one channel which it can see.');
+            } else {
+                ctx.settings.rolebanRole = role.id;
+
+                await bot.editSettings(ctx.guild.id, ctx.settings);
+                await ctx.createMessage(`Set ${role.mentionable ? `**${role.name}**` : `<@&${role.id}>`} as the roleban role.\n`
+                + 'Make sure to give it only one channel which it can see.');
+            }
+        } else if (ctx.args[0] === 'roleban' && ctx.args[1] === 'add') {
+            await ctx.createMessage('Please give me a role to set for rolebanning.');
+        } else if (ctx.args[0] === 'roleban' && ctx.args[1] === 'remove') {
+            if (!ctx.settings.rolebanRole) return await ctx.createMessage('No roleban role set.');
+
+            ctx.settings.rolebanRole = null;
+
+            await bot.editSettings(ctx.guild.id, ctx.settings);
+            await ctx.createMessage('Removed roleban role.');
+        } else if (ctx.args[0] === 'roleban' && ctx.args[1] === 'generate') {
+            if (!ctx.hasPermission('manageRoles', 'author')) {
+                return await ctx.createMessage('You need the **Manage Roles** permission.');
+            } else if (!ctx.hasPermission('manageRoles')) {
+                return await ctx.createMessage('I need the **Manage Roles** permission.');
+            } else if (!ctx.hasPermission('manageChannels')) {
+                return await ctx.createMessage('I need the **Manage Channels** permission.');
+            } else if (ctx.settings.rolebanRole) {
+                return await ctx.createMessage('There is already a role set for rolebanning.');
+            }
+
+            await ctx.createMessage('Creating role, channel and editing permissions for all channels. Please be patient...');
+
+            let role = await ctx.guild.createRole({
+                name: 'Rolebanned'
+            }, `${bot.formatUser(ctx.author)}: Auto-generating rolebanned role.`);
+
+            ctx.guild.channels.asyncForEach(async c => {
+                await c.editPermission(role.id, 0, 1024, 'role', `${bot.formatUser(ctx.author)}: Editing permission overwrites for auto-generated rolebanned role.`);
+            });
+
+            let channel = await ctx.guild.createChannel('rolebanned', 0, `${bot.formatUser(ctx.author)}: Generating channel for auto-generated rolebanned role.`);
+
+            await channel.editPermission(ctx.guild.id, 0, 1024, 'role', `${bot.formatUser(ctx.author)}: Editing generated channel permissions for auto-generated rolebanned role.`);
+            await channel.editPermission(role.id, 1024, 0, 'role', `${bot.formatUser(ctx.author)}: Editing generated channel permissions for auto-generated rolebanned role.`);
+
+            ctx.settings.rolebanRole = role.id;
+
+            await bot.editSettings(ctx.guild.id, ctx.settings);
+            await ctx.createMessage(`Created rolebanned role <@&${role.id}>, rolebanned channel and edited permissions for each channel.\n`
+            + 'You are now free to edit its name and colour.');
         }
     }
 };
