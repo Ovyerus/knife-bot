@@ -175,7 +175,7 @@ class CommandHolder {
             return;
         }
 
-        logger.custom('blue', 'CommandHolder/loadModule', `Loaded module '${name}'`);
+        logger.custom('CommandHolder/loadModule', `Loaded module '${name}'`);
     }
 
     /**
@@ -202,7 +202,7 @@ class CommandHolder {
 
         delete this.modules[name];
         delete require.cache[moduleName];
-        logger.custom('blue', 'CommandHolder/removeModule', `Removed module '${name}'`);
+        logger.custom('CommandHolder/removeModule', `Removed module '${name}'`);
     }
 
     /**

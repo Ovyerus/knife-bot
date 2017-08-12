@@ -69,7 +69,7 @@ async function preloadCommands() {
 
     if (deps.length > 0) {
         deps = deps.join(' ');
-        logger.custom('blue', 'commandLoader/preloadCommands', `Installing dependencies for commands, this may take a while...\nDependencies: ${deps}`);
+        logger.custom('commandLoader/preloadCommands', `Installing dependencies for commands, this may take a while...\nDependencies: ${deps}`);
         cp.exec(`npm i ${deps}`, (err, stdout, stderr) => {
             if (err) logger.customError('commandLoader/preloadCommands', `Error when trying to install dependencies: ${err}`);
             if (stderr) logger.customError('commandLoader/preloadCommands', `Error when trying to install dependencies: ${stderr}`);
@@ -116,17 +116,14 @@ async function loadCommands(bot) {
     });
 }
 
-exports.init = bot => {
-    return new Promise((resolve, reject) => {
-        getDirectories(`${__baseDir}/${commandsDirectory}`).then(dirs => {
-            commandFolders = dirs;
-            logger.custom('blue', 'commandLoader/init', 'Preloading commands.');
-            return preloadCommands();
-        }).then(() => {
-            logger.custom('blue', 'commandLoader/init', 'Loading commands.');
-            return loadCommands(bot);
-        }).then(resolve).catch(reject);
-    });
+exports.init = async bot => {
+    commandFolders = await getDirectories(`${__baseDir}/${commandsDirectory}`)
+
+    logger.custom('commandLoader/init', 'Preloading commands.');
+    await preloadCommands();
+
+    logger.custom('commandLoader/init', 'Loading commands.');
+    await loadCommands(bot);
 };
 
 Array.prototype.equals = array => {
