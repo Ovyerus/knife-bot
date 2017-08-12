@@ -30,7 +30,7 @@ class Logger {
      * @param {String} msg Message to log.
      */
     static warn(msg) {
-        console.log(`\x1b[37;43mcmd\x1b[33;49m ${msg}\x1b[0m`);
+        console.log(`\x1b[37;43mwarn\x1b[33;49m ${msg}\x1b[0m`);
     }
 
     /**
@@ -40,7 +40,7 @@ class Logger {
      * @param {String} msg Message to log.
      */
     static error(msg) {
-        console.error(`\x1b[37;41mcmd\x1b[31;49m ${msg}\x1b[0m`);
+        console.error(`\x1b[37;41merror\x1b[31;49m ${msg}\x1b[0m`);
     }
 
     /**
