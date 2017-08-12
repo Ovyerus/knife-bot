@@ -1,8 +1,4 @@
 module.exports = bot => {
-    bot.on('guildDelete', () => {
-        bot.editStatus('online', {name: `${bot.currentGame} | ${bot.guilds.size} servers`});
-    });
-
     bot.on('error', (err, id) => {
         logger.error(`Shard ${id} experienced error.\n${err.stack}`);
     });
