@@ -117,7 +117,7 @@ async function loadCommands(bot) {
 }
 
 exports.init = async bot => {
-    commandFolders = await getDirectories(`${__baseDir}/${commandsDirectory}`)
+    commandFolders = await getDirectories(`${__baseDir}/${commandsDirectory}`);
 
     logger.custom('commandLoader/init', 'Preloading commands.');
     await preloadCommands();
