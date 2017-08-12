@@ -390,4 +390,12 @@ module.exports = bot => {
 
         return roles.length > 0;
     };
+
+    Eris.Collection.prototype.asyncForEach = async function(func) {
+        for (let item of this) {
+            await func(item[1], item[0], this);
+        }
+
+        return this;
+    };
 };
