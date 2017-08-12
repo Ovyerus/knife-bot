@@ -40,7 +40,7 @@ class Logger {
      * @param {String} msg Message to log.
      */
     static error(msg) {
-        console.error(`\x1b[37;42mcmd\x1b[32;49m ${msg}\x1b[0m`);
+        console.error(`\x1b[37;41mcmd\x1b[31;49m ${msg}\x1b[0m`);
     }
 
     /**
@@ -52,6 +52,17 @@ class Logger {
      */
     static custom(tag, msg) {
         console.log(`\x1b[37;44m${tag}\x1b[34;49m ${msg}\x1b[0m`);
+    }
+
+    /**
+     * Error logger with custom tag.
+     * 
+     * @static
+     * @param {String} tag Tag for the logged message.
+     * @param {String} msg Message to log.
+     */
+    static customError(tag, msg) {
+        console.log(`\x1b[37;41m${tag}\x1b[31;49m ${msg}\x1b[0m`);
     }
 }
 
