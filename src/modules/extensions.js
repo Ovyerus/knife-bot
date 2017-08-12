@@ -391,6 +391,12 @@ module.exports = bot => {
         return roles.length > 0;
     };
 
+    /**
+     * Asynchronous version of Collection#forEach.
+     * 
+     * @param {Function} func Function to run over each item.
+     * @returns {Promise<Eris.Collection>} this
+     */
     Eris.Collection.prototype.asyncForEach = async function(func) {
         for (let item of this) {
             await func(item[1], item[0], this);
