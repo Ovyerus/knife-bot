@@ -763,6 +763,13 @@ exports.roles = {
 
             if (ctx.settings.muteRoles.includes(role.id)) return await ctx.createMessage('That role is already a muted role.');
 
+            let highRole = ctx.guild.roles.get(ctx.guildBot.roles.sort((a, b) => {
+                return ctx.guild.roles.get(b).position - ctx.guild.roles.get(a).position;
+            })[0]);
+            highRole = highRole ? highRole.position : 0;
+
+            if (role.position > highRole) return await ctx.createMessage("Role is higher than my highest role, so I'm not able to set it as a muted role.");
+
             ctx.settings.muteRoles.push(role.id);
 
             await bot.editSettings(ctx.guild.id, ctx.settings);
@@ -861,6 +868,13 @@ exports.roles = {
             let role = await bot.lookups.roleLookup(ctx, ctx.raw.split(' ').slice(2).join(' '));
 
             if (!role) return;
+
+            let highRole = ctx.guild.roles.get(ctx.guildBot.roles.sort((a, b) => {
+                return ctx.guild.roles.get(b).position - ctx.guild.roles.get(a).position;
+            })[0]);
+            highRole = highRole ? highRole.position : 0;
+
+            if (role.position > highRole) return await ctx.createMessage("Role is higher than my highest role, so I'm not able to set it for rolebanning.");
 
             if (ctx.settings.rolebanRole) {
                 await ctx.createMessage('There is already a role set for rolebanning. Would you like to replace it?');
