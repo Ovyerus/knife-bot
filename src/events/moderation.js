@@ -1,6 +1,24 @@
-const Actions = ['kicked', 'banned', 'softbanned'];
-const Months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const InviteRegex = /(?:https:\/\/)?(?:discord\.gg|discordapp\.com\/invite)\/((?:[A-Za-z0-9-])+)/i;
+const Actions = [
+    'kicked',
+    'banned',
+    'softbanned'
+];
+const Months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December'
+];
+
+const InviteRegex = /(?:https?:\/\/)?(?:discord\.gg|discordapp\.com\/invite)\/\s*?((?:[A-Za-z0-9-])+)/i;
 const DiacriticRegex = /[\u{0300}-\u{036F}\u{0489}]/gu; // eslint-disable-line
 
 module.exports = bot => {
