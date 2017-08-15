@@ -20,21 +20,17 @@ exports.vs = {
             return await ctx.createMessage('User not found.');
         }
 
-        if (ctx.raw.split('for').length === 1) {
-            await banMember(user, ctx);
-        } else {
-            await banMember(user, ctx);
+        await banMember(user, ctx);
 
-            if (!ctx.guild.members.map(m => m.id).includes(user.id)) {
-                bot.emit('log', {
-                    user,
-                    action: 1,
-                    reason: ctx.raw.split(' for').slice(1).join(' for').trim(),
-                    settings: ctx.settings,
-                    guild: ctx.guild,
-                    blame: ctx.member
-                });
-            }
+        if (ctx.raw.split(' for').length > 1 && !ctx.guild.members.map(m => m.id).includes(user.id)) {
+            bot.emit('log', {
+                user,
+                action: 1,
+                reason: ctx.raw.split(' for').slice(1).join(' for').trim(),
+                settings: ctx.settings,
+                guild: ctx.guild,
+                blame: ctx.member
+            });
         }
     }
 };
