@@ -827,10 +827,10 @@ exports.roles = {
             let role = await ctx.guild.createRole({
                 name: 'Muted',
                 color: 0xF21904
-            }, `${bot.formatUser(ctx.author)}: Auto-generating muted role.`);
+            }, encodeURIComponent(`${bot.formatUser(ctx.author)}: Auto-generating muted role.`));
 
             await ctx.guild.channels.asyncForEach(async c => {
-                await c.editPermission(role.id, 0, 2048, 'role', `${bot.formatUser(ctx.author)}: Editing permission overwrites for auto-generated muted role.`);
+                await c.editPermission(role.id, 0, 2048, 'role', encodeURIComponent(`${bot.formatUser(ctx.author)}: Editing permission overwrites for auto-generated muted role.`));
             });
 
             ctx.settings.muteRoles.push(role.id);
@@ -932,16 +932,16 @@ exports.roles = {
 
             let role = await ctx.guild.createRole({
                 name: 'Rolebanned'
-            }, `${bot.formatUser(ctx.author)}: Auto-generating rolebanned role.`);
+            }, encodeURIComponent(`${bot.formatUser(ctx.author)}: Auto-generating rolebanned role.`));
 
             ctx.guild.channels.asyncForEach(async c => {
-                await c.editPermission(role.id, 0, 1024, 'role', `${bot.formatUser(ctx.author)}: Editing permission overwrites for auto-generated rolebanned role.`);
+                await c.editPermission(role.id, 0, 1024, 'role', encodeURIComponent(`${bot.formatUser(ctx.author)}: Editing permission overwrites for auto-generated rolebanned role.`));
             });
 
-            let channel = await ctx.guild.createChannel('rolebanned', 0, `${bot.formatUser(ctx.author)}: Generating channel for auto-generated rolebanned role.`);
+            let channel = await ctx.guild.createChannel('rolebanned', 0, encodeURIComponent(`${bot.formatUser(ctx.author)}: Generating channel for auto-generated rolebanned role.`));
 
-            await channel.editPermission(ctx.guild.id, 0, 1024, 'role', `${bot.formatUser(ctx.author)}: Editing generated channel permissions for auto-generated rolebanned role.`);
-            await channel.editPermission(role.id, 1024, 0, 'role', `${bot.formatUser(ctx.author)}: Editing generated channel permissions for auto-generated rolebanned role.`);
+            await channel.editPermission(ctx.guild.id, 0, 1024, 'role', encodeURIComponent(`${bot.formatUser(ctx.author)}: Editing generated channel permissions for auto-generated rolebanned role.`));
+            await channel.editPermission(role.id, 1024, 0, 'role', encodeURIComponent(`${bot.formatUser(ctx.author)}: Editing generated channel permissions for auto-generated rolebanned role.`));
 
             ctx.settings.rolebanRole = role.id;
 

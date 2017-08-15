@@ -50,9 +50,9 @@ async function kickMember(user, ctx) {
         if (ctx.author.id === ctx.guild.ownerID || (userTopRolePos > mentionTopRolePos && userTopRolePos !== mentionTopRolePos)) {
             try {
                 if (ctx.raw.split(' for').length === 1) {
-                    await ctx.guild.kickMember(user.id, ctx.client.formatUser(ctx.author));
+                    await ctx.guild.kickMember(user.id, encodeURIComponent(ctx.client.formatUser(ctx.author)));
                 } else {
-                    await ctx.guild.kickMember(user.id, `${ctx.client.formatUser(ctx.author)}: ${ctx.raw.split(' for').slice(1).join(' for').trim()}`);
+                    await ctx.guild.kickMember(user.id, encodeURIComponent(`${ctx.client.formatUser(ctx.author)}: ${ctx.raw.split(' for').slice(1).join(' for').trim()}`));
                 }
 
                 await ctx.createMessage(`Butted **${ctx.client.formatUser(user)}** out of the kitchen!`);

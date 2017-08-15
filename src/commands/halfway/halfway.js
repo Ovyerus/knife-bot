@@ -50,11 +50,11 @@ async function softBanMember(user, ctx) {
         if (ctx.author.id === ctx.guild.ownerID || (userTopRolePos > mentionTopRolePos && userTopRolePos !== mentionTopRolePos)) {
             try {
                 if (ctx.raw.split(' for').length === 1) {
-                    await ctx.guild.banMember(user.id, 7, ctx.client.formatUser(ctx.author));
-                    await ctx.guild.unbanMember(user.id, ctx.client.formatUser(ctx.author));
+                    await ctx.guild.banMember(user.id, 7, encodeURIComponent(ctx.client.formatUser(ctx.author)));
+                    await ctx.guild.unbanMember(user.id, encodeURIComponent(ctx.client.formatUser(ctx.author)));
                 } else {
-                    await ctx.guild.banMember(user.id, 7, `${ctx.client.formatUser(ctx.author)}: ${ctx.raw.split(' for').slice(1).join(' for').trim()}`);
-                    await ctx.guild.unbanMember(user.id, `${ctx.client.formatUser(ctx.author)}: ${ctx.raw.split(' for').slice(1).join(' for').trim()}`);
+                    await ctx.guild.banMember(user.id, 7, encodeURIComponent(`${ctx.client.formatUser(ctx.author)}: ${ctx.raw.split(' for').slice(1).join(' for').trim()}`));
+                    await ctx.guild.unbanMember(user.id, encodeURIComponent(`${ctx.client.formatUser(ctx.author)}: ${ctx.raw.split(' for').slice(1).join(' for').trim()}`));
                 }
                 await ctx.createMessage(`Cut halfway through **${ctx.client.formatUser(user)}**!`);
             } catch(err) {
