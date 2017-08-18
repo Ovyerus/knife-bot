@@ -565,7 +565,7 @@ class Context {
         if (typeof where !== 'string') throw new TypeError('where is not a string.');
         if (!['channel', 'author'].includes(where)) throw new Error('where is an invalid place. Must either by `channel` or `author`');
             
-        if (content && content.embed && !content.embed.color) content.embed.color = 16665427;
+        if (content && content.embed && !content.embed.color) content.embed.color = this.client.embedColour;
 
         if (!this.hasPermission('embedLinks') && content && content.embed) content = Context.flattenEmbed(content.embed);
 

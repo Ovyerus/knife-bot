@@ -1,8 +1,13 @@
 // Modules
 const Eris = require('eris');
-const config = require(`${__dirname}/config.json`);
 const fs = require('fs');
-const bot = new Eris(config.token, {
+const KnifeBot = require(`${__dirname}/modules/KnifeBot`);
+const config = require(`${__dirname}/config.json`);
+
+// Generate user blacklist if needed.
+if (!fs.existsSync(`${__dirname}/blacklist.json`)) fs.writeFileSync(`${__dirname}/blacklist.json`, '[]');
+
+const bot = new KnifeBot(config, {
     getAllUsers: true,
     defaultImageFormat: 'png',
     defaultImageSize: 512,
@@ -22,24 +27,12 @@ Promise.config({
     longStackTraces: false
 });
 
-// Bot vars
-bot.config = config;
-bot.redHot = '🔥 1⃣0⃣0⃣0⃣ 🌡 🔪'; 
-bot.hotColour = 16665427;
-bot.commands = new (require(`${__dirname}/modules/CommandHolder`)).CommandHolder(bot);
-bot.lookups = new (require(`${__dirname}/modules/Lookups`))(bot);
-bot.db = require('rethinkdbdash')(config.rethinkOptions);
-bot.rest = new Eris('Bot ' + config.token, {
-    restMode: true
-});
+Eris.Collection.prototype.asyncForEach = async function(func) {
+    for (let item of this) await func(item[1], item[0], this);
+    return this;
+};
 
-bot.settings = new Eris.Collection(Object);
-
-// Generate user blacklist if needed.
-if (!fs.existsSync(`${__dirname}/blacklist.json`)) fs.writeFileSync(`${__dirname}/blacklist.json`, '[]');
-
-// Init events and extensions
-require(`${__dirname}/modules/extensions`)(bot);
+// Init events
 require(`${__dirname}/events`)(bot);
 
 bot.connect();
