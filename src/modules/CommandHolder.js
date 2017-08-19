@@ -255,13 +255,14 @@ class CommandHolder {
 
         if (cmd.owner && this[_bot].isOwner(ctx.author.id)) {
             await cmd.main(this[_bot], ctx);
-            logger.cmd(`${loggerPrefix(this[_bot], ctx)}Ran owner command '${ctx.cmd}'\n${ctx.cleanRaw}`);
+            logger.cmd(`${loggerPrefix(this[_bot], ctx)}Ran owner command '${ctx.cmd}'`);
         } else if (cmd.owner && !this[_bot].isOwner(ctx.author.id)) {
+            logger.cmd(`${loggerPrefix(this[_bot], ctx)}Tried to run owner command '${ctx.cmd}'`);
             return; // eslint-disable-line
         } else {
             if (!cmd.permissions || typeof cmd.permissions !== 'object') {
                 await cmd.main(this[_bot], ctx);
-                logger.cmd(`${loggerPrefix(this[_bot], ctx)}Ran command '${ctx.cmd}'\n${ctx.cleanRaw}`);
+                logger.cmd(`${loggerPrefix(this[_bot], ctx)}Ran command '${ctx.cmd}'`);
             } else {
                 await this[_handlePermissions](cmd, ctx);
             }
@@ -443,7 +444,7 @@ class CommandHolder {
 }
 
 function loggerPrefix(bot, msg) {
-    return msg.channel.guild ? `${msg.channel.guild.name} | ${msg.channel.name} > ${bot.formatUser(msg.author)} (${msg.author.id}): ` : `Direct Message > ${bot.formatUser(msg.author)} (${msg.author.id}): `;
+    return `${msg.channel.guild.id} > ${msg.author.id}: `;
 }
 
 /**

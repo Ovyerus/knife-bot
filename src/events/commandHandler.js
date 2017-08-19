@@ -5,11 +5,7 @@ const crypto = require('crypto');
 module.exports = bot => {
     bot.on('messageCreate', async msg => {
         if (!msg.author) console.log(msg);
-        if (!bot.useCommands || !msg.author || msg.author.id === bot.user.id) return;
-        if (!msg.channel.guild) {
-            logger.custom('cyan', 'dm', `${loggerPrefix(msg)}${msg.cleanContent}`);
-            return;
-        }
+        if (!bot.useCommands || !msg.author || msg.author.id === bot.user.id || !msg.channel.guild) return;
 
         if (/(?:https?:\/\/)?(?:discord\.gg|discordapp\.com\/invite)\/\s*?((?:[A-Za-z0-9]|-)+)/i.test(msg.content)) bot.emit('invites', msg);
         if (msg.mentions.filter(u => u.id !== msg.author.id && !u.bot).length > 0) bot.emit('mentions', msg);
@@ -36,10 +32,6 @@ module.exports = bot => {
             await handleCmdErr(msg, cmd, err);
         }
     });
-
-    function loggerPrefix(msg) {
-        return msg.channel.guild ? `${msg.channel.guild.name} | ${msg.channel.name} > ${bot.formatUser(msg.author)} (${msg.author.id}): ` : `Direct Message > ${bot.formatUser(msg.author)} (${msg.author.id}): `;
-    }
 
     /**
      * Handle errors from commands.
