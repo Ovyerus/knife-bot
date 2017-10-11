@@ -1,5 +1,3 @@
-const prettyBytes = require('pretty-bytes');
-
 exports.commands = ['info'];
 
 exports.info = {
@@ -17,7 +15,7 @@ exports.info = {
                 {name: 'Guilds', value: bot.guilds.size, inline: true},
                 {name: 'Users Seen', value: bot.users.size, inline: true},
                 {name: 'Uptime', value: msToTime(bot.uptime), inline: true},
-                {name: 'Memory Usage', value: prettyBytes(process.memoryUsage().rss), inline: true}
+                {name: 'Memory Usage', value: genBytes(process.memoryUsage().rss), inline: true}
             ]
         }});
     }
@@ -43,4 +41,13 @@ function msToTime(ms) {
     hours.toString().length === 1 ? hours = '0' + hours.toString() : hours = hours.toString();
 
     return `${days} days, ${hours}:${minutes}:${seconds}`;
+}
+
+function genBytes(amt) {
+    let endings = ['B', 'KB', 'MB', 'GB', 'TB'];
+
+    for (let i in endings) {
+        if (amt / 1000 < 1 || endings[i] === endings.slice(-1)[0]) return amt.toFixed(2) + ` ${endings[i]}`;
+        else amt /= 1000;
+    }
 }
