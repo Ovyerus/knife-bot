@@ -119,26 +119,27 @@ exports.invites = {
             await ctx.createMessage({embed});
         } else if (ctx.args[0] === 'enable') {
             if (!ctx.settings.invites.enabled) {
-                await bot.editSettings(ctx.guild.id, {invites: {enabled: true, fake: ctx.settings.invites.fake}});
-                await ctx.createMessage('I will now start cutting through invites.\nPlease make sure that I have the following permissions: **Ban Members**, **Kick Members** and **Manage Messages**.');
+                await bot.db.guild_settings[ctx.guild.id].invites.enabled.set(true);
+                await ctx.createMessage('I will now start cutting through invites.\n'
+                + 'Please make sure that I have the following permissions: **Ban Members**, **Kick Members** and **Manage Messages**.');
             } else {
                 await ctx.createMessage('I am already cutting through invites.');
             }
         } else if (ctx.args[0] === 'disable') {
             if (ctx.settings.invites.enabled) {
-                await bot.editSettings(ctx.guild.id, {invites: {enabled: false, fake: ctx.settings.invites.fake}});
+                await bot.db.guild_settings[ctx.guild.id].invites.enabled.set(false);
                 await ctx.createMessage('I will now stop cutting through invites.');
             } else {
                 await ctx.createMessage("I wasn't cutting through invites to begin with.");
             }
         } else if (ctx.args[0] === 'fake') {
             if (ctx.args[1] === 'enable' && !ctx.settings.invites.fake) {
-                await bot.editSettings(ctx.guild.id, {invites: {enabled: ctx.settings.invites.enabled, fake: true}});
+                bot.db.guild_settings[ctx.guild.id].invites.fake.set(true);
                 await ctx.createMessage('I will now cut through fake invites.');
             } else if (ctx.args[1] === 'enable' && ctx.settings.invites.fake) {
                 await ctx.createMessage('I am already cutting through fake invites.');
             } else if (ctx.args[1] === 'disable' && ctx.settings.invites.fake) {
-                await bot.editSettings(ctx.guild.id, {invites: {enabled: ctx.settings.invites.enabled, fake: false}});
+                await bot.db.guild_settings[ctx.guild.id].invites.fake.set(false);
                 await ctx.createMessage('I will no longer cut through invites.');
             } else if (ctx.args[1] === 'disable' && !ctx.settings.invites.fake) {
                 await ctx.createMessage("I wasn't cutting through fake invites.");
@@ -153,14 +154,7 @@ exports.invites = {
             } else if (num >= ctx.settings.actions.invites.ban) {
                 await ctx.createMessage('You cannot set the kick limit to, or higher than the ban limit.');
             } else {
-                let {invites, mentions, diacritics} = ctx.settings.actions;
-                let settings = Object.assign({}, ctx.settings, {actions: {
-                    invites: {kick: num, ban: invites.ban},
-                    mentions,
-                    diacritics
-                }});
-
-                await bot.editSettings(ctx.guild.id, settings);
+                await bot.db.guild_settings[ctx.guild.id].actions.invites.kick.set(num);
 
                 if (num === 0) {
                     await ctx.createMessage('Disabled kicking for invites.');
@@ -178,14 +172,7 @@ exports.invites = {
             } else if (num === 0) {
                 await ctx.createMessage('You cannot disable banning for invites (You can however set it to a ridiculously high number. This is a result of the dev being lazy atm. Might change in the future.).');
             } else {
-                let {invites, mentions, diacritics} = ctx.settings.actions;
-                let settings = Object.assign({}, ctx.settings, {actions: {
-                    invites: {kick: invites.kick, ban: num},
-                    mentions,
-                    diacritics
-                }});
-
-                await bot.editSettings(ctx.guild.id, settings);
+                await bot.db.guild_settings[ctx.guild.id].actions.invites.ban.set(num);
                 await ctx.createMessage(`Set ban limit to **${num}**.`);
             }
         }
@@ -232,14 +219,14 @@ exports.mentions = {
             await ctx.createMessage({embed});
         } else if (ctx.args[0] === 'enable') {
             if (!ctx.settings.mentions.enabled) {
-                await bot.editSettings(ctx.guild.id, {mentions: {enabled: true, trigger: ctx.settings.mentions.trigger}});
+                await bot.db.guild_settings[ctx.guild.id].mentions.enabled.set(true);
                 await ctx.createMessage('I will now start cutting through mass mentions.\nPlease make sure that I have the following permissions: **Ban Members**, **Kick Members** and **Manage Messages**.');
             } else {
                 await ctx.createMessage('I am already cutting through mass mentions.');
             }
         } else if (ctx.args[0] === 'disable') {
             if (ctx.settings.mentions.enabled) {
-                await bot.editSettings(ctx.guild.id, {mentions: {enabled: true, trigger: ctx.settings.mentions.trigger}});
+                await bot.db.guild_settings[ctx.guild.id].mentions.enabled.set(false);
                 await ctx.createMessage('I will now stop cutting through mass mentions.');
             } else {
                 await ctx.createMessage("I wasn't cutting through mass mentions to begin with.");
@@ -252,7 +239,7 @@ exports.mentions = {
             } else if (num === 0) {
                 await ctx.createMessage('You cannot set trigger to 0. If you wish to disable mass mention blocking, run `settings mentions disable`.');
             } else {
-                await bot.editSettings(ctx.guild.id, {mentions: {enabled: ctx.settings.mentions.enabled, trigger: num}});
+                await bot.db.guild_settings[ctx.guild.id].mentions.trigger.set(num);
                 await ctx.createMessage(`Set trigger limit to **${num}**.`);
             }
         } else if (ctx.args[0] === 'kick') {
@@ -263,14 +250,7 @@ exports.mentions = {
             } else if (num >= ctx.settings.actions.mentions.ban) {
                 await ctx.createMessage('You cannot set the kick limit to, or higher than the ban limit.');
             } else {
-                let {invites, mentions, diacritics} = ctx.settings.actions;
-                let settings = Object.assign({}, ctx.settings, {actions: {
-                    invites,
-                    mentions: {kick: num, ban: mentions.kick},
-                    diacritics
-                }});
-
-                await bot.editSettings(ctx.guild.id, settings);
+                await bot.db.guild_settings[ctx.guild.id].actions.mentions.kick.set(num);
 
                 if (num === 0) {
                     await ctx.createMessage('Disabled kicking for mentions.');
@@ -288,15 +268,8 @@ exports.mentions = {
             } else if (num === 0) {
                 await ctx.createMessage('You cannot disable banning for mentions (You can however set it to a ridiculously high number).');
             } else {
-                let {invites, mentions, diacritics} = ctx.settings.actions;
-                let settings = Object.assign({}, ctx.settings, {actions: {
-                    invites,
-                    mentions: {kick: mentions.kick, ban: num},
-                    diacritics
-                }});
-
-                await bot.editSettings(ctx.guild.id, settings);
-                await  ctx.createMessage(`Set ban limit to **${num}**.`);
+                await bot.db.guild_settings[ctx.guild.id].actions.mentions.ban.set(num);
+                await ctx.createMessage(`Set ban limit to **${num}**.`);
             }
         }
     }
@@ -306,7 +279,7 @@ exports.diacritics = {
     desc: 'Edit diacritics settings for the bot.',
     usage: '[enable | disable | trigger <amount> | kick <amount> | ban <amount>]',
     async main(bot, ctx) {
-        if (!['enable', 'disable', 'trigger'].includes(ctx.args[0])) {
+        if (!['enable', 'disable', 'trigger', 'ban', 'kick'].includes(ctx.args[0])) {
             let embed = {
                 title: 'Server Settings - Diacritics',
                 description: `Showing current diacritics settings for **${ctx.guild.name}**.`,
@@ -342,14 +315,14 @@ exports.diacritics = {
             await ctx.createMessage({embed});
         } else if (ctx.args[0] === 'enable') {
             if (!ctx.settings.diacritics.enabled) {
-                await bot.editSettings(ctx.guild.id, {diacritics: {enabled: true, trigger: ctx.settings.diacritics.trigger}});
+                await bot.db.guild_settings[ctx.guild.id].diacritics.enabled.set(true);
                 await ctx.createMessage('I will now start cutting through spammy diacritic usage.\nPlease make sure that I have the following permissions: **Ban Members**, **Kick Members** and **Manage Messages**.');
             } else {
                 await ctx.createMessage('I am already cutting through spammy diacritics.');
             }
         } else if (ctx.args[0] === 'disable') {
             if (ctx.settings.diacritics.enabled) {
-                await bot.editSettings(ctx.guild.id, {diacritics: {enabled: false, fake: ctx.settings.diacritics.fake}});
+                await bot.db.guild_settings[ctx.guild.id].diacritics.enabled.set(false);
                 await ctx.createMessage('I will now stop cutting through spammy diacritics.');
             } else {
                 await ctx.createMessage("I wasn't cutting through spammy diacritics to begin with.");
@@ -362,7 +335,7 @@ exports.diacritics = {
             } else if (num === 0) {
                 await ctx.createMessage('You cannot set trigger to 0. If you wish to disable spammy diacritics blocking, run `settings diacritics disable`.');
             } else {
-                await bot.editSettings(ctx.guild.id, {diacritics: {enabled: ctx.settings.diacritics.enabled, trigger: num}});
+                await bot.db.guild_settings[ctx.guild.id].diacritics.trigger.set(num);
                 await ctx.createMessage(`Set trigger limit to **${num}**.`);
             }
         } else if (ctx.args[0] === 'kick') {
@@ -373,14 +346,7 @@ exports.diacritics = {
             } else if (num >= ctx.settings.actions.diacritics.ban) {
                 await ctx.createMessage('You cannot set the kick limit to, or higher than the ban limit.');
             } else {
-                let {invites, mentions, diacritics} = ctx.settings.actions;
-                let settings = Object.assign({}, ctx.settings, {actions: {
-                    invites,
-                    mentions,
-                    diacritics: {kick: num, ban: diacritics.kick}
-                }});
-
-                await bot.editSettings(ctx.guild.id, settings);
+                await bot.db.guild_settings[ctx.guild.id].actions.diacritics.kick.set(num);
 
                 if (num === 0) {
                     await ctx.createMessage('Disabled kicking for diacritics.');
@@ -398,15 +364,8 @@ exports.diacritics = {
             } else if (num === 0) {
                 await ctx.createMessage('You cannot disable banning for diacritics (You can however set it to a ridiculously high number).');
             } else {
-                let {invites, mentions, diacritics} = ctx.settings.actions;
-                let settings = Object.assign({}, ctx.settings, {actions: {
-                    invites,
-                    mentions,
-                    diacritics: {kick: diacritics.kick, ban: num}
-                }});
-
-                await bot.editSettings(ctx.guild.id, settings);
-                await  ctx.createMessage(`Set ban limit to **${num}**.`);
+                await bot.db.guild_settings[ctx.guild.id].actions.diacritics.ban.set(num);
+                await ctx.createMessage(`Set ban limit to **${num}**.`);
             }
         }
     }
@@ -521,7 +480,7 @@ exports.exceptions = {
 
             await ctx.createMessage({embed});
         } else if (ctx.args[0] === 'users') {
-            if (!ctx.raw.split(' ').slice(2).join(' ')) return await ctx.createMessage(`Please give me a user to ${ctx.args[1]} an exception for.`);
+            if (!ctx.args[2]) return await ctx.createMessage(`Please give me a user to ${ctx.args[1]} an exception for.`);
 
             let user = await bot.lookups.memberLookup(ctx, ctx.raw.split(' ').slice(2).join(' '), false);
 
@@ -533,68 +492,50 @@ exports.exceptions = {
                 }
             }
 
-            let settings = ctx.settings;
-
-            if (!settings.exceptions.users.includes(user.id) && ctx.args[1] === 'add') {
-                settings.exceptions.users.push(user.id);
-
-                await bot.editSettings(ctx.guild.id, settings);
+            if (!ctx.settings.exceptions.users.includes(user.id) && ctx.args[1] === 'add') {
+                await bot.db.guild_settings[ctx.guild.id].exceptions.users.push(user.id);
                 await ctx.createMessage(`Added exception for user **${bot.formatUser(user)}**.`);
-            } else if (settings.exceptions.users.includes(user.id) && ctx.args[1] === 'add') {
+            } else if (ctx.settings.exceptions.users.includes(user.id) && ctx.args[1] === 'add') {
                 await ctx.createMessage('There is already an exception for that user.');
-            } else if (settings.exceptions.users.includes(user.id) && ctx.args[1] === 'remove') {
-                settings.exceptions.users.splice(settings.exceptions.users.indexOf(user.id), 1);
-
-                await bot.editSettings(ctx.guild.id, settings);
+            } else if (ctx.settings.exceptions.users.includes(user.id) && ctx.args[1] === 'remove') {
+                await bot.db.guild_settings[ctx.guild.id].exceptions.users.splice(ctx.settings.exceptions.users.indexOf(user.id), 1);
                 await ctx.createMessage(`Removed exception for user **${bot.formatUser(user)}**.`);
             } else {
                 await ctx.createMessage("There isn't an exception for that user.");
             }
         } else if (ctx.args[0] === 'channels') {
-            if (!ctx.raw.split(' ').slice(2).join(' ')) return await ctx.createMessage(`Please give me a channel to ${ctx.args[1]} an exception for.`);
+            if (!ctx.args[2]) return await ctx.createMessage(`Please give me a channel to ${ctx.args[1]} an exception for.`);
 
             let channel = await bot.lookups.channelLookup(ctx, ctx.raw.split(' ').slice(2).join(' '));
 
             if (!channel) return;
             if (channel.type === 2) return await ctx.createMessage('I cannot add exceptions for voice channels.');
 
-            let settings = ctx.settings;
-
-            if (!settings.exceptions.channels.includes(channel.id) && ctx.args[1] === 'add') {
-                settings.exceptions.channels.push(channel.id);
-
-                await bot.editSettings(ctx.guild.id, settings);
+            if (!ctx.settings.exceptions.channels.includes(channel.id) && ctx.args[1] === 'add') {
+                await bot.db.guild_settings[ctx.guild.id].exceptions.channels.push(channel.id);
                 await ctx.createMessage(`Added exception for channel <#${channel.id}>.`);
-            } else if (settings.exceptions.channels.includes(channel.id) && ctx.args[1] === 'add') {
+            } else if (ctx.settings.exceptions.channels.includes(channel.id) && ctx.args[1] === 'add') {
                 await ctx.createMessage('There is already an exception for that channel.');
-            } else if (settings.exceptions.channels.includes(channel.id) && ctx.args[1] === 'remove') {
-                settings.exceptions.channels.splice(settings.exceptions.channels.indexOf(channel.id), 1);
-
-                await bot.editSettings(ctx.guild.id, settings);
+            } else if (ctx.settings.exceptions.channels.includes(channel.id) && ctx.args[1] === 'remove') {
+                await bot.db.guild_settings[ctx.guild.id].exceptions.channels.splice(ctx.settings.exceptions.channels.indexOf(channel.id), 1);
                 await ctx.createMessage(`Removed exception for channel <#${channel.id}>.`);
             } else {
                 await ctx.createMessage("There isn't an exception for that channel.");
             }
         } else if (ctx.args[0] === 'roles') {
-            if (!ctx.raw.split(' ').slice(2).join(' ')) return await ctx.createMessage('Please give me a role to add an exception for.');
+            if (!ctx.args[2]) return await ctx.createMessage('Please give me a role to add an exception for.');
 
             let role = await bot.lookups.roleLookup(ctx, ctx.raw.split(' ').slice(2).join(' '));
 
             if (!role) return;
 
-            let settings = ctx.settings;
-
-            if (!settings.exceptions.roles.includes(role.id) && ctx.args[1] === 'add') {
-                settings.exceptions.roles.push(role.id);
-
-                await bot.editSettings(ctx.guild.id, settings);
+            if (!ctx.settings.exceptions.roles.includes(role.id) && ctx.args[1] === 'add') {
+                await bot.db.guild_settings[ctx.guild.id].exceptions.roles.push(role.id);
                 await ctx.createMessage(`Added exception for role ${role.mentionable ? `**${role.name}**`: role.mention}.`);
-            } else if (settings.exceptions.roles.includes(role.id) && ctx.args[1] === 'add') {
+            } else if (ctx.settings.exceptions.roles.includes(role.id) && ctx.args[1] === 'add') {
                 await ctx.createMessage('There is already an exception for that role.');
-            } else if (settings.exceptions.roles.includes(role.id) && ctx.args[1] === 'remove') {
-                settings.exceptions.roles.splice(settings.exceptions.users.indexOf(role.id), 1);
-
-                await bot.editSettings(ctx.guild.id, settings);
+            } else if (ctx.settings.exceptions.roles.includes(role.id) && ctx.args[1] === 'remove') {
+                await bot.db.guild_settings[ctx.guild.id].exceptions.roles.splice(ctx.settings.exceptions.roles.indexOf(role.id), 1);
                 await ctx.createMessage(`Removed exception for role ${role.mentionable ? `**${role.name}**`: role.mention}.`);
             } else {
                 await ctx.createMessage("There isn't an exception for that role.");
@@ -623,7 +564,7 @@ exports.channel = {
 
             await ctx.createMessage({embed});
         } else if (ctx.args[0] === 'disable' && ctx.settings.logChannel) {
-            await bot.editSettings(ctx.guild.id, {logChannel: null});
+            await bot.db.guild_settings[ctx.guild.id].logChannel.set(null);
             await ctx.createMessage('Removed log channel.');
         } else if (ctx.args[0] === 'disable') {
             await ctx.createMessage("There isn't a log channel set.");
@@ -632,7 +573,7 @@ exports.channel = {
 
             if (!channel) return;
 
-            await bot.editSettings(ctx.guild.id, {logChannel: channel.id});
+            await bot.db.guild_settings[ctx.guild.id].logChannel.set(channel.id);
             await ctx.createMessage(`Set log channel to <#${channel.id}>`);
         }
     }
@@ -668,38 +609,20 @@ exports.messages = {
             await ctx.createMessage('Please give a something to set the message as.');
         } else if (ctx.args[0] === 'invites') {
             let msg = ctx.raw.split(' ').slice(1).join(' ');
-            let {mentions, diacritics} = ctx.settings.mentions;
-            let settings = Object.assign({}, ctx.settings, {messages: {
-                invites: msg,
-                mentions,
-                diacritics
-            }});
 
-            await bot.editSettings(ctx.guild.id, settings);
+            await bot.db.guild_settings[ctx.guild.id].messages.invites.set(msg);
             await ctx.createMessage('Successfully edited message for `invites`. Sending test message...');
             await ctx.createMessage(msg.replace(/{{mention}}/g, ctx.author.mention));
         } else if (ctx.args[0] === 'mentions') {
             let msg = ctx.raw.split(' ').slice(1).join(' ');
-            let {invites, diacritics} = ctx.settings.mentions;
-            let settings = Object.assign({}, ctx.settings, {messages: {
-                invites,
-                mentions: msg,
-                diacritics
-            }});
 
-            await bot.editSettings(ctx.guild.id, settings);
+            await bot.db.guild_settings[ctx.guild.id].messages.mentions.set(msg);
             await ctx.createMessage('Successfully edited message for `mentions`. Sending test message...');
             await ctx.createMessage(msg.replace(/{{mention}}/g, ctx.author.mention)); 
         } else {
             let msg = ctx.raw.split(' ').slice(1).join(' ');
-            let {invites, mentions} = ctx.settings.mentions;
-            let settings = Object.assign({}, ctx.settings, {messages: {
-                invites,
-                mentions,
-                diacritics: msg
-            }});
 
-            await bot.editSettings(ctx.guild.id, settings);
+            await bot.db.guild_settings[ctx.guild.id].messaes.diacritics.set(msg);
             await ctx.createMessage('Successfully edited message for `diacritics`. Sending test message...');
             await ctx.createMessage(msg.replace(/{{mention}}/g, ctx.author.mention));
         }
@@ -769,11 +692,10 @@ exports.roles = {
             highRole = highRole ? highRole.position : 0;
 
             if (role.position > highRole) return await ctx.createMessage("Role is higher than my highest role, so I'm not able to set it as a muted role.");
+            if (role.position === highRole) return await ctx.createMessage("Role is the same as my highest role, so I'm not able to set it as a muted role.");
 
-            ctx.settings.muteRoles.push(role.id);
-
-            await bot.editSettings(ctx.guild.id, ctx.settings);
-            await ctx.createMessage(`Assigned ${role.mentionable ? `**${role.name}**` : `<@&${role.id}>`} as a muted role.`);
+            await bot.db.guild_settings[ctx.guild.id].muteRoles.push(role.id);
+            await ctx.createMessage(`Assigned ${role.mentionable ? `**${role.name}**` : role.mention} as a muted role.`);
         } else if (ctx.args[0] === 'mute' && ctx.args[1] === 'add') {
             await ctx.createMessage('Please give me a role to add as a muted role.');
         } else if (ctx.args[0] === 'mute' && ctx.args[1] === 'remove' && ctx.args[2]) {
@@ -783,22 +705,16 @@ exports.roles = {
 
             if (!role && !isNaN(ctx.args[2]) && ctx.settings.muteRoles.includes(ctx.args[2])) {
                 // Role is deleted, but user used ID that is added as mute role.
-                ctx.settings.muteRoles = ctx.settings.muteRoles.filter(r => r !== ctx.args[2]);
-
-                await bot.editSettings(ctx.guild.id, ctx.settings);
-
-                await ctx.createMessage('Removed **deleted role** from muted roles.');
+                await bot.db.guild_settings[ctx.guild.id].muteRoles.splice(ctx.settings.muteRoles.indexOf(ctx.args[2]), 1);
+                await ctx.createMessage('Removed **Deleted Role** from muted roles.');
             } else if (!role) {
                 await ctx.createMessage('That role could not be found.');
             } else if (role && !ctx.settings.muteRoles.includes(role.id)) {
                 await ctx.createMessage('That role is not a muted role.');
             } else {
                 // There is a role.
-                ctx.settings.muteRoles = ctx.settings.muteRoles.filter(r => r !== role.id);
-
-                await bot.editSettings(ctx.guild.id, ctx.settings);
-
-                await ctx.createMessage(`Removed ${role.mentionable ? `**${role.name}**` : `<@&${role.id}>`} from muted roles.`);
+                await bot.db.guild_settings[ctx.guild.id].muteRoles.splice(ctx.settings.muteRoles.indexOf(role.id), 1);
+                await ctx.createMessage(`Removed ${role.mentionable ? `**${role.name}**` : role.mention} from muted roles.`);
             }
         } else if (ctx.args[0] === 'mute' && ctx.args[1] === 'remove') {
             await ctx.createMessage('Please give me a role to remove as a muted role.');
@@ -833,10 +749,8 @@ exports.roles = {
                 await c.editPermission(role.id, 0, 2048, 'role', encodeURIComponent(`${bot.formatUser(ctx.author)}: Editing permission overwrites for auto-generated muted role.`));
             });
 
-            ctx.settings.muteRoles.push(role.id);
-
-            await bot.editSettings(ctx.guild.id, ctx.settings);
-            await ctx.createMessage(`Created muted role <@&${role.id}> and edited permissions for each channel.\n`
+            await bot.db.guild_settings[ctx.guild.id].muteRoles.push(role.id);
+            await ctx.createMessage(`Created muted role ${role.mention} and edited permissions for each channel.\n`
             + 'You are now free to edit its name, colour, settings and permissions for channels.');
         } else if (ctx.args[0] === 'roleban' && !['set', 'remove', 'generate'].includes(ctx.args[1])) {
             embed.description = embed.description.replace('special roles', 'roleban role');
@@ -875,6 +789,7 @@ exports.roles = {
             highRole = highRole ? highRole.position : 0;
 
             if (role.position > highRole) return await ctx.createMessage("Role is higher than my highest role, so I'm not able to set it for rolebanning.");
+            if (role.position === highRole) return await ctx.createMessage("Role is the same as my highest role, so I'm not able to set it for rolebanning.");
 
             if (ctx.settings.rolebanRole) {
                 await ctx.createMessage('There is already a role set for rolebanning. Would you like to replace it?');
@@ -896,26 +811,19 @@ exports.roles = {
                     return await ctx.createMessage('Invalid response.');
                 }
 
-                ctx.settings.rolebanRole = role.id;
-
-                await bot.editSettings(ctx.guild.id, ctx.settings);
-                await ctx.createMessage(`Set ${role.mentionable ? `**${role.name}**` : `<@&${role.id}>`} as the roleban role.\n`
+                await bot.db.guild_settings[ctx.guild.id].rolebanRole.set(role.id);
+                await ctx.createMessage(`Set ${role.mentionable ? `**${role.name}**` : role.mention} as the roleban role.\n`
                 + 'Make sure to give it only one channel which it can see.');
             } else {
-                ctx.settings.rolebanRole = role.id;
-
-                await bot.editSettings(ctx.guild.id, ctx.settings);
-                await ctx.createMessage(`Set ${role.mentionable ? `**${role.name}**` : `<@&${role.id}>`} as the roleban role.\n`
+                await bot.db.guild_settings[ctx.guild.id].rolebanRole.set(role.id);
+                await ctx.createMessage(`Set ${role.mentionable ? `**${role.name}**` : role.mention} as the roleban role.\n`
                 + 'Make sure to give it only one channel which it can see.');
             }
         } else if (ctx.args[0] === 'roleban' && ctx.args[1] === 'add') {
             await ctx.createMessage('Please give me a role to set for rolebanning.');
         } else if (ctx.args[0] === 'roleban' && ctx.args[1] === 'remove') {
             if (!ctx.settings.rolebanRole) return await ctx.createMessage('No roleban role set.');
-
-            ctx.settings.rolebanRole = null;
-
-            await bot.editSettings(ctx.guild.id, ctx.settings);
+            await bot.db.guild_settings[ctx.guild.id].rolebanRole.set(null);
             await ctx.createMessage('Removed roleban role.');
         } else if (ctx.args[0] === 'roleban' && ctx.args[1] === 'generate') {
             if (!ctx.hasPermission('manageRoles', 'author')) {
@@ -934,7 +842,7 @@ exports.roles = {
                 name: 'Rolebanned'
             }, encodeURIComponent(`${bot.formatUser(ctx.author)}: Auto-generating rolebanned role.`));
 
-            ctx.guild.channels.asyncForEach(async c => {
+            await ctx.guild.channels.asyncForEach(async c => {
                 await c.editPermission(role.id, 0, 1024, 'role', encodeURIComponent(`${bot.formatUser(ctx.author)}: Editing permission overwrites for auto-generated rolebanned role.`));
             });
 
@@ -943,10 +851,8 @@ exports.roles = {
             await channel.editPermission(ctx.guild.id, 0, 1024, 'role', encodeURIComponent(`${bot.formatUser(ctx.author)}: Editing generated channel permissions for auto-generated rolebanned role.`));
             await channel.editPermission(role.id, 1024, 0, 'role', encodeURIComponent(`${bot.formatUser(ctx.author)}: Editing generated channel permissions for auto-generated rolebanned role.`));
 
-            ctx.settings.rolebanRole = role.id;
-
-            await bot.editSettings(ctx.guild.id, ctx.settings);
-            await ctx.createMessage(`Created rolebanned role <@&${role.id}>, rolebanned channel and edited permissions for each channel.\n`
+            await bot.db.guild_settings[ctx.guild.id].rolebanRole.set(role.id);
+            await ctx.createMessage(`Created rolebanned role ${role.mention}, rolebanned channel and edited permissions for each channel.\n`
             + 'You are now free to edit its name and colour.');
         }
     }

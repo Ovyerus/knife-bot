@@ -9,9 +9,11 @@
   "bugs": "https://github.com/Ovyerus/knife-bot/issues",
   "dependencies": {
     "bluebird": "^3.4.7",
-    "eris": "abalabahaha/eris",
+    "eris": "git:abalabahaha/eris",
     "got": "^6.7.1",
-    "rethinkdbdash": "^2.3.27"
+    "moment": "^2.18.1",
+    "rebridge": "^2.3.0",
+    "redis": "^2.8.0"
   },
   "devDependencies": {
     "eslint": "^3.18.0",

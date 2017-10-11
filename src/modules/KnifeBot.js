@@ -5,6 +5,8 @@
 
 const Eris = require('eris');
 const got = require('got');
+const Redis = require('redis');
+const Rebridge = require('rebridge');
 const Lookups = require('./Lookups');
 const Logger = require('./Logger');
 const {CommandHolder} = require('./CommandHolder');
@@ -16,25 +18,26 @@ const fs = require('fs');
  * 
  * @extends Eris.Client
  * 
+ * @prop {String[]} blacklist Array of blacklisted users.
+ * @prop {String} blacklistPath Path to blacklist file.
+ * @prop {CommandHolder} commands Command holder and runner.
  * @prop {Object} config Configuration object for the bot.
- * @prop {String} redHot Emoji string based off the name.
+ * @prop {Rebridge} db Database wrapper.
  * @prop {Number} embedColour Default colour to use for embeds.
  * @prop {String[]} games Array of games to select from.
- * @prop {String} blacklistPath Path to blacklist file.
- * @prop {String[]} blacklist Array of blacklisted users.
- * @prop {Eris.Collection<Object>} settings Settings cache.
- * @prop {CommandHolder} commands Command holder and runner.
- * @prop {Lookups} lookups Class for looking up various objects.
  * @prop {Logger} logger Internal logger.
- * @prop {RethinkDBDash} db Database manager.
+ * @prop {Lookups} lookups Class for looking up various objects.
+ * @prop {String} redHot Emoji string based off the name.
+ * @prop {Redis} redis Database manager used for the main wrapper.
  * @prop {Eris.Client} rest Bot in REST mode in order to access REST restricted stuff.
+ * @prop {String} userAgent User agent to send to external sites.
  */
 class KnifeBot extends Eris.Client {
     /**
      * Create a new Knife Bot client.
      * 
      * @param {KnifeConfig} config Configuration for the bot.
-     * @param {Objecvt} [options={}] Eris options.
+     * @param {Object} [options={}] Eris options.
      */
     constructor(config, options={}) {
         if (!config || typeof config !== 'object') throw new TypeError('config is not an object.');
@@ -43,6 +46,8 @@ class KnifeBot extends Eris.Client {
 
         this.config = config;
         this.redHot = '🔥 1⃣0⃣0⃣0⃣ 🌡 🔪';
+        this.userAgent = 'Knife Bot/2.1';
+        this.gameInterval = config.gameInterval || 300000;
         this.embedColour = config.embedColour || 16665427;
         this.games = config.games || [
             '🔪 help',
@@ -56,15 +61,15 @@ class KnifeBot extends Eris.Client {
         this.blacklistPath = config.blacklist || './blacklist.json';
         this.blacklist = fs.readFileSync(this.blacklistPath);
 
-        this.settings = new Eris.Collection(Object);
         this.commands = new CommandHolder(this);
         this.lookups = new Lookups(this);
-        this.logger = Logger;
-        this.db = require('rethinkdbdash')(config.rethinkOptions);
+        this.redis = Redis.createClient(config.redisOptions);
+        this.db = new Rebridge(this.redis, config.rebridgeOptions);
         this.rest = new Eris(`Bot ${config.token}`, {
             restMode: true
         });
 
+        this.logger = Logger;
         this.useCommands = false;
         this.loadCommands = true;
     }
@@ -120,8 +125,6 @@ class KnifeBot extends Eris.Client {
 
     /**
      * Posts current guild count to bots.discord.pw.
-     * 
-     * @returns {Promise} .
      */
     async postGuildCount() {
         if (this.config.dbotsKey) {
@@ -130,7 +133,8 @@ class KnifeBot extends Eris.Client {
                     method: 'POST',
                     headers: {
                         Authorization: this.config.dbotsKey,
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'User-Agent': this.userAgent
                     },
                     body: JSON.stringify({
                         server_count: this.guilds.size
@@ -158,7 +162,7 @@ class KnifeBot extends Eris.Client {
             this.currentGame = game;
             return game;
         } else {
-            this.pickGame();
+            return this.pickGame();
         }
     }
 
@@ -190,6 +194,9 @@ class KnifeBot extends Eris.Client {
 
         let res = await got('https://hastebin.com/documents', {
             method: 'POST',
+            headers: {
+                'User-Agent': this.userAgent
+            },
             body: str
         });
 
@@ -208,8 +215,6 @@ class KnifeBot extends Eris.Client {
 
     /**
      * Reloads the blacklist.
-     * 
-     * @returns {Promise} .
      */
     async reloadBlacklist() {
         let list = await new Promise((resolve, reject) => {
@@ -259,11 +264,13 @@ class KnifeBot extends Eris.Client {
             r.permissions.has('kickMembers') ||
             r.permissions.has('manageMessages') ||
             r.permissions.has('manageGuild') ||
-            r.permissions.has('manageNicknames')
+            r.permissions.has('manageNicknames');
         });
 
         return roles.length > 0 || member.id === member.guild.ownerID;
     }
+
+    // %% Settings Functions %% //
 
     /**
      * Sets up the settings for a guild the first time.
@@ -275,7 +282,6 @@ class KnifeBot extends Eris.Client {
         if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
 
         let settings = {
-            id: guildID,
             actions: {
                 mentions: {
                     kick: 2,
@@ -307,15 +313,13 @@ class KnifeBot extends Eris.Client {
             muteRoles: [],
             rolebanRole: null
         };
-
-        this.settings.add(settings);
         
-        let res = await this.db.table('guild_settings').get(guildID).run();
+        let res = await this.db.guild_settings[guildID]._promise;
 
         if (res) return res;
-        await this.db.table('guild_settings').insert(settings).run();
 
-        return await this.db.table('guild_settings').get(guildID).run();
+        await this.db.guild_settings[guildID].set(settings);
+        return await this.db.guild_settings[guildID]._promise;
     }
 
     /**
@@ -327,132 +331,127 @@ class KnifeBot extends Eris.Client {
     async getSettings(guildID) {
         if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
 
-        if (this.settings.get(guildID)) {
-            return this.settings.get(guildID);
-        } else {
-            let res = await this.db.table('guild_settings').get(guildID).run();
+        let res = await this.db.guild_settings[guildID]._promise;
 
-            if (!res) return await this.initSettings(guildID);
-            this.settings.add(res);
-            return res;
+        if (!res) return await this.initSettings(guildID);
+        return res;
+    }
+
+    /**
+     * Get the strikes for a guild. Optionally get it for a user as well.
+     * 
+     * @param {String} guildID Guild to get strikes for.
+     * @param {String} [userID] User to get strikes for.
+     * @returns {Promise<(Object[]|Number)>} Strikes for the guild or user.
+     */
+    async getStrikes(guildID, userID) {
+        if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
+
+        let res = await this.db.strikes[guildID]._promise;
+
+        if (!res) {
+            await this.db.strikes[guildID].set([]);
+
+            if (typeof userID === 'string') return 0;
+            else return [];
+        } else {
+            if (typeof userID === 'string') return res.find(u => u.id === userID) ? res[userID].strikes : 0;
+            else return res;
         }
     }
 
     /**
-     * Edit the settings for a guild.
+     * Increment the strikes for a user.
      * 
-     * @param {String} guildID Guild to edit settings for.
-     * @param {Object} settings New settings.
-     * @returns {Promise<Object>} Edited settings.
+     * @param {String} guildID Guild where the user is located.
+     * @param {String} userID User to increment strikes for.
      */
-    async editSettings(guildID, settings={}) {
-        if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
-        if (!settings || typeof settings !== 'object') throw new TypeError('settings is not an object.');
-        if (Object.keys(settings).length === 0) throw new Error('settings is empty.');
-
-        await this.db.table('guild_settings').get(guildID).update(settings).run();
-        let res = await this.db.table('guild_settings').get(guildID);
-
-        if (!this.settings.get(guildID)) {
-            this.settings.add(res);
-        } else {
-            this.settings.remove(res);
-            this.settings.add(res);
-        }
-
-        return res;
-    }
-
-    async getStrikes(guildID, userID) {
-        if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
-
-        let res = await this.db.table('strikes').get(guildID).run();
-
-        if (!res) {
-            await this.db.table('strikes').insert({id: guildID, users: []});
-
-            return [];
-        } else {
-            if (typeof userID === 'string') {
-                return res.users.find(u => u.id === userID) ? res.users.find(u => u.id === userID).strikes : 0;
-            } else {
-                return res.users;
-            }
-        }
-    }
-
     async incrementStrikes(guildID, userID) {
         if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
         if (typeof userID !== 'string') throw new TypeError('userID is not a string.');
 
-        let res = await this.db.table('strikes').get(guildID).run();
+        let res = await this.db.strikes[guildID]._promise;
 
         if (!res) {
-            await this.db.table('strikes').insert({id: guildID, users: [{id: userID, strikes: 1}]});
+            await this.db.strikes[guildID].set([{id: userID, strikes: 1}]);
+            return;
+        }
+
+        if (res.find(u => u.id === userID)) {
+            let strikes = ++res[res.indexOf(res.find(u => u.id))].strikes;
+
+            await this.db.strikes[guildID][res.indexOf(res.find(u => u.id === userID))].set({id: userID, strikes});
         } else {
-            let i = res.users.indexOf(res.users.find(u => u.id === userID));
-
-            if (i > -1) {
-                let newNum = ++res.users[i].strikes;
-
-                await this.db.table('strikes').get(guildID).update(row => {
-                    return {users: row('users').changeAt(i, row('users')(i).merge({strikes: newNum}))};
-                }).run();
-            } else {
-                await this.db.table('strikes').get(guildID).update(row => {
-                    return {users: row('users').append({id: userID, strikes: 1})};
-                });
-            }
+            await this.db.strikes[guildID].push({id: userID, strikes: 1});
         }
     }
 
+    /**
+     * Decrement the strikes of a user.
+     * 
+     * @param {String} guildID Guild where the user is located.
+     * @param {String} userID User to decrement strikes for.
+     */
     async decrementStrikes(guildID, userID) {
         if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
         if (typeof userID !== 'string') throw new TypeError('userID is not a string.');
 
-        let res = await this.db.table('strikes').get(guildID).run();
+        let res = await this.db.strikes[guildID]._promise;
 
         if (!res) {
-            await this.db.table('strikes').insert({id: guildID, users: [{id: userID, strikes: 0}]}).run();
+            await this.db.strikes[guildID].set([{id: userID, strikes: 0}]);
+            return;
+        }
+
+        if (res.find(u => u.id === userID)) {
+            let strikes = res[res.indexOf(res.find(u => u.id))].strikes;
+            strikes = strikes === 0 ? 0 : --strikes;
+
+            await this.db.strikes[guildID][res.indexOf(res.find(u => u.id === userID))].set({id: userID, strikes});
         } else {
-            let i = res.users.indexOf(res.users.find(u => u.id === userID));
-
-            if (i > -1) {
-                let newNum = --res.users[i].strikes;
-
-                await this.db.table('strikes').get(guildID).update(row => {
-                    return {users: row('users').changeAt(i, row('users')(i).merge({strikes: newNum}))};
-                }).run();
-            } else {
-                await this.db.table('strikes').get(guildID).update(row => {
-                    return {users: row('users').append({id: userID, strikes: 0})};
-                }).run();
-            }
+            await this.db.strikes[guildID].push({id: userID, strikes: 0});
         }
     }
 
+    /**
+     * Reset the strikes of a user.
+     * 
+     * @param {String} guildID Guild where the user is located.
+     * @param {String} userID User to reset strikes for.
+     */
     async resetStrikes(guildID, userID) {
         if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
         if (typeof userID !== 'string') throw new TypeError('userID is not a string.');
 
-        let res = await this.db.table('strikes').get(guildID).run();
+        let res = await this.db.strikes[guildID]._promise;
 
         if (!res) {
-            await this.db.table('strikes').insert({id: guildID, users: [{id: userID, strikes: 0}]}).run();
-        } else {
-            let i = res.users.indexOf(res.users.find(u => u.id === userID));
+            await this.db.strikes[guildID].set([{id: userID, strikes: 0}]);
+            return;
+        }
 
-            if (i > -1) {
-                await this.db.table('strikes').get(guildID).update(row => {
-                    return {users: row('users').changeAt(i, row('users')(i).merge({strikes: 0}))};
-                }).run();
-            } else {
-                await this.db.table('strikes').get(guildID).update(row => {
-                    return {users: row('users').append({id: userID, strikes: 0})};
-                }).run();
-            }
+        if (res.find(u => u.id === userID)) {
+            await this.db.strikes[guildID][res.indexOf(res.find(u => u.id === userID))].set({id: userID, strikes: 0});
+        } else {
+            await this.db.strikes[guildID].push({id: userID, strikes: 0});
         }
     }
+}
+
+/**
+ * Configuration used for the bot.
+ * 
+ * @prop {String} blacklist Path to blacklist file.
+ * @prop {String} dbotsKey Token used for POSTing guild count to bots.discord.pw.
+ * @prop {Number} embedColour Default colour to use for embeds.
+ * @prop {String[]} games Array of games to cycle between.
+ * @prop {String} owner ID of the owner to be able to use owner commands.
+ * @prop {Object} rebridgeOptions Options to use for the Rebridge wrapper.
+ * @prop {Object} redisOptions Options to use for the Redis client.
+ * @prop {String} token Token used for connecting to Discord.
+ */
+class KnifeConfig { // eslint-disable-line
+    // Only existing for documentation purposes.
 }
 
 module.exports = KnifeBot;
