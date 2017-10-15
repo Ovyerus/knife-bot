@@ -4,3 +4,4 @@ blacklist.json
 unloadedCommands.json
 .vscode
 package-lock.json
+pages/
