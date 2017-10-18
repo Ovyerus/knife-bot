@@ -49,11 +49,13 @@ module.exports = bot => {
         let mentions = msg.mentions.filter(u => u.id !== msg.author.id && !u.bot);
 
         let trackerKey = msg.channel.guild.id + ':' + msg.author.id;
+
         if (mentionTracker[trackerKey]) {
             mentionTracker[trackerKey] += mentions.length;
         } else {
             mentionTracker[trackerKey] = mentions.length;
         }
+
         setTimeout(() => {
             if (mentionTracker[trackerKey] <= mentions.length) {
                 delete mentionTracker[trackerKey];
