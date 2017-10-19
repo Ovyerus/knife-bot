@@ -15,7 +15,7 @@ module.exports = bot => {
         try {
             let invCode = msg.content.match(InviteRegex)[1];
             let inv = await bot.getInvite(invCode);
-            
+
             if (inv.guild.id === msg.channel.guild.id) return;
 
             await msg.delete();
@@ -36,6 +36,8 @@ module.exports = bot => {
         }
     });
 
+    let mentionTracker = {};
+
     bot.on('mentions', async msg => {
         if (!bot.hasWantedPerms(msg) || msg.author.id === msg.channel.guild.ownerID) return;
 
@@ -46,7 +48,23 @@ module.exports = bot => {
 
         let mentions = msg.mentions.filter(u => u.id !== msg.author.id && !u.bot);
 
-        if (mentions.length >= settings.mentions.trigger) {
+        let trackerKey = msg.channel.guild.id + ':' + msg.author.id;
+
+        if (mentionTracker[trackerKey]) {
+            mentionTracker[trackerKey] += mentions.length;
+        } else {
+            mentionTracker[trackerKey] = mentions.length;
+        }
+
+        setTimeout(() => {
+            if (mentionTracker[trackerKey] <= mentions.length) {
+                delete mentionTracker[trackerKey];
+            } else {
+                mentionTracker[trackerKey] -= mentions.length;
+            }
+        }, settings.mentions.timelimit || 5000);
+
+        if (mentionTracker[trackerKey] >= settings.mentions.trigger) {
             try {
                 await msg.delete();
                 await punishChain(bot, msg, settings, 'mentions', `(${mentions.length} mentions)`);
@@ -119,7 +137,7 @@ async function punishChain(bot, msg, settings, type, extra) {
 
     if (settings.actions[type].kick > 0 && strikes === settings.actions[type].kick) {
         await msg.member.kick(type);
-        
+
         bot.emit('log', {
             user: msg.author,
             action: 0,

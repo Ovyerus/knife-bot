@@ -186,13 +186,13 @@ exports.invites = {
 
 exports.mentions = {
     desc: 'Edit mass mention settings for the bot.',
-    usage: '[enable | disable | trigger <number> | kick <number> | ban <number>]',
+    usage: '[enable | disable | trigger <number> | timelimit <number> | kick <number> | ban <number>]',
     async main(bot, ctx) {
-        if (!['enable', 'disable', 'trigger', 'kick', 'ban'].includes(ctx.args[0])) {
+        if (!['enable', 'disable', 'trigger', 'timelimit', 'kick', 'ban'].includes(ctx.args[0])) {
             let embed = {
                 title: 'Server Settings - Mentions',
                 description: `Showing current mass-mention settings for **${ctx.guild.name}**.`,
-                footer: {text: "'Amount to Trigger' is how many mentions in one message or done fast enough is needed for the bot to be triggered."},
+                footer: {text: "'Amount to Trigger' is how many mentions in one message or done fast enough is needed for the bot to be triggered. 'Time Limit' is the time (in milliseconds) until mentions no longer count towards the 'Amount to Trigger'"},
                 fields: [
                     {
                         name: '`Status`',
@@ -204,6 +204,12 @@ exports.mentions = {
                         name: '`Amount to Trigger`',
                         value: `**${ctx.settings.mentions.trigger}**\n`
                         + 'Key: `trigger <number>`',
+                        inline: true
+                    },
+                    {
+                        name: '`Time Limit`',
+                        value: `**${ctx.settings.mentions.timelimit || 5000}ms**\n`
+                        + 'Key `timelimit <number>`',
                         inline: true
                     },
                     {
@@ -240,12 +246,23 @@ exports.mentions = {
             let num = Number(Math.abs(ctx.args[1]).toFixed(0));
 
             if (isNaN(num)) {
-                await ctx.createMesage('You can only set trigger to a valid number.');
+                await ctx.createMessage('You can only set trigger to a valid number.');
             } else if (num === 0) {
                 await ctx.createMessage('You cannot set trigger to 0. If you wish to disable mass mention blocking, run `settings mentions disable`.');
             } else {
                 await bot.editSettings(ctx.guild.id, {mentions: {enabled: ctx.settings.mentions.enabled, trigger: num}});
                 await ctx.createMessage(`Set trigger limit to **${num}**.`);
+            }
+        } else if (ctx.args[0] === 'timelimit') {
+            let num = Number(Math.abs(ctx.args[1]).toFixed(0));
+
+            if (isNaN(num)) {
+                await ctx.createMessage('You can only set timelimit to a valid number.');
+            } else if (num < 1000) {
+                await ctx.createMessage('You cannot set timelimit to less than 1000ms. Remember that this value is in milliseconds, not seconds.');
+            } else {
+                await bot.editSettings(ctx.guild.id, {mentions: {enabled: ctx.settings.mentions.enabled, timelimit: num}});
+                await ctx.createMessage(`Set time limit to **${num}**.`);
             }
         } else if (ctx.args[0] === 'kick') {
             let num = Number(Math.abs(ctx.args[1]).toFixed(0));
@@ -350,7 +367,7 @@ exports.diacritics = {
             let num = Number(Math.abs(ctx.args[1]).toFixed(0));
 
             if (isNaN(num)) {
-                await ctx.createMesage('You can only set trigger to a valid number.');
+                await ctx.createMessage('You can only set trigger to a valid number.');
             } else if (num === 0) {
                 await ctx.createMessage('You cannot set trigger to 0. If you wish to disable spammy diacritics blocking, run `settings diacritics disable`.');
             } else {
@@ -513,7 +530,7 @@ exports.exceptions = {
 
             await ctx.createMessage({embed});
         } else if (ctx.args[0] === 'users') {
-            if (!ctx.raw.split(' ').slice(2).join(' ')) return await ctx.createMesage(`Please give me a user to ${ctx.args[1]} an exception for.`);
+            if (!ctx.raw.split(' ').slice(2).join(' ')) return await ctx.createMessage(`Please give me a user to ${ctx.args[1]} an exception for.`);
 
             let user = await bot.lookups.memberLookup(ctx, ctx.raw.split(' ').slice(2).join(' '), false);
 
@@ -543,7 +560,7 @@ exports.exceptions = {
                 await ctx.createMessage("There isn't an exception for that user.");
             }
         } else if (ctx.args[0] === 'channels') {
-            if (!ctx.raw.split(' ').slice(2).join(' ')) return await ctx.createMesage(`Please give me a channel to ${ctx.args[1]} an exception for.`);
+            if (!ctx.raw.split(' ').slice(2).join(' ')) return await ctx.createMessage(`Please give me a channel to ${ctx.args[1]} an exception for.`);
 
             let channel = await bot.lookups.channelLookup(ctx, ctx.raw.split(' ').slice(2).join(' '));
 
@@ -568,7 +585,7 @@ exports.exceptions = {
                 await ctx.createMessage("There isn't an exception for that channel.");
             }
         } else if (ctx.args[0] === 'roles') {
-            if (!ctx.raw.split(' ').slice(2).join(' ')) return await ctx.createMesage('Please give me a role to add an exception for.');
+            if (!ctx.raw.split(' ').slice(2).join(' ')) return await ctx.createMessage('Please give me a role to add an exception for.');
 
             let role = await bot.lookups.roleLookup(ctx, ctx.raw.split(' ').slice(2).join(' '));
 

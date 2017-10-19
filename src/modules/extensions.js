@@ -20,7 +20,7 @@ module.exports = bot => {
 
     /**
      * Easily format a username.
-     * 
+     *
      * @param {(Eris.Member|Eris.User)} user The user to format. If a member is passed, will use their nickname if possible.
      * @returns {?String} The formatted string. Null if proper user isnt passed.
      */
@@ -30,7 +30,7 @@ module.exports = bot => {
 
     /**
      * Wait for a message in a channel from a user.
-     * 
+     *
      * @param {String} channelID The ID of the channel
      * @param {Sting} userID The ID of the user
      * @param {Function} [filter] Optional filter function that returns a boolean when passed a Message object
@@ -56,7 +56,7 @@ module.exports = bot => {
                     bot.removeListener('messageCreate', onCrtWrap);
                     clearInterval(rmvTimeout);
                     resolve(res);
-                } 
+                }
             };
 
             bot.on('messageCreate', onCrtWrap);
@@ -87,7 +87,7 @@ module.exports = bot => {
 
     /**
      * Returns a random game from the games array
-     * 
+     *
      * @returns {String} The game.
      */
     bot.pickGame = () => {
@@ -114,7 +114,7 @@ module.exports = bot => {
 
     /**
      * Initialises settings for a guild in the database.
-     * 
+     *
      * @param {String} guildID The ID of the guild
      * @returns {Promise<Object>} Settings for the guild.
      */
@@ -124,7 +124,7 @@ module.exports = bot => {
         let settings = {
             id: guildID,
             actions: {mentions: {kick: 2, ban: 3}, invites: {kick: 2, ban: 3}, diacritics: {kick: 2, ban: 3}},
-            mentions: {trigger: 5, enabled: false},
+            mentions: {trigger: 5, enabled: false, timelimit: 5000},
             invites: {enabled: false, fake: false},
             diacritics: {trigger: 10, enabled: false},
             logChannel: null,
@@ -141,7 +141,7 @@ module.exports = bot => {
         };
 
         bot.settings.add(settings);
-        
+
         let res = await bot.db.table('guild_settings').get(guildID).run();
 
         if (res) return res;
@@ -150,7 +150,7 @@ module.exports = bot => {
 
     /**
      * Gets settings for a guild.
-     * 
+     *
      * @param {String} guildID The ID of the guild
      * @returns {Promise<Object>} Settings for the guild.
      */
@@ -170,7 +170,7 @@ module.exports = bot => {
 
     /**
      * Edits settings for a guild.
-     * 
+     *
      * @param {String} guildID The ID of the guild
      * @param {Object} settings The settings to edit
      * @returns {Promise<Object>} Settings for the guild.
@@ -195,7 +195,7 @@ module.exports = bot => {
 
     /**
      * Get strikes for a user or guild.
-     * 
+     *
      * @param {String} guildID ID of the guild to find strikes for.
      * @param {String} [userID] ID of the user to get strikes for.
      * @returns {Promise<(Number|Object[])>} Strikes for the guild or user.
@@ -218,9 +218,9 @@ module.exports = bot => {
         }
     };
 
-    /** 
+    /**
      * Increment someones strike count.
-     * 
+     *
      * @param {String} guildID ID of the guild.
      * @param {String} userID ID of the user.
      */
@@ -251,7 +251,7 @@ module.exports = bot => {
 
     /**
      * Decrement someones strike count.
-     * 
+     *
      * @param {String} guildID ID of the guild.
      * @param {String} userID ID of the user.
      */
@@ -282,7 +282,7 @@ module.exports = bot => {
 
     /**
      * Reset someones strike count.
-     * 
+     *
      * @param {String} guildID ID of the guild.
      * @param {String} userID ID of the user.
      */
@@ -311,7 +311,7 @@ module.exports = bot => {
 
     /**
      * POST something to Hastebin.
-     * 
+     *
      * @param {String} str Content to POST.
      * @returns {String} Returned key.
      */
@@ -328,7 +328,7 @@ module.exports = bot => {
 
     /**
      * Check if a user is blacklisted.
-     * 
+     *
      * @param {String} userID ID of the user to check.
      * @returns {Boolean} If the user is blacklisted
      */
@@ -338,7 +338,7 @@ module.exports = bot => {
 
     /**
      * Check if a user is the bot owner.
-     * 
+     *
      * @param {String} userID ID of the user to check.
      * @returns {Boolean} If the user is the bot owner or not.
      */
@@ -348,7 +348,7 @@ module.exports = bot => {
 
     /**
      * Check if the bot has the perms wanted to work properly.
-     * 
+     *
      * @param {Eris.Message} msg Message to use.
      * @returns {Boolean} If the bot has the wanted perms or not.
     */
@@ -359,7 +359,7 @@ module.exports = bot => {
 
     /**
      * Check if a user is what appears to be a moderator.
-     * 
+     *
      * @param {Eris.Member} member Member to check.
      * @returns {Boolean} If the member seems to be a moderator or not.
      */
