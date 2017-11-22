@@ -1,3 +1,4 @@
+const Eris = require('eris');
 const {AwaitTimeout, ValueError} = require(`${__dirname}/helpers`);
 const {Context} = require(`${__dirname}/CommandHolder`);
 
@@ -126,12 +127,12 @@ class Lookups {
             let id = what.match(/^<#(\d+)>$/)[1];
             channel = ctx.guild.channels.get(id);
         } else {
-            let channels;
+            let channels = ctx.guild.channels.filter(c => !(c instanceof Eris.CategoryChannel));
 
             if (!isNaN(what)) {
-                channels = ctx.guild.channels.filter(c => c.id.includes(what) || c.name.includes(what));
+                channels = channels.filter(c => c.id.includes(what) || c.name.includes(what));
             } else {
-                channels = ctx.guild.channels.filter(c => c.name.toLowerCase().includes(what.toLowerCase()));
+                channels = channels.filter(c => c.name.toLowerCase().includes(what.toLowerCase()));
             }
 
             if (channels.length > 1) {
