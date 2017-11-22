@@ -7,12 +7,14 @@ let prompting = false;
  * @param {String} message Message to print before enabling input.
  * @param {Object} [options] Optional options.
  * @param {Function} [options.filter] Filter to run against the line, repeating if it doesn't match.
+ * @param {String} [options.filterMsg="Invalid input."] Message to display if the filter doesn't match. 
  * @param {Boolean} [options.newLine=false] Whether to have a `> ` on the next line.
  * @returns {Promise<String>} Input from stdin.
  */
 function prompt(message, options={}) {
     return new Promise(resolve => {
         let filter = options.filter ? options.filter : () => true;
+        let filterMsg = options.filterMsg || 'Invalid input.';
         let newLine = options.newLine != null ? !!options.newLine : true;
 
         if (typeof message !== 'string') throw new TypeError('message is not a string.');
@@ -35,7 +37,10 @@ function prompt(message, options={}) {
             console.log();
 
             if (filter(line)) resolve(line);
-            else resolve(prompt(message, options));
+            else {
+                console.log(filterMsg);
+                resolve(prompt(message, options));
+            }
         });
     });
 }
