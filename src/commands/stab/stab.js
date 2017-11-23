@@ -1,12 +1,12 @@
-exports.commands = ['butt'];
+exports.commands = ['stab'];
 
-exports.butt = {
-    desc: 'Hit someone with the butt of your knife, removing them from the server.',
+exports.stab = {
+    desc: 'Stabs someone, removing them from the server.',
     usage: '<user> [for <reason>]',
     aliases: ['kick'],
     permissions: {both: 'kickMembers'},
     async main(bot, ctx) {
-        if (!ctx.raw) return await ctx.createMessage('Please give me a user to cut through.');
+        if (!ctx.raw) return await ctx.createMessage('Please give me a user to stab.');
 
         let user = await bot.lookups.memberLookup(ctx, ctx.raw.split(' for')[0], false);
 
@@ -55,21 +55,19 @@ async function kickMember(user, ctx) {
                     await ctx.guild.kickMember(user.id, encodeURIComponent(`${ctx.client.formatUser(ctx.author)}: ${ctx.raw.split(' for').slice(1).join(' for').trim()}`));
                 }
 
-                await ctx.createMessage(`Butted **${ctx.client.formatUser(user)}** out of the kitchen!`);
+                await ctx.createMessage(`Stabbed **${ctx.client.formatUser(user)}**.`);
             } catch(err) {
                 if (err.resp && err.resp.statusCode === 403) {
-                    return await ctx.createMessage(`**${ctx.client.formatUser(user)}** is too tough for me and I was unable to be butt them.`);
-                } else {
-                    throw err;
-                }
+                    return await ctx.createMessage(`**${ctx.client.formatUser(user)}** is too tough for me and I was unable to be stab them.`);
+                } else throw err;
             }
         } else {
-            await ctx.createMessage(`**${ctx.client.formatUser(user)}** is too strong and you weren't able to knock them over.\n`
+            await ctx.createMessage(`**${ctx.client.formatUser(user)}** was wearing an anti-1000-degree-knife vest and you were unable to stab them.\n`
             + `**(You cannot kick people ${userTopRolePos === mentionTopRolePos ? 'with the same role as you.' : 'higher then you'})**`);
         }
     } else if (user.id === ctx.author.id) {
-        await ctx.createMessage("You can't hit yourself.");
+        await ctx.createMessage("You can't stab yourself.");
     } else if (user.id === ctx.client.user.id) {
-        await ctx.createMessage("You can't hit the knife with itself.");
+        await ctx.createMessage("You can't stab the knife with itself.");
     }
 }
