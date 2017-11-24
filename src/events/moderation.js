@@ -1,25 +1,13 @@
-const Actions = [
+const {formatUTC} = require('../modules/helpers');
+
+const ACTIONS = [
     'kicked',
     'banned',
     'softbanned'
 ];
-const Months = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December'
-];
 
-const InviteRegex = /(?:https?:\/\/)?(?:discord\.gg|discordapp\.com\/invite)\/\s*?((?:[A-Za-z0-9-])+)/i;
-const DiacriticRegex = /[\u{0300}-\u{036F}\u{0489}]/gu; // eslint-disable-line
+const INVITE_REGEX = /(?:https?:\/\/)?(?:discord\.gg|discordapp\.com\/invite)\/\s*?((?:[A-Za-z0-9-])+)/i;
+const DIACRITIC_REGEX = /[\u{0300}-\u{036F}\u{0489}]/gu; // eslint-disable-line
 
 module.exports = bot => {
     bot.on('invites', async msg => {
@@ -31,7 +19,7 @@ module.exports = bot => {
         if (userExcept(settings, msg.author.id) || roleExcept(settings, msg) || channelExcept(settings, msg.channel.id)) return;
 
         try {
-            let invCode = msg.content.match(InviteRegex)[1];
+            let invCode = msg.content.match(INVITE_REGEX)[1];
             let inv = await bot.getInvite(invCode);
             
             if (inv.guild.id === msg.channel.guild.id) return;
@@ -45,11 +33,15 @@ module.exports = bot => {
                         await msg.delete();
                         await punishChain(bot, msg, settings, 'invites');
                     } catch(err) {
-                        logger.error(err.stack);
+                        await bot.handleError(err, {
+                            event: 'moderation'
+                        });
                     }
                 }
             } else {
-                logger.error(err.stack);
+                await bot.handleError(err, {
+                    event: 'moderation'
+                });
             }
         }
     });
@@ -69,7 +61,9 @@ module.exports = bot => {
                 await msg.delete();
                 await punishChain(bot, msg, settings, 'mentions', `(${mentions.length} mentions)`);
             } catch(err) {
-                logger.error(err.stack);
+                await bot.handleError(err, {
+                    event: 'moderation'
+                });
             }
         }
     });
@@ -82,7 +76,7 @@ module.exports = bot => {
         if (!settings.diacritics.enabled) return;
         if (userExcept(settings, msg.author.id) || roleExcept(settings, msg) || channelExcept(settings, msg.channel.id)) return;
 
-        let diacritics = msg.content.replace(DiacriticRegex, '');
+        let diacritics = msg.content.replace(DIACRITIC_REGEX, '');
 
         if (msg.content.length === diacritics.length) return;
         if (msg.content.length - diacritics.length >= settings.diacritics.trigger) {
@@ -90,7 +84,9 @@ module.exports = bot => {
                 await msg.delete();
                 await punishChain(bot, msg, settings, 'diacritics', `(${msg.content.length - diacritics.length} diacritics)`);
             } catch(err) {
-                logger.error(err.stack);
+                await bot.handleError(err, {
+                    event: 'moderation'
+                });
             }
         }
     });
@@ -98,10 +94,9 @@ module.exports = bot => {
     bot.on('log', e => {
         if (!e.settings.logChannel || !e.guild.channels.get(e.settings.logChannel) || !e.guild.channels.get(e.settings.logChannel).permissionsOf(bot.user.id).has('sendMessages')) return;
 
-        let now = new Date();
-        let timestamp = `${now.getUTCDate()} ${Months[now.getUTCMonth()]} ${now.getUTCFullYear()} ${now.getUTCHours()}:${now.getUTCMinutes()}:${now.getUTCSeconds()} UTC`;
+        let timestamp = formatUTC(new Date());
         let msg = [
-            Actions[e.action][0].toUpperCase() + Actions[e.action].slice(1),
+            ACTIONS[e.action][0].toUpperCase() + ACTIONS[e.action].slice(1),
             bot.formatUser(e.user),
             '\n**Timestamp:**',
             timestamp
@@ -111,7 +106,7 @@ module.exports = bot => {
         if (e.extra) msg.splice(4, 0, e.extra);
         if (e.blame) {
             msg.splice(0, 0, bot.formatUser(e.blame.user));
-            msg[1] = Actions[e.action];
+            msg[1] = ACTIONS[e.action];
         }
 
         bot.createMessage(e.settings.logChannel, msg.join(' '));

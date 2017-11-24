@@ -1,3 +1,18 @@
+const MONTHS = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December'
+];
+
 class AwaitTimeout extends Error {
     constructor(message) {
         super(message);
@@ -14,4 +29,8 @@ class ValueError extends Error {
     }
 }
 
-module.exports = {AwaitTimeout, ValueError};
+function formatUTC(date=new Date()) {
+    return `${date.getUTCDate()} ${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()} ${date.getUTCHours()}:${date.getUTCMinutes()}:${date.getUTCSeconds()} UTC`;
+}
+
+module.exports = {AwaitTimeout, ValueError, formatUTC};
