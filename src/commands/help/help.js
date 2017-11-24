@@ -9,13 +9,9 @@ exports.help = {
             let cmds = [];
                 
             bot.commands.forEach((cmd, name) => {
-                if ((cmd.owner || cmd.hidden) && bot.isOwner(ctx.author.id)) {
-                    cmds.push(`🔪 ${name}${cmd.usage ? ` ${cmd.usage}` : ''}`);
-                } else if (cmd.owner || cmd.hidden) {
-                    return null;
-                } else {
-                    cmds.push(`🔪 ${name}${cmd.usage ? ` ${cmd.usage}` : ''}`);
-                }
+                if ((cmd.owner || cmd.hidden) && bot.isOwner(ctx.author.id)) cmds.push(`🔪 ${name}${cmd.usage ? ` ${cmd.usage}` : ''}`);
+                else if (cmd.owner || cmd.hidden) return null;
+                else cmds.push(`🔪 ${name}${cmd.usage ? ` ${cmd.usage}` : ''}`);
             });
 
             await ctx.createMessage(`${bot.redHot} Slicing into your DMs!`);
