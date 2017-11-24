@@ -70,8 +70,10 @@ function parsePrefix(str, prefixes) {
 
     for (let prfx of prefixes) {
         str = str.startsWith(prfx) ? str.slice(prfx.length) : str;
-        if (str !== oldStr) return str;
+        if (str !== oldStr) break;
     }
+
+    return str;
 }
 
 /**
