@@ -24,10 +24,9 @@ exports.whois = {
         let embed = {
             title: bot.formatUser(user.user ? user.user : user),
             desc: user.user ? 'User in server.' : 'User not in server.',
+            timestamp: new Date(user.createdAt),
             thumbnail: {url: user.avatarURL},
-            footer: {
-                text: `User created on ${moment(user.createdAt).format('dddd Do MMMM Y')} at ${moment(user.createdAt).format('HH:mm:ss')}`
-            },
+            footer: {text: 'User created:'},
             fields: []
         };
 
@@ -39,8 +38,8 @@ exports.whois = {
             embed.fields.push({name: 'Game', value: user.game ? user.game.name : 'None'});
             embed.fields.push({name: 'Status', value: user.status});
             embed.fields.push({
-                name: 'Moderator',
-                value: (bot.isModerator(user) ? 'Yes' : 'No') + ' (may not be entirely accurate)'
+                name: 'Moderator (may not be 100% accurate)',
+                value: bot.isModerator(user) ? 'Yes' : 'No'
             });
             embed.fields.push({
                 name: 'Roles',

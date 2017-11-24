@@ -3,15 +3,14 @@
  * @author Ovyerus
  */
 
+const crypto = require('crypto');
 const Eris = require('eris');
 const got = require('got');
-const Redis = require('redis');
-const Rebridge = require('rebridge');
+const Redite = require('redite');
 const Lookups = require('./Lookups');
 const Logger = require('./Logger');
 const {CommandHolder} = require('./CommandHolder');
 const {AwaitTimeout} = require('./helpers');
-const fs = require('fs');
 
 /**
  * Main class for Knife Bot.
@@ -22,13 +21,12 @@ const fs = require('fs');
  * @prop {String} blacklistPath Path to blacklist file.
  * @prop {CommandHolder} commands Command holder and runner.
  * @prop {Object} config Configuration object for the bot.
- * @prop {Rebridge} db Database wrapper.
+ * @prop {Redite} db Database wrapper.
  * @prop {Number} embedColour Default colour to use for embeds.
  * @prop {String[]} games Array of games to select from.
- * @prop {Logger} logger Internal logger.
+ * @prop {Logger} logger Fancy console logging.
  * @prop {Lookups} lookups Class for looking up various objects.
  * @prop {String} redHot Emoji string based off the name.
- * @prop {Redis} redis Database manager used for the main wrapper.
  * @prop {Eris.Client} rest Bot in REST mode in order to access REST restricted stuff.
  * @prop {String} userAgent User agent to send to external sites.
  */
@@ -36,42 +34,55 @@ class KnifeBot extends Eris.Client {
     /**
      * Create a new Knife Bot client.
      * 
-     * @param {KnifeConfig} config Configuration for the bot.
+     * @param {String} token Configuration for the bot
+     * @param {Redite} db Redite wrapper for redis.
      * @param {Object} [options={}] Eris options.
      */
-    constructor(config, options={}) {
-        if (!config || typeof config !== 'object') throw new TypeError('config is not an object.');
+    constructor(token, db, options={}) {
+        if (typeof token !== 'string') throw new TypeError('token is not a string.');
 
-        super(config.token, options);
+        super(token, options);
 
-        this.config = config;
         this.redHot = '🔥 1⃣0⃣0⃣0⃣ 🌡 🔪';
         this.userAgent = 'Knife Bot/2.1';
-        this.gameInterval = config.gameInterval || 300000;
-        this.embedColour = config.embedColour || 16665427;
-        this.games = config.games || [
+        this.gameInterval = 300000;
+        this.embedColour = 16665427;
+        this.games = [
             '🔪 help',
             '🔪 invite',
             'OH GOD EVERYTHING IS MELTING',
             '🔪 info',
             'HOLY SHIT WHY AM I ON FIRE',
-            'IT BUUURNNNNS'
+            'IT BUUURNNNNS',
+            '🔪 support'
         ];
 
-        this.blacklistPath = config.blacklist || './blacklist.json';
-        this.blacklist = fs.readFileSync(this.blacklistPath);
-
+        this.db = db;
         this.commands = new CommandHolder(this);
         this.lookups = new Lookups(this);
-        this.redis = Redis.createClient(config.redisOptions);
-        this.db = new Rebridge(this.redis, config.rebridgeOptions);
-        this.rest = new Eris(`Bot ${config.token}`, {
+        this.rest = new Eris(`Bot ${token}`, {
             restMode: true
         });
 
         this.logger = Logger;
         this.useCommands = false;
         this.loadCommands = true;
+    }
+
+    /**
+     * Properly and easily sets up a Knife Bot instance.
+     * 
+     * @param {String} redisURL URL of the Redis server to connect to.
+     * @param {Object} [options] Eris options.
+     * @returns {Promise<KnifeBot>} Set up client.
+     */
+    static async setup(redisURL, options) {
+        if (typeof redisURL !== 'string') throw new TypeError('redisURL is not a string.');
+
+        let db = new Redite({url: redisURL});
+        let token = await db.settings.token._promise;
+
+        return new this(token, db, options);
     }
 
     /**
@@ -203,28 +214,25 @@ class KnifeBot extends Eris.Client {
         return JSON.parse(res.body).key;
     }
 
+    async reloadSettings() {
+        let settings = await this.db.settings.get;
+
+        this.blacklist = settings.blacklist;
+        this.prefixes = settings.prefixes;
+        this.errorChannel = settings.errorChannel;
+        this.dbotsKey = settings.dbotsKey;
+        this.owner = settings.owner;
+        this.unloaded = settings.unloaded;
+    }
+
     /**
      * Checks if a user is blacklisted.
      * 
      * @param {String} userID User to check.
-     * @returns {Boolean} .
+     * @returns {Promise<Boolean>} .
      */
     isBlacklisted(userID) {
-        return this.blacklist.includes(userID);
-    }
-
-    /**
-     * Reloads the blacklist.
-     */
-    async reloadBlacklist() {
-        let list = await new Promise((resolve, reject) => {
-            fs.readFile(this.blacklistPath, (err, res) => {
-                if (err) reject(err);
-                else resolve(JSON.parse(res));
-            });
-        });
-
-        this.blacklist = list;
+        return (this.blacklist || []).includes(userID);
     }
 
     /**
@@ -234,7 +242,7 @@ class KnifeBot extends Eris.Client {
      * @returns {Boolean} .
      */
     isOwner(userID) {
-        return userID === this.config.owner;
+        return userID === this.owner;
     }
 
     /**
@@ -280,6 +288,7 @@ class KnifeBot extends Eris.Client {
      */
     async initSettings(guildID) {
         if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
+        if (await this.db.has(guildID)) return await this.db[guildID].get;
 
         let settings = {
             actions: {
@@ -308,18 +317,16 @@ class KnifeBot extends Eris.Client {
             messages: {
                 invites: '{{mention}} please do not advertise here. Your message has been deleted and future offenses will be dealt with accordingly.',
                 mentions: '{{mention}} do not mass-mention users. Future offences will be dealt with accordingly.',
-                diacritics: '{{mention}} please do not post characters or messages that abuse the use of diacritics. Future offences will be dealt with accordingly.'
+                diacritics: '{{mention}} please do not post characters or messages that abuse the use of diacritics.'
+                            + 'Future offences will be dealt with accordingly.'
             },
             muteRoles: [],
-            rolebanRole: null
+            rolebanRole: null,
+            strikes: {}
         };
-        
-        let res = await this.db.guild_settings[guildID]._promise;
 
-        if (res) return res;
-
-        await this.db.guild_settings[guildID].set(settings);
-        return await this.db.guild_settings[guildID]._promise;
+        await this.db[guildID].set(settings);
+        return settings;
     }
 
     /**
@@ -330,11 +337,9 @@ class KnifeBot extends Eris.Client {
      */
     async getSettings(guildID) {
         if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
+        if (!await this.db.has(guildID)) return await this.initSettings(guildID);
 
-        let res = await this.db.guild_settings[guildID]._promise;
-
-        if (!res) return await this.initSettings(guildID);
-        return res;
+        return await this.db[guildID].get;
     }
 
     /**
@@ -347,111 +352,59 @@ class KnifeBot extends Eris.Client {
     async getStrikes(guildID, userID) {
         if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
 
-        let res = await this.db.strikes[guildID]._promise;
+        let settings = await this.getSettings(guildID);
 
-        if (!res) {
-            await this.db.strikes[guildID].set([]);
-
-            if (typeof userID === 'string') return 0;
-            else return [];
-        } else {
-            if (typeof userID === 'string') return res.find(u => u.id === userID) ? res[userID].strikes : 0;
-            else return res;
-        }
+        if (!userID) return settings.strikes;
+        else return settings.strikes[userID];
     }
 
     /**
-     * Increment the strikes for a user.
+     * Handles the various methods for error reporting.
      * 
-     * @param {String} guildID Guild where the user is located.
-     * @param {String} userID User to increment strikes for.
+     * @param {*} err Error to handle.
+     * @param {Object} [opts] Options for handling.
+     * @param {Eris.Message} [opts.msg] Possible message that triggered the error.
+     * @param {String} [event] Possible event that triggered the error.
+     * @param {Object} [discord] Possible Discord error.
      */
-    async incrementStrikes(guildID, userID) {
-        if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
-        if (typeof userID !== 'string') throw new TypeError('userID is not a string.');
+    async handleError(err, opts={}) {
+        let errorCode = crypto.createHash('md5');
 
-        let res = await this.db.strikes[guildID]._promise;
+        if (!opts.msg) errorCode.update((Date.now() ** -1 + Date.now()).toString(2));
+        else errorCode.update(opts.msg.author.id + opts.msg.channel.guild.id + Date.now());
 
-        if (!res) {
-            await this.db.strikes[guildID].set([{id: userID, strikes: 1}]);
-            return;
-        }
+        errorCode = errorCode.digest('hex').slice(0, 10);
 
-        if (res.find(u => u.id === userID)) {
-            let strikes = ++res[res.indexOf(res.find(u => u.id))].strikes;
+        if (!opts.discord) this.logger.error(`Error code: "${errorCode}"\nError message: "${err.message}"${opts.event ? `\nEvent: ${opts.event}` : ''}`);
 
-            await this.db.strikes[guildID][res.indexOf(res.find(u => u.id === userID))].set({id: userID, strikes});
-        } else {
-            await this.db.strikes[guildID].push({id: userID, strikes: 1});
+        if (opts.event && this.errorChannel) {
+            await this.createMessage(this.errorChannel, '**New Error**\n\n'
+            + `**Code:** \`${errorCode}\`\n`
+            + `**Event:** \`${opts.event}\`\n`
+            + '```js\n'
+            + `${opts.discord ? `${opts.discord.code}: ${opts.discord.message}` : err.stack}\n`
+            + '```');
+        } else if (opts.msg && this.errorChannel) {
+            await this.createMessage(this.errorChannel, '**New Error**\n\n'
+            + `**Code:** \`${errorCode}\`\n`
+            + `**Command:** \`${opts.msg.cmd}\`\n`
+            + `**Guild:** \`${opts.msg.channel.guild.name}\` (${opts.msg.channel.guild.id})\n`
+            + `**User:** \`${this.formatUser(opts.msg.author)}\` (${opts.msg.author.id})\n`
+            + '```js\n'
+            + `${opts.discord ? `${opts.discord.code}: ${opts.discord.message}` : err.stack}\n`
+            + '```');
+
+            await this.createMessage(opts.msg.channel.id, '**Woops, the blowtorches malfunctioned**\n\n'
+            + "Something bad happened, and I wasn't able to complete your request.\n"
+            + 'This event has been recorded, but if you would like to get help with it you can join my support server with `🔪 support`.\n'
+            + `Make sure to quote with the code \`${errorCode}\``);
+        } else if (opts.msg) {
+            await this.createMessage(opts.msg.channel.id, '**Woops, the blowtorches malfunctioned**\n\n'
+            + "Something bad happened, and I wasn't able to complete your request.\n"
+            + 'This event has been recorded, but if you would like to get help with it you can join my support server with `🔪 support`.\n'
+            + `Make sure to quote with the code \`${errorCode}\``);
         }
     }
-
-    /**
-     * Decrement the strikes of a user.
-     * 
-     * @param {String} guildID Guild where the user is located.
-     * @param {String} userID User to decrement strikes for.
-     */
-    async decrementStrikes(guildID, userID) {
-        if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
-        if (typeof userID !== 'string') throw new TypeError('userID is not a string.');
-
-        let res = await this.db.strikes[guildID]._promise;
-
-        if (!res) {
-            await this.db.strikes[guildID].set([{id: userID, strikes: 0}]);
-            return;
-        }
-
-        if (res.find(u => u.id === userID)) {
-            let strikes = res[res.indexOf(res.find(u => u.id))].strikes;
-            strikes = strikes === 0 ? 0 : --strikes;
-
-            await this.db.strikes[guildID][res.indexOf(res.find(u => u.id === userID))].set({id: userID, strikes});
-        } else {
-            await this.db.strikes[guildID].push({id: userID, strikes: 0});
-        }
-    }
-
-    /**
-     * Reset the strikes of a user.
-     * 
-     * @param {String} guildID Guild where the user is located.
-     * @param {String} userID User to reset strikes for.
-     */
-    async resetStrikes(guildID, userID) {
-        if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
-        if (typeof userID !== 'string') throw new TypeError('userID is not a string.');
-
-        let res = await this.db.strikes[guildID]._promise;
-
-        if (!res) {
-            await this.db.strikes[guildID].set([{id: userID, strikes: 0}]);
-            return;
-        }
-
-        if (res.find(u => u.id === userID)) {
-            await this.db.strikes[guildID][res.indexOf(res.find(u => u.id === userID))].set({id: userID, strikes: 0});
-        } else {
-            await this.db.strikes[guildID].push({id: userID, strikes: 0});
-        }
-    }
-}
-
-/**
- * Configuration used for the bot.
- * 
- * @prop {String} blacklist Path to blacklist file.
- * @prop {String} dbotsKey Token used for POSTing guild count to bots.discord.pw.
- * @prop {Number} embedColour Default colour to use for embeds.
- * @prop {String[]} games Array of games to cycle between.
- * @prop {String} owner ID of the owner to be able to use owner commands.
- * @prop {Object} rebridgeOptions Options to use for the Rebridge wrapper.
- * @prop {Object} redisOptions Options to use for the Redis client.
- * @prop {String} token Token used for connecting to Discord.
- */
-class KnifeConfig { // eslint-disable-line
-    // Only existing for documentation purposes.
 }
 
 module.exports = KnifeBot;

@@ -147,11 +147,9 @@ class CommandHolder {
                 let cmd = module[command];
 
                 if (!cmd.desc) {
-                    logger.warn(`Command '${command}' does not have a description. Skipping.`);
-                    continue;
+                    logger.warn(`Command '${command}' does not have a description. Skipping...`);
                 } else if (typeof cmd.main !== 'function') {
-                    logger.warn(`Command '${command}' does not have main as a function. Skipping.`);
-                    continue;
+                    logger.warn(`Command '${command}' does not have main as a function. Skipping...`);
                 } else {
                     this.commands[command] = cmd;
 
@@ -169,6 +167,7 @@ class CommandHolder {
             this.modules[name] = loadedCommands.concat(loadedAliases);
         }
 
+        // In case the module somehow is empty.
         if (!this.modules[name]) {
             delete this.modules[name];
             delete require.cache[name];
@@ -497,7 +496,7 @@ class Context {
         this[_msg] = msg;
 
         let cleaned = parseTulpa(msg.content);
-        cleaned = parsePrefix(cleaned, bot.config.prefixes);
+        cleaned = parsePrefix(cleaned, bot.prefixes);
 
         let tmp = parseArgs(cleaned);
         this.args = tmp.args;

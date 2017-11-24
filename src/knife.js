@@ -1,27 +1,20 @@
 // Modules
 const Eris = require('eris');
-const fs = require('fs');
 const KnifeBot = require(`${__dirname}/modules/KnifeBot`);
-const config = require(`${__dirname}/config.json`);
+const setup = require(`${__dirname}/modules/setup`);
+var config;
 
-// Generate user blacklist if needed.
-if (!fs.existsSync(`${__dirname}/blacklist.json`)) fs.writeFileSync(`${__dirname}/blacklist.json`, '[]');
+try {
+    config = require(`${__dirname}/config.json`);
+} catch(_) {
+    config = {};
+}
 
-const bot = new KnifeBot(config, {
-    getAllUsers: true,
-    defaultImageFormat: 'png',
-    defaultImageSize: 512,
-    disableEvents: {
-        TYPING_START: true,
-        VOICE_STATE_UPDATE: true
-    }
-});
-
-// Globals;
-global.logger = require(`${__dirname}/modules/logger`);
-global.Promise = require('bluebird');
+// Easy access to this directory for when `./` doesn't work
 global.__baseDir = __dirname;
 
+// Promise library stuff
+global.Promise = require('bluebird');
 Promise.config({
     warnings: {wForgottenPromise: false},
     longStackTraces: false
@@ -32,7 +25,24 @@ Eris.Collection.prototype.asyncForEach = async function(func) {
     return this;
 };
 
-// Init events
-require(`${__dirname}/events`)(bot);
+(async () => {
+    if (!config.redisURL) config.redisURL = 'redis://127.0.0.1/0';
 
-bot.connect();
+    await setup(config.redisURL);
+
+    const bot = await KnifeBot.setup(config.redisURL, {
+        getAllUsers: true,
+        defaultImageFormat: 'png',
+        defaultImageSize: 512,
+        latencyThreshold: 15000,
+        disableEvents: {
+            TYPING_START: true
+        }
+    });
+
+    require(`${__dirname}/events`)(bot);
+    await bot.connect();
+})().catch(err => {
+    console.error(err);
+    process.exit(1);
+});

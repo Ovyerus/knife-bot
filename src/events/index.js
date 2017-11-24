@@ -6,7 +6,7 @@ module.exports = bot => {
 
         files.forEach(v => {
             require(`${__dirname}/${v}`)(bot);
-            logger.info(`Loaded ${v}`);
+            bot.logger.info(`Loaded ${v}`);
         });
     });
 };
