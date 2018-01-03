@@ -45,7 +45,7 @@ exports.eval = {
                 ]
             };
 
-            if (returned instanceof Promise) embed.fields[1].value = generateCodeblock('[object Promise]');
+            if (returned && returned.then) embed.fields[1].value = generateCodeblock('[object Promise]');
             if (str.length > 1000) {
                 let key = await bot.hastePost(str);
                 let url = `https://hastebin.com/${key}.js`;
@@ -78,7 +78,7 @@ async function sendEval(bot, ctx, embed, returned) {
     let m = await ctx.createMessage({embed});
     let str;
 
-    if (returned instanceof Promise) returned = await returned;
+    if (returned && returned.then) returned = await returned;
     else return;
 
     if ((returned instanceof IncomingMessage || returned instanceof PassThrough) && returned.requestUrl) {
