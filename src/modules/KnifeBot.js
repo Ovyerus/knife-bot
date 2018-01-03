@@ -80,7 +80,7 @@ class KnifeBot extends Eris.Client {
         if (typeof redisURL !== 'string') throw new TypeError('redisURL is not a string.');
 
         let db = new Redite({url: redisURL});
-        let token = await db.settings.token._promise;
+        let token = await db.settings.token.get;
 
         return new this(token, db, options);
     }

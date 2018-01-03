@@ -16,9 +16,7 @@ class Lookups {
         } else if (['channels', 'roles', 'guilds'].includes(type)) {
             whatArr = whatArr.map(x => [x.name, x.id]).slice(0, 10);
             formatArr = whatArr.map(x => `${whatArr.indexOf(x) + 1}. ${x[0]}`);
-        } else {
-            throw new ValueError(`Type '${type}' is not supported.`);
-        }
+        } else throw new ValueError(`Type '${type}' is not supported.`);
 
         let delet = await ctx.createMessage({embed: {
             title: `${type[0].toUpperCase() + type.slice(1, -1)} Lookup`,
@@ -42,17 +40,12 @@ class Lookups {
             if (choice > whatArr.length || choice < 0) {
                 await ctx.createMessage('Choice is either too large or too small.');
                 return null;
-            } else {
-                if (type === 'members') {
-                    choice = ctx.guild.members.get(whatArr[choice - 1][2]);
-                } else if (type === 'channels') {
-                    choice = ctx.guild.channels.get(whatArr[choice - 1][1]);
-                } else if (type === 'roles') {
-                    choice = ctx.guild.roles.get(whatArr[choice - 1][1]);
-                } else {
-                    choice = this.bot.guilds.get(whatArr[choice - 1][1]);
-                }
             }
+
+            if (type === 'members') choice = ctx.guild.members.get(whatArr[choice - 1][2]);
+            else if (type === 'channels') choice = ctx.guild.channels.get(whatArr[choice - 1][1]);
+            else if (type === 'roles') choice = ctx.guild.roles.get(whatArr[choice - 1][1]);
+            else choice = this.bot.guilds.get(whatArr[choice - 1][1]);
 
             await delet.delete();
             return choice;
@@ -60,9 +53,7 @@ class Lookups {
             if (err instanceof AwaitTimeout) {
                 await ctx.createMessage('Choice timed out.');
                 return null;
-            } else {
-                throw err;
-            }
+            } else throw err;
         }
     }
 
