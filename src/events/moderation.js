@@ -3,7 +3,9 @@ const {formatUTC} = require('../modules/helpers');
 const ACTIONS = [
     'kicked',
     'banned',
-    'softbanned'
+    'softbanned',
+    'rolebanned',
+    'muted'
 ];
 
 const INVITE_REGEX = /(?:https?:\/\/)?(?:discord\.gg|discordapp\.com\/invite)\/\s*?((?:[A-Za-z0-9-])+)/i;
