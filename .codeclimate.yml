@@ -1,17 +1,18 @@
+checks:
+  method-complexity:
+    enabled: false
+  method-lines:
+    enabled: false
+  file-lines:
+    enabled: false
+  similar-code:
+    enabled: false
 engines:
   eslint:
     enabled: true
     config: .eslintrc
-  duplication:
-    enabled: false
-    config:
-      languages:
-      - javascript
   fixme:
       enabled: true
 ratings:
   paths:
   - "**.js"
-exclude_paths:
-- data/*
-- res/*
