@@ -38,15 +38,19 @@ class Lookups {
             msg = await this.bot.awaitMessage(ctx.channel.id, ctx.author.id);
         } catch(err) {
             if (err instanceof AwaitTimeout) {
+                await delet.delete();
                 await ctx.createMessage('Choice timed out.');
+
                 return null;
             } else throw err;
         }
 
+        await delet.delete();
+
         let choice = Number(msg.content);
 
         if (isNaN(choice)) {
-            await ctx.createMessage('Invalid response (not a number).');
+            await ctx.createMessage('Choice is not a number.');
             return null;
         }
 
@@ -60,7 +64,6 @@ class Lookups {
         else if (type === 'roles') choice = ctx.guild.roles.get(whatArr[choice - 1][1]);
         else choice = this.bot.guilds.get(whatArr[choice - 1][1]);
 
-        await delet.delete();
         return choice;
     }
 
