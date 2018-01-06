@@ -305,7 +305,7 @@ class KnifeBot extends Eris.Client {
                     ban: 3
                 }
             },
-            mentions: {trigger: 5, enabled: false},
+            mentions: {trigger: 5, enabled: false, timelimit: 5000},
             invites: {enabled: false, fake: false},
             diacritics: {trigger: 10, enabled: false},
             logChannel: null,

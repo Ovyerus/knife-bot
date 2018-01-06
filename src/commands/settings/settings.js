@@ -181,13 +181,13 @@ exports.invites = {
 
 exports.mentions = {
     desc: 'Edit mass mention settings for the bot.',
-    usage: '[enable | disable | trigger <number> | kick <number> | ban <number>]',
+    usage: '[enable | disable | trigger <number> | timelimit <number> | kick <number> | ban <number>]',
     async main(bot, ctx) {
-        if (!['enable', 'disable', 'trigger', 'kick', 'ban'].includes(ctx.args[0])) {
+        if (!['enable', 'disable', 'trigger', 'timelimit', 'kick', 'ban'].includes(ctx.args[0])) {
             let embed = {
                 title: 'Server Settings - Mentions',
                 description: `Showing current mass-mention settings for **${ctx.guild.name}**.`,
-                footer: {text: "'Amount to Trigger' is how many mentions in one message or done fast enough is needed for the bot to be triggered."},
+                footer: {text: "'Amount to Trigger' is how many mentions in one message or done fast enough is needed for the bot to be triggered. 'Time Limit' is the time (in milliseconds) until mentions no longer count towards the 'Amount to Trigger'"},
                 fields: [
                     {
                         name: '`Status`',
@@ -199,6 +199,12 @@ exports.mentions = {
                         name: '`Amount to Trigger`',
                         value: `**${ctx.settings.mentions.trigger}**\n`
                         + 'Key: `trigger <number>`',
+                        inline: true
+                    },
+                    {
+                        name: '`Time Limit`',
+                        value: `**${ctx.settings.mentions.timelimit || 5000}ms**\n`
+                        + 'Key `timelimit <number>`',
                         inline: true
                     },
                     {
@@ -241,6 +247,17 @@ exports.mentions = {
             } else {
                 await bot.db[ctx.guild.id].mentions.trigger.set(num);
                 await ctx.createMessage(`Set trigger limit to **${num}**.`);
+            }
+        } else if (ctx.args[0] === 'timelimit') {
+            let num = Number(Math.abs(ctx.args[1]).toFixed(0));
+
+            if (isNaN(num)) {
+                await ctx.createMessage('You can only set timelimit to a valid number.');
+            } else if (num < 1000) {
+                await ctx.createMessage('You cannot set timelimit to less than 1000ms. Remember that this value is in milliseconds, not seconds.');
+            } else {
+                await bot.db[ctx.guild.id].mentions.timelimit.set(num);
+                await ctx.createMessage(`Set time limit to **${num}**.`);
             }
         } else if (ctx.args[0] === 'kick') {
             let num = Number(Math.abs(ctx.args[1]).toFixed(0));
