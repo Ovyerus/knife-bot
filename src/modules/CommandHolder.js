@@ -146,11 +146,10 @@ class CommandHolder {
             for (let command of module.commands) {
                 let cmd = module[command];
 
-                if (!cmd.desc) {
-                    logger.warn(`Command '${command}' does not have a description. Skipping...`);
-                } else if (typeof cmd.main !== 'function') {
-                    logger.warn(`Command '${command}' does not have main as a function. Skipping...`);
-                } else {
+                if (!cmd) logger.warn(`Command '${command}' doesn't exist. Skipping...`);
+                else if (!cmd.desc) logger.warn(`Command '${command}' does not have a description. Skipping...`);
+                else if (typeof cmd.main !== 'function') logger.warn(`Command '${command}' does not have main as a function. Skipping...`);
+                else {
                     this.commands[command] = cmd;
 
                     if (Array.isArray(cmd.aliases)) {

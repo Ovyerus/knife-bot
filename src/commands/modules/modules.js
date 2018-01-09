@@ -49,18 +49,14 @@ exports.load = {
 
         let folders = await Promise.promisify(fs.readdir)(path.resolve(__dirname, '../'));
 
-        if (folders.indexOf(ctx.args[0]) === -1) {
-            await ctx.channel.createMessage(`Module **${ctx.args[0]}** does not exist.`);
-        } else {
-            let pkg = JSON.parse(fs.readFileSync(path.join(__dirname,  '../', ctx.args[0], 'package.json')));
-            let mod = path.join(__dirname, '../', ctx.args[0], pkg.main);
-            let unloaded = await bot.db.settings.unloaded._promise;
+        if (folders.indexOf(ctx.args[0]) === -1) return await ctx.channel.createMessage(`Module **${ctx.args[0]}** does not exist.`);
 
-            bot.commands.loadModule(mod);
-            await bot.db.settings.unloaded.splice(unloaded.indexOf(ctx.args[0]), 1);
+        let pkg = JSON.parse(fs.readFileSync(path.join(__dirname,  '../', ctx.args[0], 'package.json')));
+        let mod = path.join(__dirname, '../', ctx.args[0], pkg.main);
 
-            await ctx.createMessage(`Loaded module **${ctx.args[0]}**`);
-        }
+        bot.commands.loadModule(mod);
+        await bot.db.settings.unloaded.remove(ctx.args[0]);
+        await ctx.createMessage(`Loaded module **${ctx.args[0]}**`);
     }
 };
 
@@ -75,7 +71,9 @@ exports.unload = {
         let mod = path.join(__dirname, '../', ctx.args[0], pkg.main);
 
         bot.commands.unloadModule(mod);
+
         await bot.db.settings.unloaded.push(ctx.args[0]);
+        await bot.reloadSettings();
         await ctx.channel.createMessage(`Unloaded module **${ctx.args[0]}**`);
     }
 };
@@ -86,6 +84,7 @@ exports.reload = {
     async main(bot, ctx) {
         if (!ctx.args[0]) return await ctx.createMessage('No module given to reload.');
         else if (!bot.commands.checkModule(ctx.args[0])) return await exports.load.main(bot, ctx);
+
         let pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '../', ctx.args[0], 'package.json')));
         let mod = path.join(__dirname, '../', ctx.args[0], pkg.main);
 
