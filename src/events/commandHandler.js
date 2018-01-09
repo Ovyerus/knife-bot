@@ -2,9 +2,10 @@ const {parsePrefix, parseTulpa} = require(`${__baseDir}/modules/messageParser`);
 const {Context} = require(`${__baseDir}/modules/CommandHolder`);
 
 module.exports = bot => {
+    // Main command handler.
     bot.on('messageCreate', async msg => {
         if (!msg.author) console.log(msg);
-        if (!bot.useCommands || !msg.author || msg.author.id === bot.user.id || !msg.channel.guild) return;
+        if (!bot.useCommands || !msg.author || msg.author.id === bot.user.id || !msg.channel.guild || bot._currentlyAwaiting[msg.channel.id + msg.author.id]) return;
 
         if (/(?:https?:\/\/)?(?:discord\.gg|discordapp\.com\/invite)\/\s*?((?:[A-Za-z0-9]|-)+)/i.test(msg.content)) bot.emit('invites', msg);
         if (msg.mentions.filter(u => u.id !== msg.author.id && !u.bot).length > 0) bot.emit('mentions', msg);
@@ -38,5 +39,18 @@ module.exports = bot => {
 
             await bot.handleError(err, opts);
         }
+    });
+
+    // Message await handler.
+    bot.on('messageCreate', msg => {
+        let awaiting = bot._currentlyAwaiting[msg.channel.id + msg.author.id];
+
+        // Test if something is being awaited, if it does, try the filter and return if it doesnt return a truthy.
+        if (!awaiting || !awaiting.filter(msg)) return;
+
+        // Resolve and clean up.
+        awaiting.p.resolve(msg);
+        clearTimeout(awaiting.timer);
+        delete bot._currentlyAwaiting[msg.channel.id + msg.author.id];
     });
 };

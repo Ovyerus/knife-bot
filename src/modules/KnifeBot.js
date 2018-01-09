@@ -57,6 +57,7 @@ class KnifeBot extends Eris.Client {
             '🔪 support'
         ];
 
+        this._currentlyAwaiting = {};
         this.db = db;
         this.commands = new CommandHolder(this);
         this.lookups = new Lookups(this);
@@ -112,36 +113,34 @@ class KnifeBot extends Eris.Client {
      * @param {String} channelID ID of the channel to wait in.
      * @param {String} userID ID of the user to wait for.
      * @param {Function} [filter] Filter to apply on messages.
-     * @param {Number} [timeout] Time in milliseconds before the await expires.
+     * @param {Number} [timeout=15000] Time in milliseconds before the await expires.
      * @returns {Promise<Eris.Message>} Awaited message.
      */
-    awaitMessage(channelID, userID, filter=function() {return true;}, timeout=15000) {
-        return new Promise((resolve, reject) => {
-            if (typeof channelID !== 'string') throw new TypeError('channelID is not a string.');
-            if (typeof userID !== 'string') throw new TypeError('userID is not a string');
-            if (!filter) filter = () => true;
+    awaitMessage(channelID, userID, filter, timeout=15000) {
+        if (typeof channelID !== 'string') return Promise.reject(new TypeError('channelID is not a string.'));
+        if (typeof userID !== 'string') return Promise.reject(new TypeError('userID is not a string'));
+        if (!filter) filter = () => true;
 
-            var responded, rmvTimeout;
-
-            var onCrt = msg => {
-                if (msg.channel.id === channelID && msg.author.id === userID && filter(msg)) responded = true;
-
-                if (responded) {
-                    this.removeListener('messageCreate', onCrt);
-                    clearInterval(rmvTimeout);
-                    resolve(msg);
-                } 
-            };
-
-            this.on('messageCreate', onCrt);
-
-            rmvTimeout = setTimeout(() => {
-                if (!responded) {
-                    this.removeListener('messageCreate', onCrt);
-                    reject(new AwaitTimeout('Message await expired.'));
-                }
-            }, timeout);
+        let resolve, reject;
+        let promise = new Promise(function() {
+            [resolve, reject] = arguments;
         });
+
+        let deferred = {promise, resolve, reject};
+        let timer = setTimeout(() => {
+            if (deferred.promise.isPending) {
+                deferred.reject(new AwaitTimeout('Message await expired.'));
+                delete this._currentlyAwaiting[channelID + userID];
+            }
+        }, timeout);
+
+        this._currentlyAwaiting[channelID + userID] = {
+            p: deferred,
+            filter,
+            timer
+        };
+
+        return deferred.promise;
     }
 
     /**
