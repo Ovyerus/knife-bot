@@ -130,7 +130,7 @@ exports.ban = {
 
         if (isNaN(num)) return await ctx.createMessage('You can only set the ban limit to a valid number.');
         else if (num <= ctx.settings.actions.mentions.kick) return await ctx.createMessage('You cannot set the ban limit to, or lower than the kick limit.');
-        else if (!num) return await ctx.createMessage('You cannot disable banning for mentions.')
+        else if (!num) return await ctx.createMessage('You cannot disable banning for mentions.');
         
         await bot.db[ctx.guild.id].actions.mentions.ban.set(num);
         await ctx.createMessage(`Set ban limit to **${num}**.`);
