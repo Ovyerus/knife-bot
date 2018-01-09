@@ -93,7 +93,17 @@ class KnifeBot extends Eris.Client {
      * @returns {?String} Formatted user string. Will be null if user isn't passed.
      */
     formatUser(user) {
-        return (user instanceof Eris.Member || user instanceof Eris.User) ? `${user.nick ? user.nick : user.username}#${user.discriminator}` : null;
+        return user instanceof Eris.Member || user instanceof Eris.User ? `${user.nick ? user.nick : user.username}#${user.discriminator}` : null;
+    }
+
+    /**
+     * Easily formats a role into a string, mentioning it if it won't ping anyone, otherwise its name.
+     * 
+     * @param {Eris.Role} role Role to format.
+     * @returns {?String} Role name or mention. Will be null if role isnt passed.
+     */
+    formatRole(role) {
+        return role instanceof Eris.Role ? (role.mentionable ? `**${role.name}**` : role.mention) : null;
     }
 
     /**
