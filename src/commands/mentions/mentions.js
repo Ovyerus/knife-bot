@@ -18,7 +18,10 @@ exports.main = {
         let embed = {
             title: 'Server Settings - Mentions',
             description: `Showing current mass-mention settings for **${ctx.guild.name}**.`,
-            footer: {text: "'Amount to Trigger' is how many mentions in one message or done fast enough is needed for the bot to be triggered. 'Time Limit' is the time (in milliseconds) until mentions no longer count towards the 'Amount to Trigger'"},
+            footer: {
+                text: "'Amount to Trigger' is how many mentions in one message or done fast enough is needed for the bot to be triggered."
+                + "'Time Limit' is the time (in seconds) until mentions no longer count towards the 'Amount to Trigger'"
+            },
             fields: [
                 {
                     name: '`Status`',
@@ -34,7 +37,7 @@ exports.main = {
                 },
                 {
                     name: '`Time Limit`',
-                    value: `**${ctx.settings.mentions.timelimit || 5000}ms**\n`
+                    value: `**${ctx.settings.mentions.timelimit / 1000 || 5} seconds**\n`
                     + 'Key `timelimit <number>`',
                     inline: true
                 },
@@ -93,16 +96,15 @@ exports.trigger = {
 
 exports.timelimit = {
     desc: 'Sets the time limit in which spam mentions are counted.',
-    usage: '<number>',
+    usage: '<time>',
     async main(bot, ctx) {
-        // TODO: convert this to getting seconds as input, to stifle confusion and make it more user friendly.
-        let num = Number(Math.abs(ctx.args[0]).toFixed(0));
+        let num = Number(Math.abs(ctx.args[0]));
 
         if (isNaN(num)) return await ctx.createMessage('You can only set the time limit to a valid number.');
-        else if (num < 1000) return await ctx.createMessage('You cannot set the time limit to less than 1000ms. Remember that this value is in milliseconds, not seconds.');
+        else if (num === 0) return await ctx.createMessage('You cannot set the the time limit to 0 seconds.');
 
-        await bot.db[ctx.guild.id].mentions.timelimit.set(num);
-        await ctx.createMessage(`Set time limit to **${num}**.`);
+        await bot.db[ctx.guild.id].mentions.timelimit.set(num * 1000);
+        await ctx.createMessage(`Set time limit to **${num}** seconds.`);
     }
 };
 
