@@ -77,9 +77,13 @@ exports.channels = {
         } else {
             if (!ctx.args[1]) return await ctx.createMessage(`Please give me a channel to remove an exception for.`);
 
-            let channel = await bot.lookups.textChannelLookup(ctx, ctx.raw.split(' ').slice(1).join(' '));
+            let sliced = ctx.raw.split(' ').slice(1).join(' ');
+            let channel = await bot.lookups.textChannelLookup(ctx, sliced, false);
 
-            if (!channel) return; // TODO: detect if ded channel
+            if (!channel && !isNaN(sliced) && ctx.settings.exceptions.channels.includes(sliced)) {
+                await bot.db[ctx.guild.id].exceptions.channels.remove(sliced);
+                return await ctx.createMessage(`Removed exception for deleted channel **${sliced}**.`);
+            } else if (!channel) return await ctx.createMessage('Channel not found.');
 
             if (ctx.settings.exceptions.channels.includes(channel.id)) {
                 await bot.db[ctx.guild.id].exceptions.channels.remove(channel.id);
@@ -107,7 +111,7 @@ exports.roles = {
             };
 
             ctx.settings.exceptions.roles.map(id => [ctx.guild.roles.get(id), id]).forEach(([role, id]) => {
-                if (role) embed.fields[0].value.push(`**${role.name}** (${id})`);
+                if (role) embed.fields[0].value.push(`**${bot.formatRole(role)}** (${id})`);
                 else embed.fields[0].value.push(`**Deleted role** (${id})`);
             });
 
@@ -123,18 +127,22 @@ exports.roles = {
 
             if (!ctx.settings.exceptions.roles.includes(role.id)) {
                 await bot.db[ctx.guild.id].exceptions.roles.push(role.id);
-                await ctx.createMessage(`Added exception for role **${role.name}**.`);
+                await ctx.createMessage(`Added exception for role **${bot.formatRole(role)}**.`);
             } else await ctx.createMessage('There is already an exception for that role.');
         } else {
             if (!ctx.args[1]) return await ctx.createMessage(`Please give me a role to remove an exception for.`);
 
-            let role = await bot.lookups.roleLookup(ctx, ctx.raw.split(' ').slice(1).join(' '));
+            let sliced = ctx.raw.split(' ').slice(1).join(' ');
+            let role = await bot.lookups.roleLookup(ctx, sliced, false);
 
-            if (!role) return; // TODO: detect if ded role
+            if (!role && !isNaN(sliced) && ctx.settings.exceptions.roles.includes(sliced)) {
+                await bot.db[ctx.guild.id].exceptions.roles.remove(sliced);
+                return await ctx.createMessage(`Removed exception for deleted role **${sliced}**.`);
+            } else if (!role) return await ctx.createMessage('Role not found.');
 
             if (ctx.settings.exceptions.roles.includes(role.id)) {
                 await bot.db[ctx.guild.id].exceptions.roles.remove(role.id);
-                await ctx.createMessage(`Removed exception for role **${role.name}**.`);
+                await ctx.createMessage(`Removed exception for role **${bot.formatRole(role)}**.`);
             } else await ctx.createMessage("There isn't an exception for that role.");
         }
     }
@@ -158,7 +166,7 @@ exports.users = {
             };
 
             ctx.settings.exceptions.user.map(id => [ctx.guild.members.get(id) || bot.users.get(id), id]).forEach(([user, id]) => {
-                if (user) embed.fields[0].value.push(`**${bot.formatUsername(user)}** (${id})`);
+                if (user) embed.fields[0].value.push(`**${bot.formatUser(user)}** (${id})`);
                 else embed.fields[0].value.push(`**Unknown user** (${id})`);
             });
 
@@ -174,18 +182,22 @@ exports.users = {
 
             if (!ctx.settings.exceptions.users.includes(user.id)) {
                 await bot.db[ctx.guild.id].exceptions.users.push(user.id);
-                await ctx.createMessage(`Added exception for user **${bot.fromatUsername(user)}**.`);
+                await ctx.createMessage(`Added exception for user **${bot.fromatUser(user)}**.`);
             } else await ctx.createMessage('There is already an exception for that user.');
         } else {
             if (!ctx.args[1]) return await ctx.createMessage(`Please give me a user to remove an exception for.`);
 
-            let user = await bot.lookups.memberLookup(ctx, ctx.raw.split(' ').slice(1).join(' '));
+            let sliced = ctx.raw.split(' ').slice(1).join(' ');
+            let user = await bot.lookups.memberLookup(ctx, sliced, false);
 
-            if (!user) return; // TODO: detect if ded user
+            if (!user && !isNaN(sliced) && ctx.settings.exceptions.users.includes(sliced)) {
+                await bot.db[ctx.guild.id].exceptions.users.remove(sliced);
+                return await ctx.createMessage(`Removed exception for unknown user **<@${user}>**.`);
+            } else if (!user) return await ctx.createMeessage('User not found.');
 
             if (ctx.settings.exceptions.users.includes(user.id)) {
                 await bot.db[ctx.guild.id].exceptions.users.remove(user.id);
-                await ctx.createMessage(`Removed exception for user **${bot.formatUsername(user)}**.`);
+                await ctx.createMessage(`Removed exception for user **${bot.formatUser(user)}**.`);
             } else await ctx.createMessage("There isn't an exception for that user.");
         }
     }
