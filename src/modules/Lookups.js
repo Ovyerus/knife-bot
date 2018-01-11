@@ -156,7 +156,7 @@ class Lookups {
 
         if (/^<#\d+>$/.test(what)) {
             let id = what.match(/^<#(\d+)>$/)[1];
-            channel = channels.get(id);
+            channel = channels.find(c => c.id === id);
 
             if (!channel && notFoundMsg) await ctx.createMessage('Channel not found.'); 
         } else {
@@ -192,7 +192,7 @@ class Lookups {
 
         if (/^<#\d+>$/.test(what)) {
             let id = what.match(/^<#(\d+)>$/)[1];
-            channel = channels.get(id);
+            channel = channels.find(c => c.id === id);
 
             if (!channel && notFoundMsg) await ctx.createMessage('Channel not found.'); 
         } else {
@@ -228,7 +228,7 @@ class Lookups {
 
         if (/^<#\d+>$/.test(what)) {
             let id = what.match(/^<#(\d+)>$/)[1];
-            category = categories.get(id);
+            category = categories.get(c => c.id === id);
 
             if (!category && notFoundMsg) await ctx.createMessage('Category not found.'); 
         } else {
