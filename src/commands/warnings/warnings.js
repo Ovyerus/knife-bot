@@ -8,6 +8,7 @@ exports.commands = [
 exports.main = {
     desc: 'Handles warning messages for filter triggers.',
     usage: '[invites <message> | mentions <message> | diacritics <message>]',
+    permissions: {author: 'manageGuild'},
     aliases: ['messages'],
     async main(bot, ctx) {
         let embed = {

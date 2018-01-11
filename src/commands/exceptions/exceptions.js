@@ -8,6 +8,7 @@ exports.commands = [
 exports.main = {
     desc: 'Edit settings for the filter exceptions.',
     usage: '[option [arguments]]',
+    permissions: {author: 'manageGuild'},
     async main(bot, ctx) {
         let embed = {
             title: 'Server Settings - Exceptions',

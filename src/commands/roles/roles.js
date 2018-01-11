@@ -8,7 +8,8 @@ exports.commands = [
 
 exports.main = {
     desc: 'Manages the special roles used by the bot.',
-    usage: '<mute <options> | roleban <options>>'
+    usage: '<mute <options> | roleban <options>>',
+    permissions: {author: 'manageGuild'}
 };
 
 exports.mute = {

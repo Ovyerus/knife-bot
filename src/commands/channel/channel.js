@@ -6,6 +6,7 @@ exports.commands = [
 exports.main = {
     desc: 'Manages the log channel for filter notifications.',
     usage: '[channel | disable]',
+    permissions: {author: 'manageGuild'},
     async main(bot, ctx) {
         if (!ctx.args[0]) {
             let embed = {
