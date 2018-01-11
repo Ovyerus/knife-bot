@@ -78,8 +78,7 @@ async function sendEval(bot, ctx, embed, returned) {
     let m = await ctx.createMessage({embed});
     let str;
 
-    if (returned && returned.then) returned = await returned;
-    else return;
+    while (returned && returned.then) returned = await returned;
 
     if ((returned instanceof IncomingMessage || returned instanceof PassThrough) && returned.requestUrl) {
         str = returned.headers['content-type'].split(';')[0] === 'application/json' ? util.inspect(JSON.parse(returned.body), {depth: 1}) : returned.body;
