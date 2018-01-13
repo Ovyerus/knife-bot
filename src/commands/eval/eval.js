@@ -8,6 +8,7 @@ const path = require('path');
 const got = require('got');
 const IncomingMessage = require('http').IncomingMessage;
 const PassThrough = require('stream').PassThrough;
+const helpers = require(`${__baseDir}/modules/helpers`);
 /* eslint-enable */
 
 const FAIL_COL = 0xF44336;

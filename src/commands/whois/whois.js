@@ -1,6 +1,5 @@
-const moment = require('moment');
-const SeedRandom = require('seedrandom');
 const Eris = require('eris');
+const {LCG} = require(`${__baseDir}/modules/helpers`);
 
 exports.commands = ['whois'];
 
@@ -24,9 +23,9 @@ exports.whois = {
         let embed = {
             title: bot.formatUser(user.user ? user.user : user),
             desc: user.user ? 'User in server.' : 'User not in server.',
+            footer: {text: 'User created:'},
             timestamp: new Date(user.createdAt),
             thumbnail: {url: user.avatarURL},
-            footer: {text: 'User created:'},
             fields: []
         };
 
@@ -47,7 +46,7 @@ exports.whois = {
             });
             embed.fields.push({
                 name: 'Join Date',
-                value: `User joined on ${moment(user.joinedAt).format('dddd Do MMMM Y')} at ${moment(user.joinedAt).format('HH:mm:ss')}`
+                value: new Date(user.joinedAt)
             });
         }
 
@@ -60,14 +59,19 @@ exports.whois = {
 };
 
 function generateIP(userID) {
-    let seeded = new SeedRandom(userID);
+    let seeded = new LCG(userID);
+    let type = seeded() > .5 ? 0 : 1;
     let bytes = [];
 
-    for (let i = 0; i < 4; i++) {
-        bytes.push(Math.floor(seeded() * 255));
+    if (type === 1) {
+        // IPv4
+        for (let i = 0; i < 4; i++) bytes.push(Math.floor(seeded() * 0xFF));
+        bytes[Math.floor(seeded() * 4)] = Array.from(new Array(768), (x, i) => i + 256)[Math.floor(seeded() * 768)];
+        return bytes.join('.');
+    } else {
+        // IPv6
+        for (let i = 0; i < 8; i++) bytes.push(Math.floor(seeded() * 0xFFFF));
+        bytes[Math.floor(seeded() * 8)] = Array.from(new Array(0xFF), (x, i) => i + 0xFFFF)[Math.floor(seeded() * 0xFF)];
+        return bytes.join(':');
     }
-
-    bytes[Math.floor(Math.random() * 4)] = Array.from(new Array(744), (x, i) => i + 256)[Math.floor(seeded() * 744)];
-
-    return bytes.join('.');
 }

@@ -33,4 +33,10 @@ function formatUTC(date=new Date()) {
     return `${date.getUTCDate()} ${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()} ${date.getUTCHours()}:${date.getUTCMinutes()}:${date.getUTCSeconds()} UTC`;
 }
 
-module.exports = {AwaitTimeout, ValueError, formatUTC};
+function LCG(seed) {
+    let lcg = a => a * 48271 % 2147483647;
+    seed = seed ? lcg(seed) : lcg(Math.random());
+    return () => (seed = lcg(seed)) / 2147483648;
+}
+
+module.exports = {AwaitTimeout, ValueError, formatUTC, LCG};
