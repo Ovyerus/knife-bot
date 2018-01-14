@@ -4,7 +4,6 @@ const {Context} = require(`${__baseDir}/modules/CommandHolder`);
 module.exports = bot => {
     // Main command handler.
     bot.on('messageCreate', async msg => {
-        if (!msg.author) console.log(msg);
         if (!bot.useCommands || !msg.author || msg.author.id === bot.user.id || !msg.channel.guild || bot._currentlyAwaiting[msg.channel.id + msg.author.id]) return;
 
         if (/(?:https?:\/\/)?(?:discord\.gg|discordapp\.com\/invite)\/\s*?((?:[A-Za-z0-9]|-)+)/i.test(msg.content)) bot.emit('invites', msg);

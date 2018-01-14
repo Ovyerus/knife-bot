@@ -273,7 +273,7 @@ class CommandHolder {
      * @param {Function} callback Function to run on each iteration. Gets two arguments: command object and command name.
      */
     forEach(callback) {
-        if (typeof callback !== 'function') throw new Error('callback is not a function');
+        if (typeof callback !== 'function') throw new TypeError('callback is not a function');
 
         for (let cmd in this.commands) {
             callback(this.commands[cmd], cmd);
@@ -287,7 +287,7 @@ class CommandHolder {
      * @returns {Command[]} Filtered commands.
      */
     filter(callback) {
-        if (typeof callback !== 'function') throw new Error('callback is not a function');
+        if (typeof callback !== 'function') throw new TypeError('callback is not a function');
 
         let filtered = [];
 
@@ -296,6 +296,16 @@ class CommandHolder {
         });
 
         return filtered;
+    }
+
+    map(callback) {
+        if (typeof callback !== 'function') throw new TypeError('callback is not a function.');
+
+        let mapped = [];
+
+        this.forEach((cmd, name) => mapped.push(callback(cmd, name)));
+
+        return mapped;
     }
 
     /**

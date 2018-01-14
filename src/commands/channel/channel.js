@@ -12,7 +12,7 @@ exports.main = {
             let embed = {
                 title: 'Server Settings - Log Channel',
                 description: `Showing current log channel for **${ctx.guild.name}**`,
-                footer: {text: "Run 'settings channel <channel>' to enable logging or change the channel, or run 'settings channel disable' to remove the log channel."},
+                footer: {text: "Run 'channel <channel>' to enable logging or change the channel, or run 'channel disable' to remove the log channel."},
                 fields: [
                     {
                         name: '`Channel`', 

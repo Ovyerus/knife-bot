@@ -90,7 +90,7 @@ exports.kick = {
     async main(bot, ctx) {
         let num = Number(Math.abs(ctx.args[0]).toFixed(0));
 
-        if (isNaN(num)) return await ctx.createMessage('You can only set kick to a valid number.');
+        if (isNaN(num)) return await ctx.createMessage('You can only set the kick limit to a valid number.');
         else if (num >= ctx.settings.actions.diacritics.ban) return await ctx.createMessage('You cannot set the kick limit to, or higher than the ban limit.');
 
         await bot.db[ctx.guild.id].actions.diacritics.kick.set(num);
@@ -108,7 +108,6 @@ exports.ban = {
 
         if (isNaN(num)) return await ctx.createMessage('You can only set the ban limit to a valid number');
         else if (num <= ctx.settings.actions.diacritics.kick) return await ctx.createMessage('You cannot set the ban limit to, or lower than the kick limit.');
-        else if (!num) return await ctx.createMessage('You cannot disable banning for diacritics.');
 
         await bot.db[ctx.guild.id].actions.diacritics.ban.set(num);
         await ctx.createMessage(`Set ban limit **${num}**.`);

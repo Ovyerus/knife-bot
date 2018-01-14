@@ -1,4 +1,3 @@
-const moment = require('moment');
 const cp = require('child_process');
 const got = require('got');
 
@@ -10,11 +9,10 @@ exports.main = {
     async main(bot, ctx) {
         await ctx.channel.sendTyping();
 
-        let res = await got(`https://api.github.com/repos/Ovyerus/knife-bot/commits`, {
+        let res = await got('https://api.github.com/repos/Ovyerus/knife-bot/commits', {
             headers: {Accept: 'application/vnd.github.v3+json'}
         });
         let commit = JSON.parse(res.body)[0];
-        let commitTime = moment(commit.commit.author.date);
 
         await ctx.createMessage({embed: {
             color: 0x1CABB3,
@@ -28,7 +26,7 @@ exports.main = {
             fields: [
                 {name: `\`${commit.sha.slice(0, 6)}\``, value: commit.commit.message}
             ],
-            footer: {text: `Commited on ${commitTime.format('dddd Do MMMM Y')} at ${commitTime.format('HH:mm:ss A')}`}
+            timestamp: commit.commit.author.date
         }});
     }
 };

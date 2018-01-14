@@ -19,10 +19,7 @@ exports.cooldown = {
             bot.disconnect({reconnect: false});
             bot.logger.info('Restarting/exiting process...');
             process.exit(0);
-        } else if (/^no?$/i.test(msg.content)) {
-            await ctx.createMessage('Keeping the blowtorches running.');
-        } else {
-            await ctx.createMessage('Invalid option. Keeping the blowtorches running.');
-        }
+        } else if (/^no?$/i.test(msg.content)) await ctx.createMessage('Keeping the blowtorches running.');
+        else await ctx.createMessage('Invalid option. Keeping the blowtorches running.');
     }
 };
