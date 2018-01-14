@@ -4,7 +4,7 @@ const {Context} = require(`${__baseDir}/modules/CommandHolder`);
 module.exports = bot => {
     // Main command handler.
     bot.on('messageCreate', async msg => {
-        if (!bot.useCommands || !msg.author || msg.author.id === bot.user.id || !msg.channel.guild || bot._currentlyAwaiting[msg.channel.id + msg.author.id]) return;
+        if (!bot.useCommands || !msg.author || msg.author.id === bot.user.id || bot._currentlyAwaiting[msg.channel.id + msg.author.id]) return;
 
         if (/(?:https?:\/\/)?(?:discord\.gg|discordapp\.com\/invite)\/\s*?((?:[A-Za-z0-9]|-)+)/i.test(msg.content)) bot.emit('invites', msg);
         if (msg.mentions.filter(u => u.id !== msg.author.id && !u.bot).length > 0) bot.emit('mentions', msg);
@@ -22,7 +22,7 @@ module.exports = bot => {
         if (/^vs$/i.test(cmd)) cmd = 'vs';
         if (!bot.commands.getCommand(cmd)) return;
 
-        let settings = await bot.getSettings(msg.channel.guild.id);
+        let settings = msg.channel.guild ? await bot.getSettings(msg.channel.guild.id) : {};
         let ctx = new Context(msg, bot, settings);
 
         try {

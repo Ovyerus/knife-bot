@@ -242,6 +242,7 @@ class CommandHolder {
         let cmd = this.getCommand(ctx.cmd);
 
         if (!cmd) return;
+        if (!ctx.guild && !cmd.allowDM) return await ctx.createMessage('This command can only be run in a server.');
 
         if (cmd.subcommands && cmd.subcommands[ctx.args[0]]) {
             let subcommand = ctx.args[0];
@@ -452,7 +453,7 @@ class CommandHolder {
 }
 
 function loggerPrefix(bot, msg) {
-    return `${msg.channel.guild.id} > ${msg.author.id}: `;
+    return `${msg.channel.guild ? msg.channel.guild.id : msg.channel.id} > ${msg.author.id}: `;
 }
 
 /**
@@ -513,7 +514,7 @@ class Context {
         this.raw = tmp.raw;
         this.cleanRaw = msg.content.split(this.cmd).slice(1).join(this.cmd).trim();
 
-        this.guildBot = msg.channel.guild.members.get(bot.user.id);
+        this.guildBot = msg.channel.guild ? msg.channel.guild.members.get(bot.user.id) : bot.user;
         this.settings = settings;
 
         // Get mention strings.
@@ -593,6 +594,9 @@ class Context {
      * @returns {Boolean} If the user has the permission.
      */
     hasPermission(permission, who='self') {
+        // If it is a DM, just return true.
+        if (!this.guild) return true;
+
         // Check if permission actually exists.
         if (!Object.keys(Eris.Constants.Permissions).includes(permission)) return false;
         if (!['self', 'author', 'both'].includes(who)) return false;

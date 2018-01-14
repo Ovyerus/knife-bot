@@ -3,6 +3,7 @@ exports.commands = ['info'];
 exports.info = {
     desc: 'Display information about the bot.',
     aliases: ['stats'],
+    allowDM: true,
     async main(bot, ctx) {
         let roleColour = ctx.guildBot.roles.sort((a, b) => ctx.guild.roles.get(b).position - ctx.guild.roles.get(a).position)[0];
         roleColour = roleColour ? ctx.guild.roles.get(roleColour).colour : 0;

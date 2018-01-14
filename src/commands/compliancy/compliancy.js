@@ -1,8 +1,9 @@
 exports.commands = ['compliancy'];
 
 exports.compliancy = {
-    desc: '\u200b',
+    desc: 'Talks about tulpa compliancy.',
     hidden: true,
+    allowDM: true,
     main(bot, ctx) {
         return ctx.createMessage('Commands can still be run even with a few select wrappers or prefixes.\n\n'
         + 'Wrappers are either `[prefix command]` or `{prefix command}` but not both at the same time.\n'

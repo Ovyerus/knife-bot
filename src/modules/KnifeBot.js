@@ -380,7 +380,7 @@ class KnifeBot extends Eris.Client {
         let errorCode = crypto.createHash('md5');
 
         if (!opts.msg) errorCode.update((Date.now() ** -1 + Date.now()).toString(2));
-        else errorCode.update(opts.msg.author.id + opts.msg.channel.guild.id + Date.now());
+        else errorCode.update(opts.msg.author.id + opts.msg.channel.id + Date.now());
 
         errorCode = errorCode.digest('hex').slice(0, 10);
 
@@ -397,7 +397,7 @@ class KnifeBot extends Eris.Client {
             await this.createMessage(this.errorChannel, '**New Error**\n\n'
             + `**Code:** \`${errorCode}\`\n`
             + `**Command:** \`${opts.msg.cmd}\`\n`
-            + `**Guild:** \`${opts.msg.channel.guild.name}\` (${opts.msg.channel.guild.id})\n`
+            + opts.msg.channel.guild ? `**Guild:** \`${opts.msg.channel.guild.name}\` (${opts.msg.channel.guild.id})\n` : ''
             + `**User:** \`${this.formatUser(opts.msg.author)}\` (${opts.msg.author.id})\n`
             + '```js\n'
             + `${opts.discord ? `${opts.discord.code}: ${opts.discord.message}` : err.stack}\n`

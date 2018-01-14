@@ -26,8 +26,9 @@ exports.commands = [
 exports.eval = {
     desc: 'Evaluate code in Discord.',
     fullDesc: 'Used to evaluate JavaScript code in Discord. Mostly for debug purposes.',
-    owner: true,
     usage: '<code>',
+    allowDM: true,
+    owner: true,
     async main(bot, ctx) {
         if (ctx.raw.length === 0) return await ctx.createMessage('Please give arguments to evaluate.');
 

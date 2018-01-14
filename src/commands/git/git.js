@@ -6,6 +6,7 @@ exports.commands = ['pull'];
 
 exports.main = {
     desc: 'Show information about latest pulled commit.',
+    allowDM: true,
     async main(bot, ctx) {
         await ctx.channel.sendTyping();
 

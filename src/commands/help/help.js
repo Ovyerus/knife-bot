@@ -4,6 +4,7 @@ exports.help = {
     desc: 'Show bot help.',
     usage: '[command]',
     aliases: ['commands'],
+    allowDM: true,
     async main(bot, ctx) {
         if (!ctx.args[0]) {                
             let cmds = bot.commands.map((cmd, name) => {
@@ -11,7 +12,7 @@ exports.help = {
                 else if (!cmd.owner && !cmd.hidden) return `**🔪${name}${cmd.usage ? ` \`${cmd.usage}\`` : ''}** - ${cmd.desc}`;
             }).filter(c => c);
 
-            await ctx.createMessage(`${bot.redHot} Slicing into your DMs!`);
+            if (ctx.guild) await ctx.createMessage(`${bot.redHot} Slicing into your DMs!`);
 
             let cmdCollect = [];
             let fieldsPos = 0;
