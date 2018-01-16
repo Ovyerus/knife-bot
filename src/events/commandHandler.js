@@ -1,12 +1,13 @@
 const {parsePrefix, parseTulpa} = require(`${__baseDir}/modules/messageParser`);
 const {Context} = require(`${__baseDir}/modules/CommandHolder`);
+const {URLRegex} = require(`${__baseDir}/modules/helpers`);
 
 module.exports = bot => {
     // Main command handler.
     bot.on('messageCreate', async msg => {
         if (!bot.useCommands || !msg.author || msg.author.id === bot.user.id || bot._currentlyAwaiting[msg.channel.id + msg.author.id]) return;
 
-        if (/(?:https?:\/\/)?(?:discord\.gg|discordapp\.com\/invite)\/\s*?((?:[A-Za-z0-9]|-)+)/i.test(msg.content)) bot.emit('invites', msg);
+        if (URLRegex.test(msg.content)) bot.emit('invites', msg);
         if (msg.mentions.filter(u => u.id !== msg.author.id && !u.bot).length > 0) bot.emit('mentions', msg);
         if (msg.content.replace(/[\u{0300}-\u{036F}\u{0489}]/gu, '').length < msg.content.length) bot.emit('diacritics', msg);
 

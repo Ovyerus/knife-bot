@@ -1,4 +1,4 @@
-const {formatUTC} = require('../modules/helpers');
+const {formatUTC, inviteRegex, URLRegex, getLinkRedirects} = require(`${__baseDir}/modules/helpers`);
 
 const ACTIONS = [
     'kicked',
@@ -8,7 +8,6 @@ const ACTIONS = [
     'muted'
 ];
 
-const INVITE_REGEX = /(?:https?:\/\/)?(?:discord\.gg|discordapp\.com\/invite)\/\s*?((?:[A-Za-z0-9-])+)/i;
 const DIACRITIC_REGEX = /[\u{0300}-\u{036F}\u{0489}]/gu; // eslint-disable-line
 
 module.exports = bot => {
@@ -20,8 +19,30 @@ module.exports = bot => {
         if (!settings.invites.enabled) return;
         if (userExcept(settings, msg.author.id) || roleExcept(settings, msg) || channelExcept(settings, msg.channel.id)) return;
 
+        let invite;
+
+        if (!inviteRegex.test(msg.content)) {
+            // Check if an invite is hidden behind a possibly shortened link.
+            for (let url of msg.content.match(URLRegex)) {
+                let redirects;
+
+                try {
+                    redirects = (await getLinkRedirects(url)).map(v => v.match(inviteRegex)).filter(v => v);
+                } catch(err) {
+                    continue;
+                }
+
+                if (redirects[0]) {
+                    invite = redirects[0];
+                    break;
+                }
+            }
+        } else invite = msg.content.match(inviteRegex);
+
+        if (!invite) return;
+
         try {
-            let invCode = msg.content.match(INVITE_REGEX)[1];
+            let invCode = invite[1];
             let inv = await bot.getInvite(invCode);
 
             if (inv.guild.id === msg.channel.guild.id) return;
@@ -147,8 +168,10 @@ function channelExcept(res, channel) {
 }
 
 async function punishChain(bot, msg, settings, type, extra) {
-    await bot.incrementStrikes(msg.channel.guild.id, msg.author.id);
-    let strikes = await bot.getStrikes(msg.channel.guild.id, msg.author.id);
+    await bot.editStrikes(msg.channel.guild.id, msg.author.id, '+');
+
+    let strikes = settings.strikes[msg.author.id];
+    strikes = strikes ? strikes + 1 : 1;
 
     if (settings.actions[type].kick > 0 && strikes === settings.actions[type].kick) {
         await msg.member.kick(type);
@@ -162,7 +185,8 @@ async function punishChain(bot, msg, settings, type, extra) {
             extra
         });
     } else if (settings.actions[type].ban > 0 && settings.actions[type].ban > settings.actions[type].kick && strikes === settings.actions[type].ban) {
-        await Promise.all([msg.member.ban(1, type), bot.resetStrikes(msg.channel.guild.id, msg.author.id)]);
+        await msg.member.ban(1, type);
+        await bot.editStrikes(msg.channel.guild.id, msg.author.id, 'reset');
 
         bot.emit('log', {
             user: msg.author,

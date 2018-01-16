@@ -10,7 +10,7 @@ const Redite = require('redite');
 const Lookups = require('./Lookups');
 const Logger = require('./Logger');
 const {CommandHolder} = require('./CommandHolder');
-const {AwaitTimeout} = require('./helpers');
+const {AwaitTimeout, ValueError} = require('./helpers');
 
 /**
  * Main class for Knife Bot.
@@ -263,7 +263,7 @@ class KnifeBot extends Eris.Client {
     hasWantedPerms(msg) {
         let perms = msg.channel.guild.members.get(this.user.id).permission;
 
-        return perms.has('manageMessages') && perms.has('banMember') && perms.has('kickMembers');
+        return perms.has('manageMessages') && perms.has('banMembers') && perms.has('kickMembers');
     }
 
     /**
@@ -338,6 +338,26 @@ class KnifeBot extends Eris.Client {
         return settings;
     }
 
+    async editStrikes(guildID, userID, type) {
+        if (!['+', '-', 'reset'].includes(type)) throw new ValueError('type must be one of the following: "+", "-", "reset".');
+
+        let settings = await this.getSettings(guildID);
+        let strikes = settings.strikes[userID] || 0;
+
+        if (type === '+') {
+            // Increment strikes.
+            strikes += 1;
+        } else if (type === '-') {
+            // Decrement strikes (only if it isn't zero).
+            strikes -= strikes ? 1 : 0;
+        } else {
+            // Reset strikes to 0.
+            strikes = 0;
+        }
+
+        await this.db[guildID].strikes[userID].set(strikes);
+    }
+
     /**
      * Get the settings for a guild.
      * 
@@ -349,22 +369,6 @@ class KnifeBot extends Eris.Client {
         if (!await this.db.has(guildID)) return await this.initSettings(guildID);
 
         return await this.db[guildID].get;
-    }
-
-    /**
-     * Get the strikes for a guild. Optionally get it for a user as well.
-     * 
-     * @param {String} guildID Guild to get strikes for.
-     * @param {String} [userID] User to get strikes for.
-     * @returns {Promise<(Object[]|Number)>} Strikes for the guild or user.
-     */
-    async getStrikes(guildID, userID) {
-        if (typeof guildID !== 'string') throw new TypeError('guildID is not a string.');
-
-        let settings = await this.getSettings(guildID);
-
-        if (!userID) return settings.strikes;
-        else return settings.strikes[userID];
     }
 
     /**
