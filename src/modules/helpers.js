@@ -15,6 +15,9 @@ const MONTHS = [
     'December'
 ];
 
+/**
+ * Custom error class used in KnifeBot#awaitMessage to designate a timeout.
+*/
 class AwaitTimeout extends Error {
     constructor(message) {
         super(message);
@@ -23,6 +26,9 @@ class AwaitTimeout extends Error {
     }
 }
 
+/**
+ * Custom error class used to designate an unwanted value for an argument.
+*/
 class ValueError extends Error {
     constructor(message) {
         super(message);
@@ -31,16 +37,34 @@ class ValueError extends Error {
     }
 }
 
+/**
+ * Formats a given date object into a UTC time string.
+ * 
+ * @param {Date} [date] Date to format.
+ * @returns {String} Formatted date string.
+ */
 function formatUTC(date=new Date()) {
     return `${date.getUTCDate()} ${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()} ${date.getUTCHours()}:${date.getUTCMinutes()}:${date.getUTCSeconds()} UTC`;
 }
 
+/**
+ * Lehmer LCG random number generator.
+ * 
+ * @param {Number} [seed] Seed to start the generator off with.
+ * @returns {Function} Function to generate next number on the generator.
+ */
 function LCG(seed) {
     let lcg = a => a * 48271 % 2147483647;
     seed = seed ? lcg(seed) : lcg(Math.random());
     return () => (seed = lcg(seed)) / 2147483648;
 }
 
+/**
+ * Gets possible redirects for a given URL.
+ * 
+ * @param {String} url URL to get redirects for.
+ * @returns {String[]} Redirects for the given URL. May be empty.
+ */
 async function getLinkRedirects(url) {
     if (typeof url !== 'string') throw new TypeError('url is not a string.');
 
