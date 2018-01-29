@@ -41,32 +41,20 @@ module.exports = bot => {
 
         if (!invite) return;
 
-        try {
-            let invCode = invite[1];
-            let inv = await bot.getInvite(invCode);
+        if (!settings.invites.fake) {
+            try {
+                let inv = await bot.getInvite(invite[1]);
 
-            if (inv.guild.id === msg.channel.guild.id) return;
-
-            await msg.delete();
-            await punishChain(bot, msg, settings, 'invites');
-        } catch(err) {
-            if (err.response && typeof err.response === 'string' && JSON.parse(err.response).message === 'Unknown Invite') {
-                if (settings.invites.fake) {
-                    try {
-                        await msg.delete();
-                        await punishChain(bot, msg, settings, 'invites');
-                    } catch(err) {
-                        await bot.handleError(err, {
-                            event: 'moderation'
-                        });
-                    }
+                if (inv.guild.id === msg.channel.guild.id) return;
+            } catch(err) {
+                if (!(err.response && typeof err.response === 'string' && JSON.parse(err.response).message === 'Unknown Invite')) {
+                    return await bot.handleError(err, {event: 'invites'});
                 }
-            } else {
-                await bot.handleError(err, {
-                    event: 'moderation'
-                });
             }
         }
+
+        await msg.delete();
+        await punishChain(bot, msg, settings, 'invites');
     });
 
     let mentionTracker = {};
