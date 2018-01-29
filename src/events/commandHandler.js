@@ -5,7 +5,7 @@ const {URLRegex} = require(`${__baseDir}/modules/helpers`);
 module.exports = bot => {
     // Main command handler.
     bot.on('messageCreate', async msg => {
-        if (!bot.useCommands || !msg.author || msg.author.id === bot.user.id || bot._currentlyAwaiting[msg.channel.id + msg.author.id]) return;
+        if (!bot.useCommands || msg.author.id === bot.user.id || bot._currentlyAwaiting[msg.channel.id + msg.author.id]) return;
 
         if (URLRegex.test(msg.content)) bot.emit('invites', msg);
         if (msg.mentions.filter(u => u.id !== msg.author.id && !u.bot).length > 0) bot.emit('mentions', msg);
@@ -52,5 +52,12 @@ module.exports = bot => {
         awaiting.p.resolve(msg);
         clearTimeout(awaiting.timer);
         delete bot._currentlyAwaiting[msg.channel.id + msg.author.id];
+    });
+
+    bot.on('messageUpdate', msg => {
+        if (msg.author.id === bot.user.id) return;
+
+        if (URLRegex.test(msg.content)) bot.emit('invites', msg);
+        if (msg.content.replace(/[\u{0300}-\u{036F}\u{0489}]/gu, '').length < msg.content.length) bot.emit('diacritics', msg);
     });
 };
