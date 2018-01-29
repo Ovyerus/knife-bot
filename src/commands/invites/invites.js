@@ -75,7 +75,7 @@ exports.fake = {
     desc: 'Handles toggling of fake invite detection.',
     usage: '<enable|disable>',
     async main(bot, ctx) {
-        if (!['enable', 'disable'].ctx.args[0]) return await ctx.createMessage('Invalid option for `fake`, must either be `enable` or `disable`.');
+        if (!['enable', 'disable'].includes(ctx.args[0])) return await ctx.createMessage('Invalid option for `fake`, must either be `enable` or `disable`.');
 
         if (ctx.args[0] === 'enable' && !ctx.settings.invites.fake) {
             await bot.db[ctx.guild.id].invites.fake.set(true);

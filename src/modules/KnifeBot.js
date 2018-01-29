@@ -401,7 +401,7 @@ class KnifeBot extends Eris.Client {
             await this.createMessage(this.errorChannel, '**New Error**\n\n'
             + `**Code:** \`${errorCode}\`\n`
             + `**Command:** \`${opts.msg.cmd}\`\n`
-            + opts.msg.channel.guild ? `**Guild:** \`${opts.msg.channel.guild.name}\` (${opts.msg.channel.guild.id})\n` : ''
+            + (opts.msg.channel.guild ? `**Guild:** \`${opts.msg.channel.guild.name}\` (${opts.msg.channel.guild.id})\n` : '')
             + `**User:** \`${this.formatUser(opts.msg.author)}\` (${opts.msg.author.id})\n`
             + '```js\n'
             + `${opts.discord ? `${opts.discord.code}: ${opts.discord.message}` : err.stack}\n`
