@@ -163,17 +163,15 @@ li a:hover {
     }
 
     h1 {
-        font-size: 55px;
-        text-align: center;
+        font-size: 50px;
     }
 
     h2 {
-        font-size: 30px;
-        text-align: center;
+        font-size: 25px;
     }
 
     h3 {
-        font-size: 25px;
+        font-size: 20px;
     }
 
     .title {
@@ -209,6 +207,7 @@ li a:hover {
     }
     
     .link-lists {
-        padding: auto
+        margin-top: 50px;
+        margin-bottom: 25px;
     }
 }
