@@ -37,9 +37,6 @@ ul {
     list-style-type: none;
     padding: 0;
     margin: 0;
-    position: relative;
-    bottom: 0;
-    left: 50%;
 }
 
 li {
@@ -68,6 +65,8 @@ li a:hover {
     width: 100%;
     min-height: 100%;
     position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Fucking stupid fix for Firefox */
@@ -91,17 +90,10 @@ li a:hover {
     box-shadow: 0 5px 20px 10px rgba(0, 0, 0, 0.25);
 }
 
-.list-wrapper {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-}
-
 .links-list {
-    float: right;
-    position: relative;
-    left: -50%;
-    text-align: left;
+    display: block;
+    align-self: center;
+    margin-top: auto;
 }
 
 .faq {
@@ -148,7 +140,7 @@ li a:hover {
     font-size: 25px;
     opacity: 0.5;
     display: inline-block;
-    transition: all 0.2s ease-out;
+    transition: opacity 0.2s ease-out, text-shadow 0.2s ease-out;
 }
 
 .back:hover {
@@ -189,13 +181,13 @@ li a:hover {
     }
 
     .button {
-        font-size: 50px;
+        font-size: 35px;
         text-align: center;
         display: block;
         margin: auto;
-        margin-top: 35px;
         padding: 16px;
         border-radius: 100px;
+        max-width: 6em;
     }
 
     .q {
@@ -209,11 +201,14 @@ li a:hover {
     .back {
         font-size: 35px;
         padding: 12px 0;
-        display: block;
-        text-align: center;
+        margin: auto;
     }
 
     .footer {
         font-size: 15px;
+    }
+    
+    .link-lists {
+        padding: auto
     }
 }
