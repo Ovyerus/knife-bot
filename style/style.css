@@ -1,5 +1,35 @@
 @import url('https://fonts.googleapis.com/css?family=Lato:400,700|Overpass+Mono');
 
+@keyframes slide-up-fade {
+    0% {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+
+    75% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}
+
+@keyframes slide-up-from-bottom-fade {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    75% {
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateY(-50px);
+    }
+}
+
 * {
     font-family: Lato, Arial, Helvetica, sans-serif;
     color: #FFF;
@@ -42,6 +72,7 @@ ul {
 li {
     float: left;
     position: relative;
+    text-align: center;
 }
 
 li a {
@@ -51,7 +82,7 @@ li a {
     padding: 32px 32px 0;
     opacity: 0.5;
     display: block;
-    transition: all 0.2s ease-out;
+    transition: padding-top 0.2s ease-out, padding-bottom 0.2s ease-out, opacity 0.2s ease-out, text-shadow 0.2s ease-out;
 }
 
 li a:hover {
@@ -61,17 +92,22 @@ li a:hover {
     text-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
 }
 
-.container {
+#body-container {
     width: 100%;
     min-height: 100%;
     position: relative;
     display: flex;
     flex-direction: column;
+    animation: slide-up-fade 1s ease-out
 }
 
 /* Fucking stupid fix for Firefox */
-.container.aaa {
+#body-container.aaa {
     height: 100%
+}
+
+.slide-out {
+    animation: slide-up-from-bottom-fade 1s ease-out;
 }
 
 .button {
@@ -91,8 +127,9 @@ li a:hover {
 }
 
 .links-list {
-    display: block;
+    display: flex;
     align-self: center;
+    flex-wrap: wrap;
     margin-top: auto;
 }
 
@@ -157,17 +194,20 @@ li a:hover {
    Mobile Devices
                   */
 
-@media only screen and (min-width: 320px) and (max-width: 480px) {
+@media only screen and (max-width: 480px) {
     body {
         margin: 25px;
     }
 
     h1 {
-        font-size: 50px;
+        font-size: 35px;
+        text-align: center;
     }
 
     h2 {
         font-size: 25px;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     h3 {
@@ -207,7 +247,22 @@ li a:hover {
     }
     
     .link-lists {
+        align-self: center;
+        font-size: 20px;
         margin-top: 50px;
-        margin-bottom: 25px;
+    }
+
+    li {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    li a {
+        padding: 8;
+        transition: none;
+    }
+
+    li a:hover {
+        padding: 8;
     }
 }
