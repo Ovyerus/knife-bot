@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css?family=Lato:400,700|Space+Mono:400');
+/* @import url('https://fonts.googleapis.com/css?family=Lato:400,700|Space+Mono:400'); */
 
 @keyframes slide-up-fade {
     0% {
@@ -124,6 +124,8 @@ li {
     text-transform: uppercase;
     font-size: 50px;
     font-weight: 700;
+    display: block;
+    padding-bottom: 50px;
 }
 
 .text {
@@ -260,13 +262,29 @@ li {
     margin-bottom: 25px;
 }
 
+.command .name {
+    cursor: pointer;
+    margin-left: -24px;
+}
+
 .command .name::before {
-    content: "";
-    background: url('img/link.svg') no-repeat;
+    content: '';
+    background-image: url('../img/link.svg');
+    background-repeat: no-repeat;
+    background-position: -25px center;
     display: block;
-    width: 24px;
     height: 24px;
+    width: 24px;
     float: left;
+    margin-top: 12px;
+    opacity: 0;
+    transition: padding 0.2s ease-out, background-position 0.2s ease-out, opacity 0.2s ease-out;
+}
+
+.command .name:hover::before {
+    background-position: 15px center;
+    padding-left: 25px;
+    opacity: 1;
 }
 
 .section span {
@@ -311,8 +329,7 @@ li {
     transition: opacity 0.2s ease-out, text-shadow 0.2s ease-out;
 }
 
-#commands-list li:hover a,
-#commands-list li a.selected {
+#commands-list li:hover a {
     opacity: 1;
     text-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
 }

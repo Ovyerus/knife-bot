@@ -71,7 +71,7 @@
         </div>
 
         <div id="commands-info">
-          <h2 class="subtitle">General</h2>
+          <span class="subtitle">General</span>
 
           <div id="help" class="command">
             <div class="name">help</div>
@@ -161,6 +161,10 @@
               </div>
             </div>
           </div>
+
+          <span class="subtitle">Moderation</span>
+
+
         </div>
       </div>
     </div>
@@ -169,6 +173,7 @@
       const topBtn = document.getElementById('back-to-top');
 
       window.addEventListener('scroll', scroller);
+      document.querySelectorAll('.command .name').forEach(v => v.addEventListener('click', copyHash));
 
       function scroller() {
         if ((document.body.scrollTop || document.documentElement.scrollTop) >= 100) topBtn.classList.add('alive');
@@ -180,6 +185,31 @@
           top: 0,
           behavior: 'smooth'
         });
+      }
+
+      function copyHash(ev) {
+        let parent = ev.target.parentElement;
+        parent.scrollIntoView();
+        history.pushState({}, null, '#' + parent.id);
+        copy(location.href);
+      }
+
+      // Forgive me father, for I have sinned.
+      function copy() {
+        for (var a = 0 < arguments.length && arguments[0] !== void 0 ? arguments[0] : '', b = window.getSelection(), c = [
+        ], d = 0; d < b.rangeCount; d++) c[d] = b.getRangeAt(d);
+        b.removeAllRanges();
+        var e = document.createRange(),
+        f = document.createElement('span');
+        f.innerText = a,
+        f.setAttribute('style', 'position:absolute !important;top:-9999vh !important;opacity:0 !important;height:0 !important;width:0 !important;pointer-events:none !important;z-index:-9999 !important;'),
+        document.body.appendChild(f),
+        e.selectNodeContents(f),
+        b.addRange(e),
+        document.execCommand('copy'),
+        b.removeAllRanges(),
+        document.body.removeChild(f);
+        for (var g = 0; g < c.length; g++) b.addRange(c[g])
       }
     </script>
   </body>
