@@ -1,0 +1,186 @@
+<html>
+  <head>
+    <title>Glowing 1000 Degree KNIFE</title>
+    <link rel="stylesheet" href="style/style.css">
+    <link rel="icon" type="image/png" href="img/knife.png">
+
+    <!-- OpenGraph Meta -->
+    <meta property="og:title" content="Glowing 1000 Degree KNIFE">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="http://knife.ovyerus.me">
+    <meta property="og:description" content="A powerful and easy to use moderation bot for Discord.">
+    <meta property="og:site_name" content="Glowing 1000 Degree KNIFE">
+    <meta property="og:image" content="http://knife.ovyerus.me/img/knife.png">
+    <meta property="og:image:alt" content="Knife Bot avatar">   
+    
+    <!-- Regular Meta -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A powerful and easy to use moderation bot for Discord.">
+    <meta name="author" content="Ovyerus">
+    <meta name="keywords" content="discord,javascript,bot,moderation,easy,powerful">
+  </head>
+
+  <body>
+    <div id="back-to-top" onclick="goToTop()" title="Jump to Top">
+      <svg style="width:36px;height:36px" viewBox="0 0 24 24">
+        <path fill="#FFF" d="M14,20H10V11L6.5,14.5L4.08,12.08L12,4.16L19.92,12.08L17.5,14.5L14,11V20Z" />
+      </svg>
+    </div>
+
+    <div id="body-container">
+      <a class="back" href="support">back</a>
+      <h1 class="title">Commands</h1>
+
+      <span class="text">
+        Help for all the commands available through Glowing 1000 Degree KNIFE, including examples.<br>
+        If you are confused by the formatting of the options that get given to commands, shown in the example usage text, <a href="misc-info">click here</a>.
+      </span>
+
+      <div class="commands">
+        <div id="commands-list">
+          <ul>
+            <li class="cmd-category"><div>General</div></li>
+            <li><a href="#help">help</a></li>
+            <li><a href="#info">info</a></li>
+            <li><a href="#invite">invite</a></li>
+            <li><a href="#linkcheck">linkcheck</a></li>
+            <li><a href="#ping">ping</a></li>
+            <li><a href="#support">support</a></li>
+            <li><a href="#whois">whois</a></li>
+            
+            <li class="cmd-category"><div>Moderation</div></li>
+            <li><a href="#halfway">halfway (softban)</a></li>
+            <li><a href="#mute">mute</a></li>
+            <li><a href="#purge">purge</a></li>
+            <li><a href="#roleban">roleban</a></li>
+            <li><a href="#stab">stab (kick)</a></li>
+            <li><a href="#vs">vs (ban)</a></li>
+            
+            <li class="cmd-category"><div>Settings</div></li>
+            <li><a href="#settings">settings</a></li>
+            <li><a href="#channel">channel</a></li>
+            <li><a href="#diacritics">diacritics</a></li>
+            <li><a href="#exceptions">exceptions</a></li>
+            <li><a href="#invites">invites</a></li>
+            <li><a href="#mentions">mentions</a></li>
+            <li><a href="#punishments">punishments</a></li>
+            <li><a href="#roles">roles</a></li>
+            <li><a href="#warnings">warnings</a></li>
+          </ul>
+        </div>
+
+        <div id="commands-info">
+          <h2 class="subtitle">General</h2>
+
+          <div id="help" class="command">
+            <div class="name">help</div>
+            <div class="aliases">commands</div>
+            <div class="usage">[command]</div>
+            <div class="description">
+              Displays a list of all the currently available commands for the bot.<br>
+              If <span class="mono">command</span> is specified, then the bot will try to display specific help for that command, if it exists.
+            </div>
+            <div class="examples">
+              <div>
+                <div class="example-title">Basic usage (list of all commands)</div>
+                <div class="example mono">help</div>
+              </div>
+              <div>
+                <div class="example-title">Recieving help for a specific command</div>
+                <div class="example mono">help ping</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="info" class="command">
+            <div class="name">info</div>
+            <div class="aliases">stats</div>
+            <div class="description">
+              Shows general information about the bot's state, including servers, memory usage, and uptime.
+            </div>
+          </div>
+
+          <div id="invite" class="command">
+            <div class="name">invite</div>
+            <div class="description">
+              Sends a link to allow you to add the bot your own server.
+            </div>
+          </div>
+
+          <div id="linkcheck" class="command">
+            <div class="name">linkcheck</div>
+            <div class="aliases">checklink, check</div>
+            <div class="usage">&lt;link&gt;</div>
+            <div class="description">
+              Gets all the redirects (if any) of a given link.<br>
+              Can be used to see if a link someone posted is suspicious or not.
+            </div>
+          </div>
+
+          <div id="ping" class="command">
+            <div class="name">ping</div>
+            <div class="description">
+              Shows the latency (in milliseconds) of the bot's connection to Discord.<br>
+              This can be used as a simple command to check if the bot is online and/or responding.
+            </div>
+          </div>
+
+          <div id="support" class="command">
+            <div class="name">support</div>
+            <div class="description">
+              Sends an invite to the official support server.
+            </div>
+          </div>
+
+          <div id="whois" class="command">
+            <div class="name">whois</div>
+            <div class="aliases">lookup, user, inspect, member</div>
+            <div class="usage">&lt;user&gt;</div>
+            <div class="description">
+              Searches for a given user in the current server.<br>
+              <span class="mono">user</span> can either be part of a user's name, their full name, their ID, or an @mention.<br>
+              If you search using the user's name (or part of it), and there are multiple people with that in their name, a popup will appear, requiring you to choose the user to select.
+            </div>
+            <div class="examples">
+              <div>
+                <div class="example-title">Search by a part of a name</div>
+                <div class="example mono">whois exam</div>
+              </div>
+              <div>
+                <div class="example-title">Search using a full name</div>
+                <div class="example mono">whois example</div>
+              </div>
+              <div>
+                <div class="example-title">Search using an ID</div>
+                <div class="example mono">whois 1234567890</div>
+              </div>
+              <div>
+                <div class="example-title">Search using a mention</div>
+                <div class="example mono">whois @example#1234</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+      const topBtn = document.getElementById('back-to-top');
+
+      window.addEventListener('scroll', scroller);
+
+      function scroller() {
+        if ((document.body.scrollTop || document.documentElement.scrollTop) >= 100) topBtn.classList.add('alive');
+        else topBtn.classList.remove('alive');
+      }
+
+      function goToTop() {
+        window.scroll({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }
+    </script>
+  </body>
+</html>

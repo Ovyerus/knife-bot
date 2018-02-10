@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css?family=Lato:400,700|Overpass+Mono');
+@import url('https://fonts.googleapis.com/css?family=Lato:400,700|Space+Mono:400');
 
 @keyframes slide-up-fade {
     0% {
@@ -58,11 +58,6 @@ h3 {
     font-weight: 400;
 }
 
-.title {
-    letter-spacing: 5px;
-    padding-bottom: 75px;
-}
-
 ul {
     list-style-type: none;
     padding: 0;
@@ -73,23 +68,6 @@ li {
     float: left;
     position: relative;
     text-align: center;
-}
-
-li a {
-    text-transform: uppercase;
-    text-decoration: none;
-    font-size: 25px;
-    padding: 32px 32px 0;
-    opacity: 0.5;
-    display: block;
-    transition: padding-top 0.2s ease-out, padding-bottom 0.2s ease-out, opacity 0.2s ease-out, text-shadow 0.2s ease-out;
-}
-
-li a:hover {
-    padding-top: 16px;
-    padding-bottom: 16px;
-    opacity: 1;
-    text-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
 }
 
 #body-container {
@@ -104,6 +82,52 @@ li a:hover {
 /* Fucking stupid fix for Firefox */
 #body-container.aaa {
     height: 100%
+}
+
+#back-to-top {
+    position: fixed;
+    display: flex;
+    bottom: -50px;
+    right: 25px;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(to bottom left, #FE4B51, #3c0c56);
+    background-size: 100px 100px;
+    background-position: center center;
+    border-radius: 50px;
+    cursor: pointer;
+    opacity: 0;
+    transition: bottom 0.2s ease, opacity 0.2s ease-out;
+}
+
+#back-to-top.alive {
+    bottom: 25px;
+    opacity: 1;
+}
+
+#back-to-top * {
+    margin: auto;
+    opacity: 0.75;
+    transition: opacity 0.2s ease-out;
+}
+
+#back-to-top:hover * {
+    opacity: 1
+}
+
+.title {
+    padding-bottom: 50px;
+    text-transform: uppercase;
+}
+
+.subtitle {
+    text-transform: uppercase;
+    font-size: 50px;
+    font-weight: 700;
+}
+
+.text {
+    font-size: 20px;
 }
 
 .slide-out {
@@ -133,6 +157,23 @@ li a:hover {
     margin-top: auto;
 }
 
+.links-list li a {
+    text-transform: uppercase;
+    text-decoration: none;
+    font-size: 25px;
+    padding: 32px 32px 0;
+    opacity: 0.5;
+    display: block;
+    transition: padding-top 0.2s ease-out, padding-bottom 0.2s ease-out, opacity 0.2s ease-out, text-shadow 0.2s ease-out;
+}
+
+.links-list li a:hover {
+    padding-top: 16px;
+    padding-bottom: 16px;
+    opacity: 1;
+    text-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+}
+
 .faq {
     padding-bottom: 50px;
 }
@@ -145,7 +186,7 @@ li a:hover {
 }
 
 .q::before {
-    content: "Q";
+    content: 'Q';
     margin-right: 20px;
 }
 
@@ -161,14 +202,16 @@ li a:hover {
 
 .mono {
     background: rgba(0, 0, 0, 0.75);
-    padding: 5px;
+    padding: 0 5px;
     border-radius: 5px;
-    font-family: "Overpass Mono", monospace;
+    display: inline;
+    font-family: 'Space Mono', Courier New, Courier, monospace;
 }
 
 .knife {
     width: 25px;
     height: 25px;
+    margin-bottom: -5px;
 }
 
 .back {
@@ -188,6 +231,148 @@ li a:hover {
 .footer {
     font-size: 20px;
     text-align: center;
+}
+
+.sections {
+    display: grid;
+    min-width: 100%;
+    height: 100%;
+    margin-top: 50px;
+}
+
+.sections.support {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.section {
+    max-height: 100%;
+    max-width: 100%;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+}
+
+.section .name,
+.command .name {
+    font-size: 35px;
+    font-weight: 700;
+    margin-bottom: 25px;
+}
+
+.command .name::before {
+    content: "";
+    background: url('img/link.svg') no-repeat;
+    display: block;
+    width: 24px;
+    height: 24px;
+    float: left;
+}
+
+.section span {
+    margin: auto auto 0 auto;
+}
+
+.section .button {
+    padding: 16px 32px;
+}
+
+.commands {
+    width: 100%;
+    height: 100%;
+    margin-top: 50px;
+    display: grid;
+    grid-template-columns: 25% 1fr;
+    grid-gap: 75px;
+}
+
+.command {
+    padding-bottom: 50px;
+}
+
+#commands-list li {
+    float: initial;
+    text-align: left;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    font-size: 20px;
+}
+
+#commands-list li:not(.cmd-category) {
+    padding-left: 20px;
+}
+
+#commands-list a {
+    width: 100%;
+    display: block;
+    text-decoration: none;
+    opacity: 0.5;
+    letter-spacing: 2px;
+    transition: opacity 0.2s ease-out, text-shadow 0.2s ease-out;
+}
+
+#commands-list li:hover a,
+#commands-list li a.selected {
+    opacity: 1;
+    text-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+}
+
+.cmd-category > div {
+    font-size: 25px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.cmd-category:not(:first-child) {
+    margin-top: 25px;
+}
+
+.aliases {
+    margin-bottom: 25px;
+    font-family: 'Space Mono', Courier New, Courier, monospace;
+}
+
+.aliases::before {
+    content: 'Aliases:\a0\a0';
+    font-family: Lato, Arial, Helvetica, sans-serif; 
+    font-weight: 700;
+}
+
+.usage {
+    margin-bottom: 25px;
+    font-family: 'Space Mono', Courier New, Courier, monospace;
+}
+
+.usage::before {
+    content: 'Usage: ';
+    font-family: Lato, Arial, Helvetica, sans-serif; 
+    font-weight: 700;
+}
+
+.aliases + .usage {
+    margin-top: -25px;
+}
+
+.description {
+    line-height: 25px;
+}
+
+.examples {
+    margin-top: 25px;
+}
+
+.example-title {
+    font-weight: 700;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.examples > div {
+    margin-bottom: 15px;
+}
+
+.example {
+    margin-left: 15px;
 }
 
 /*
@@ -239,7 +424,8 @@ li a:hover {
     .back {
         font-size: 35px;
         padding: 12px 0;
-        margin: auto;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .footer {
@@ -264,5 +450,9 @@ li a:hover {
 
     li a:hover {
         padding: 8;
+    }
+
+    .sections {
+        grid-template-columns: 1fr;
     }
 }
