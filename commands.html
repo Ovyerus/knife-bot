@@ -164,16 +164,26 @@
 
           <span class="subtitle">Moderation</span>
 
-
+          <div id="halfway" class="command">
+            <div class="name">halfway</div>
+            <div class="aliases">softban</div>
+            <div class="usage">&lt;user&gt; [for &lt;reason&gt;]</div>
+            <div class="description">
+              Softbans a given user.<br>
+              Softbanning bans a user and then quickly unbans them, and is an effective way to delete all the recent messages of a user, while removing them from the server.
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
     <script type="text/javascript">
       const topBtn = document.getElementById('back-to-top');
+      const linkJumpers = Array.from(document.querySelectorAll('#commands-list ul li:not(.cmd-category)')).map(v => v.childNodes[0]);
 
       window.addEventListener('scroll', scroller);
       document.querySelectorAll('.command .name').forEach(v => v.addEventListener('click', copyHash));
+      linkJumpers.forEach(v => v.addEventListener('click', smoothJump));
 
       function scroller() {
         if ((document.body.scrollTop || document.documentElement.scrollTop) >= 100) topBtn.classList.add('alive');
@@ -189,9 +199,28 @@
 
       function copyHash(ev) {
         let parent = ev.target.parentElement;
-        parent.scrollIntoView();
+        scrollToEl(parent);
         history.pushState({}, null, '#' + parent.id);
         copy(location.href);
+      }
+
+      function smoothJump(ev) {
+        let target = document.getElementById(ev.target.href.split('#')[1]);
+
+        if (target) {
+          history.pushState({}, null, '#' + target.id);
+          scrollToEl(target);
+          ev.preventDefault();
+        }
+      }
+
+      function scrollToEl(el) {
+        let dist = el.getBoundingClientRect().y + (document.body.scrollTop || document.documentElement.scrollTop);
+
+        window.scrollTo({
+          top: dist,
+          behavior: 'smooth'
+        });
       }
 
       // Forgive me father, for I have sinned.
