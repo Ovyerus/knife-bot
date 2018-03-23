@@ -1,45 +1,48 @@
 // Modules
 const Eris = require('eris');
-const config = require(`${__dirname}/config.json`);
-const fs = require('fs');
-const bot = new Eris(config.token, {
-    getAllUsers: true,
-    defaultImageFormat: 'png',
-    defaultImageSize: 512,
-    disableEvents: {
-        TYPING_START: true,
-        VOICE_STATE_UPDATE: true
-    }
-});
+const KnifeBot = require(`${__dirname}/modules/KnifeBot`);
+const setup = require(`${__dirname}/modules/setup`);
+var config;
 
-// Globals;
-global.logger = require(`${__dirname}/modules/logger`);
-global.Promise = require('bluebird');
+try {
+    config = require(`${__dirname}/config.json`);
+} catch(_) {
+    config = {};
+}
+
+// Easy access to this directory for when `./` doesn't work
 global.__baseDir = __dirname;
 
+// Promise library stuff
+global.Promise = require('bluebird');
 Promise.config({
     warnings: {wForgottenPromise: false},
     longStackTraces: false
 });
 
-// Bot vars
-bot.config = config;
-bot.redHot = '🔥 1⃣0⃣0⃣0⃣ 🌡 🔪'; 
-bot.hotColour = 16665427;
-bot.commands = new (require(`${__dirname}/modules/CommandHolder`)).CommandHolder(bot);
-bot.lookups = new (require(`${__dirname}/modules/Lookups`))(bot);
-bot.db = require('rethinkdbdash')(config.rethinkOptions);
-bot.rest = new Eris('Bot ' + config.token, {
-    restMode: true
+Eris.Collection.prototype.asyncForEach = async function(func) {
+    for (let item of this) await func(item[1], item[0], this);
+    return this;
+};
+
+(async () => {
+    if (!config.redisURL) config.redisURL = 'redis://127.0.0.1/0';
+
+    await setup(config.redisURL);
+
+    const bot = await KnifeBot.setup(config.redisURL, {
+        getAllUsers: true,
+        defaultImageFormat: 'png',
+        defaultImageSize: 512,
+        latencyThreshold: 15000,
+        disableEvents: {
+            TYPING_START: true
+        }
+    });
+
+    require(`${__dirname}/events`)(bot);
+    await bot.connect();
+})().catch(err => {
+    console.error(err);
+    process.exit(1);
 });
-
-bot.settings = new Eris.Collection(Object);
-
-// Generate user blacklist if needed.
-if (!fs.existsSync(`${__dirname}/blacklist.json`)) fs.writeFileSync(`${__dirname}/blacklist.json`, '[]');
-
-// Init events and extensions
-require(`${__dirname}/modules/extensions`)(bot);
-require(`${__dirname}/events`)(bot);
-
-bot.connect();

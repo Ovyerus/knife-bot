@@ -10,7 +10,14 @@ Simple, open-source moderation bot for Discord.
 - Memes.
 
 ## Requirements
-At least [Node.JS](https://nodejs.org/) v7.0.0 is required for the bot to run as it makes use of the async/await feature which is not in v6.X.X. [RethinkDB](https://www.rethinkdb.com/) is also required for storing settings for guilds and strikes for users.
+At least [Node.JS](https://nodejs.org/) v7.0.0 is required for the bot to run as it makes use of the async/await feature which is not in v6.X.X.  
+[Redis](https://redis.io/) is also required in order to function, so that the bot can store settings.
 
-The bot requires a `config.json` in the same directory as `bot.js` in order to function. This contains settings such as the bot's token and owner ID.
-I will not be providing an example for this, so you will need to read the code in order to find out what you need.
+If Redis is installed on the local machine, the above requirements are all you need, and you can run `knife.js` and the first time setup will walk you through.  
+If Redis is *not* installed on the local machine, then you will need a `config.json` in the same directory as `knife.js` with the following structure
+```json
+{
+    "redisURL": "redis://[:password@]host[:port][/db-number][?option=value]"
+}
+```
+after which, you can run `knife.js` as above and follow the instructions.

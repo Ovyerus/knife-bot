@@ -13,10 +13,10 @@ exports.main = {
     desc: 'Command for managing modules.',
     longDesc: 'Manages command modules for the bots. If no arguments, lists currently loaded modules, else runs the specified subcommand if possible.',
     usage: '[load|unload|reload]',
+    allowDM: true,
     owner: true,
     async main(bot, ctx) {
         let cmdFolders = fs.readdirSync(path.join(__dirname, '../'));
-        let unloadedMods = JSON.parse(fs.readFileSync(`${__baseDir}/unloadedCommands.json`));
         let embed = {
             title: 'Current Modules',
             description: `Showing **${cmdFolders.length}** command modules.`,
@@ -30,12 +30,12 @@ exports.main = {
             embed.fields[0].value.push(`\`${mod}\``);
         });
 
-        unloadedMods.forEach(mod =>  {
+        bot.unloaded.forEach(mod =>  {
             embed.fields[1].value.push(`\`${mod}\``);
         });
 
-        embed.fields[0].value = embed.fields[0].value.join(', ');
-        embed.fields[1].value = embed.fields[1].value.join(', ');
+        embed.fields[0].value = embed.fields[0].value.join(', ') || 'None';
+        embed.fields[1].value = embed.fields[1].value.join(', ') || 'None';
 
         await ctx.createMessage({embed});
     }
@@ -45,30 +45,19 @@ exports.load = {
     desc: 'Load a module.',
     usage: '<module>',
     async main(bot, ctx) {
-        if (!ctx.args[0]) {
-            await ctx.createMessage('No module given to load.');
-        } else if (bot.commands.checkModule(ctx.args[0])) {
-            await ctx.createMessage(`Module **${ctx.args[0]}** already exist's in the command holder.`);
-        } else {
-            let folders = await readDir(`${__baseDir}/commands`);
+        if (!ctx.args[0]) return await ctx.createMessage('No module given to load.');
+        else if (bot.commands.checkModule(ctx.args[0])) return await ctx.createMessage(`Module **${ctx.args[0]}** already exist's in the command holder.`);
 
-            if (folders.indexOf(ctx.args[0]) === -1) {
-                await ctx.channel.createMessage(`Module **${ctx.args[0]}** does not exist.`);
-            } else {
-                let pkg = require(path.join(__dirname,  '../', ctx.args[0], 'package.json'));
-                let mod = path.join(__dirname, '../', ctx.args[0], pkg.main);
-                bot.commands.loadModule(mod);
+        let folders = await Promise.promisify(fs.readdir)(path.resolve(__dirname, '../'));
 
-                let unloadedMods = JSON.parse(fs.readFileSync(`${__baseDir}/unloadedCommands.json`).toString());
+        if (folders.indexOf(ctx.args[0]) === -1) return await ctx.channel.createMessage(`Module **${ctx.args[0]}** does not exist.`);
 
-                if (unloadedMods.indexOf(ctx.args[0]) !== -1) {
-                    unloadedMods.splice(unloadedMods.indexOf(ctx.args[0]), 1);
-                    fs.writeFileSync(`${__baseDir}/unloadedCommands.json`, JSON.stringify(unloadedMods));
-                }
+        let pkg = JSON.parse(fs.readFileSync(path.join(__dirname,  '../', ctx.args[0], 'package.json')));
+        let mod = path.join(__dirname, '../', ctx.args[0], pkg.main);
 
-                await ctx.createMessage(`Loaded module **${ctx.args[0]}**`);
-            }
-        }
+        bot.commands.loadModule(mod);
+        await bot.db.settings.unloaded.remove(ctx.args[0]);
+        await ctx.createMessage(`Loaded module **${ctx.args[0]}**`);
     }
 };
 
@@ -76,27 +65,17 @@ exports.unload = {
     desc: 'Unload a module.',
     usage: '<module>',
     async main(bot, ctx) {
-        if (!ctx.args[0]) {
-            await ctx.createMessage('No module given to unload.');
-        } else if (!bot.commands.checkModule(ctx.args[0])) {
-            await ctx.createMessage(`Module **${ctx.args[0]}** is not loaded or does not exist.`);
-        } else {
-            let pkg = path.join(__dirname, '../', ctx.args[0], 'package.json');
+        if (!ctx.args[0]) return await ctx.createMessage('No module given to unload.');
+        else if (!bot.commands.checkModule(ctx.args[0])) return await ctx.createMessage(`Module **${ctx.args[0]}** is not loaded or does not exist.`);
 
-            delete require.cache[require.resolve(pkg)];
+        let pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '../', ctx.args[0], 'package.json')));
+        let mod = path.join(__dirname, '../', ctx.args[0], pkg.main);
 
-            pkg = require(pkg);
-            let mod = path.join(__dirname, '../', ctx.args[0], pkg.main);
+        bot.commands.unloadModule(mod);
 
-            bot.commands.unloadModule(mod);
-            delete require.cache[require.resolve(mod)];
-
-            let unloadedMods = JSON.parse(fs.readFileSync(`${__baseDir}/unloadedCommands.json`).toString());
-            unloadedMods.push(ctx.args[0]);
-            fs.writeFileSync(`${__baseDir}/unloadedCommands.json`, JSON.stringify(unloadedMods));
-
-            await ctx.channel.createMessage(`Unloaded module **${ctx.args[0]}**`);
-        }
+        await bot.db.settings.unloaded.push(ctx.args[0]);
+        await bot.reloadSettings();
+        await ctx.channel.createMessage(`Unloaded module **${ctx.args[0]}**`);
     }
 };
 
@@ -104,35 +83,13 @@ exports.reload = {
     desc: 'Reload a module.',
     usage: '<module>',
     async main(bot, ctx) {
-        if (!ctx.args[0]) {
-            await ctx.createMessage('No module given to reload.');
-        } else if (!bot.commands.checkModule(ctx.args[0])) {
-            await ctx.createMessage(`Module **${ctx.args[0]}** is not loaded or does not exist.`);
-        } else {
-            let pkg = path.join(__dirname, '../', ctx.args[0], 'package.json');
+        if (!ctx.args[0]) return await ctx.createMessage('No module given to reload.');
+        else if (!bot.commands.checkModule(ctx.args[0])) return await exports.load.main(bot, ctx);
 
-            delete require.cache[require.resolve(pkg)];
+        let pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '../', ctx.args[0], 'package.json')));
+        let mod = path.join(__dirname, '../', ctx.args[0], pkg.main);
 
-            pkg = require(pkg);
-            let mod = path.join(__dirname, '../', ctx.args[0], pkg.main);
-
-            delete require.cache[require.resolve(mod)];
-
-            bot.commands.reloadModule(mod);
-
-            await ctx.createMessage(`Reloaded module **${ctx.args[0]}**`);
-        }
+        bot.commands.reloadModule(mod);
+        await ctx.createMessage(`Reloaded module **${ctx.args[0]}**`);
     }
 };
-
-function readDir(dir) {
-    return new Promise((resolve, reject) => {
-        fs.readdir(dir, (err, files) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(files);
-            }
-        });
-    });
-}

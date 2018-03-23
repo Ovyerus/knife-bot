@@ -146,13 +146,10 @@ class CommandHolder {
             for (let command of module.commands) {
                 let cmd = module[command];
 
-                if (!cmd.desc) {
-                    logger.warn(`Command '${command}' does not have a description. Skipping.`);
-                    continue;
-                } else if (typeof cmd.main !== 'function') {
-                    logger.warn(`Command '${command}' does not have main as a function. Skipping.`);
-                    continue;
-                } else {
+                if (!cmd) logger.warn(`Command '${command}' doesn't exist. Skipping...`);
+                else if (!cmd.desc) logger.warn(`Command '${command}' does not have a description. Skipping...`);
+                else if (typeof cmd.main !== 'function') logger.warn(`Command '${command}' does not have main as a function. Skipping...`);
+                else {
                     this.commands[command] = cmd;
 
                     if (Array.isArray(cmd.aliases)) {
@@ -169,13 +166,14 @@ class CommandHolder {
             this.modules[name] = loadedCommands.concat(loadedAliases);
         }
 
+        // In case the module somehow is empty.
         if (!this.modules[name]) {
             delete this.modules[name];
             delete require.cache[name];
             return;
         }
 
-        logger.custom('blue', 'CommandHolder/loadModule', `Loaded module '${name}'`);
+        logger.custom('CommandHolder/loadModule', `Loaded module '${name}'`);
     }
 
     /**
@@ -202,7 +200,7 @@ class CommandHolder {
 
         delete this.modules[name];
         delete require.cache[moduleName];
-        logger.custom('blue', 'CommandHolder/removeModule', `Removed module '${name}'`);
+        logger.custom('CommandHolder/removeModule', `Removed module '${name}'`);
     }
 
     /**
@@ -237,6 +235,7 @@ class CommandHolder {
      * Run a command from the command object.
      * 
      * @param {Context} ctx Context object to be passed to the command.
+     * @returns {Undefined}
      */
     async runCommand(ctx) {
         if (!(ctx instanceof Context)) throw new TypeError('ctx is not a Context object.');
@@ -244,6 +243,7 @@ class CommandHolder {
         let cmd = this.getCommand(ctx.cmd);
 
         if (!cmd) return;
+        if (!ctx.guild && !cmd.allowDM) return await ctx.createMessage('This command can only be run in a server.');
 
         if (cmd.subcommands && cmd.subcommands[ctx.args[0]]) {
             let subcommand = ctx.args[0];
@@ -255,13 +255,14 @@ class CommandHolder {
 
         if (cmd.owner && this[_bot].isOwner(ctx.author.id)) {
             await cmd.main(this[_bot], ctx);
-            logger.cmd(`${loggerPrefix(this[_bot], ctx)}Ran owner command '${ctx.cmd}'\n${ctx.cleanRaw}`);
+            logger.cmd(`${loggerPrefix(this[_bot], ctx)}Ran owner command '${ctx.cmd}'`);
         } else if (cmd.owner && !this[_bot].isOwner(ctx.author.id)) {
+            logger.cmd(`${loggerPrefix(this[_bot], ctx)}Tried to run owner command '${ctx.cmd}'`);
             return; // eslint-disable-line
         } else {
             if (!cmd.permissions || typeof cmd.permissions !== 'object') {
                 await cmd.main(this[_bot], ctx);
-                logger.cmd(`${loggerPrefix(this[_bot], ctx)}Ran command '${ctx.cmd}'\n${ctx.cleanRaw}`);
+                logger.cmd(`${loggerPrefix(this[_bot], ctx)}Ran command '${ctx.cmd}'`);
             } else {
                 await this[_handlePermissions](cmd, ctx);
             }
@@ -274,7 +275,7 @@ class CommandHolder {
      * @param {Function} callback Function to run on each iteration. Gets two arguments: command object and command name.
      */
     forEach(callback) {
-        if (typeof callback !== 'function') throw new Error('callback is not a function');
+        if (typeof callback !== 'function') throw new TypeError('callback is not a function');
 
         for (let cmd in this.commands) {
             callback(this.commands[cmd], cmd);
@@ -288,7 +289,7 @@ class CommandHolder {
      * @returns {Command[]} Filtered commands.
      */
     filter(callback) {
-        if (typeof callback !== 'function') throw new Error('callback is not a function');
+        if (typeof callback !== 'function') throw new TypeError('callback is not a function');
 
         let filtered = [];
 
@@ -297,6 +298,16 @@ class CommandHolder {
         });
 
         return filtered;
+    }
+
+    map(callback) {
+        if (typeof callback !== 'function') throw new TypeError('callback is not a function.');
+
+        let mapped = [];
+
+        this.forEach((cmd, name) => mapped.push(callback(cmd, name)));
+
+        return mapped;
     }
 
     /**
@@ -315,97 +326,71 @@ class CommandHolder {
      * @access private
      * @param {Command} cmd The command to check permissions for.
      * @param {Context} ctx Context object to use.
+     * @returns {Undefined}
      */
     async [_handlePermissions](cmd, ctx) {
         // Permission checking
         let permChecks = {both: [], author: [], self: []};
 
         // Permissions for both
-        if (Array.isArray(cmd.permissions.both)) {
-            cmd.permissions.both.forEach(perm => {
-                if (ctx.hasPermission(perm, 'both')) permChecks.both.push(perm);
-            });
-        } else if (typeof cmd.permissions.both === 'string' && ctx.hasPermission(cmd.permissions.both, 'both')) {
-            permChecks.both.push(cmd.permissions.both);
-        }
+        if (Array.isArray(cmd.permissions.both)) permChecks.both = cmd.permissions.both.filter(perm => ctx.hasPermission(perm, 'both'));
+        else if (typeof cmd.permissions.both === 'string' && ctx.hasPermission(cmd.permissions.both, 'both')) permChecks.both.push(cmd.permissions.both);
 
         // Permissions for author
-        if (Array.isArray(cmd.permissions.author)) {
-            cmd.permissions.author.forEach(perm => {
-                if (ctx.hasPermission(perm, 'author')) permChecks.author.push(perm);
-            });
-        } else if (typeof cmd.permissions.author === 'string' && ctx.hasPermission(cmd.permissions.author, 'author')) {
-            permChecks.author.push(cmd.permissions.author);
-        }
+        if (Array.isArray(cmd.permissions.author)) permChecks.author = cmd.permissions.author.filter(perm => ctx.hasPermission(perm, 'author'));
+        else if (typeof cmd.permissions.author === 'string' && ctx.hasPermission(cmd.permissions.author, 'author')) permChecks.author.push(cmd.permissions.author);
 
         // Permissions for self
-        if (Array.isArray(cmd.permissions.self)) {
-            cmd.permissions.self.forEach(perm => {
-                if (ctx.hasPermission(perm)) permChecks.self.push(perm);
-            });
-        } else if (typeof cmd.permissions.self === 'string' && ctx.hasPermission(cmd.permissions.self)) {
-            permChecks.self.push(cmd.permissions.self);
-        }
+        if (Array.isArray(cmd.permissions.self)) permChecks.self = cmd.permissions.self.filter(perm => ctx.hasPermission(perm));
+        else if (typeof cmd.permissions.self === 'string' && ctx.hasPermission(cmd.permissions.self)) permChecks.self.push(cmd.permissions.self);
 
         // See if all permissions are met
         let haveAmt = permChecks.both.length + permChecks.author.length + permChecks.self.length;
         let permAmt = 0;
 
         for (let key in cmd.permissions) {
-            if (Array.isArray(cmd.permissions[key])) {
-                permAmt += cmd.permissions[key].length;
-            } else if (typeof cmd.permissions[key] === 'string') {
-                permAmt += 1;
-            }
+            if (Array.isArray(cmd.permissions[key])) permAmt += cmd.permissions[key].length;
+            else if (typeof cmd.permissions[key] === 'string') permAmt += 1;
         }
 
         if (haveAmt === permAmt) {
             // Run command since all permissions are fulfilled
-            await cmd.main(this[_bot], ctx);
-        } else {
-            // Figure out which permission is missing.
-            let foundPerm;
-            for (let key in cmd.permissions) {
-                if (Array.isArray(cmd.permissions[key])) {
-                    for (let perm of cmd.permissions[key]) {
-                        if (!~permChecks[key].indexOf(perm)) {
-                            foundPerm = {perm, who: key};
-                            break;
-                        }
-                    }
-                } else if (typeof cmd.permissions[key] === 'string') {
-                    if (permChecks[key][0] !== cmd.permissions[key]) {
-                        foundPerm = {perm: cmd.permissions[key], who: key};
+            return await cmd.main(this[_bot], ctx);
+        }
+
+        // Figure out which permission is missing.
+        let foundPerm;
+
+        for (let key in cmd.permissions) {
+            if (Array.isArray(cmd.permissions[key])) {
+                for (let perm of cmd.permissions[key]) {
+                    if (!~permChecks[key].indexOf(perm)) {
+                        foundPerm = {perm, who: key};
                         break;
                     }
                 }
-
-                if (foundPerm) break;
-            }
-
-            if (foundPerm) {
-                let {perm, who} = foundPerm;
-
-                if (who === 'author' && !PermissionMsgs[perm]) {
-                    await ctx.createMessage(`You require the **${PermissionsPrettyPrinted[perm]}** permission to use this command.`);
-                } else if (who === 'author') {
-                    await ctx.createMessage(PermissionMsgs[perm].author);
-                } else if (who === 'self' && !PermissionMsgs[perm]) {
-                    await ctx.createMessage(`I do not have the **${PermissionsPrettyPrinted[perm]}** permission.`);
-                } else if (who === 'self') {
-                    await ctx.createMessage(PermissionMsgs[perm].self);
-                } else if (who === 'both') {
-                    if (!ctx.hasPermission(perm, 'author') && !PermissionMsgs[perm]) {
-                        await ctx.createMessage(`You require the **${PermissionsPrettyPrinted[perm]}** permission to use this command.`);
-                    } else if (!ctx.hasPermission(perm, 'author')) {
-                        await ctx.createMessage(PermissionMsgs[perm].author);
-                    } else if (!ctx.hasPermission(perm) && !PermissionMsgs[perm]) {
-                        await ctx.createMessage(`I do not have the **${PermissionsPrettyPrinted[perm]}** permission.`);
-                    } else if (!ctx.hasPermission(perm)) {
-                        await ctx.createMessage(PermissionMsgs[perm].self);
-                    }
+            } else if (typeof cmd.permissions[key] === 'string') {
+                if (permChecks[key][0] !== cmd.permissions[key]) {
+                    foundPerm = {perm: cmd.permissions[key], who: key};
+                    break;
                 }
             }
+
+            if (foundPerm) break;
+        }
+
+        if (foundPerm) {
+            let {perm, who} = foundPerm;
+
+            if (who === 'author' && !PermissionMsgs[perm]) return await ctx.createMessage(`You require the **${PermissionsPrettyPrinted[perm]}** permission to use this command.`);
+            else if (who === 'author') return await ctx.createMessage(PermissionMsgs[perm].author);
+            else if (who === 'self' && !PermissionMsgs[perm]) return await ctx.createMessage(`I do not have the **${PermissionsPrettyPrinted[perm]}** permission.`);
+            else if (who === 'self') return await ctx.createMessage(PermissionMsgs[perm].self);
+
+            if (!ctx.hasPermission(perm, 'author') && !PermissionMsgs[perm]) await ctx.createMessage(`You require the **${PermissionsPrettyPrinted[perm]}** permission to use this command.`);
+            else if (!ctx.hasPermission(perm, 'author')) await ctx.createMessage(PermissionMsgs[perm].author);
+            else if (!ctx.hasPermission(perm) && !PermissionMsgs[perm]) await ctx.createMessage(`I do not have the **${PermissionsPrettyPrinted[perm]}** permission.`);
+            else if (!ctx.hasPermission(perm)) await ctx.createMessage(PermissionMsgs[perm].self);
         }
     }
 
@@ -443,7 +428,7 @@ class CommandHolder {
 }
 
 function loggerPrefix(bot, msg) {
-    return msg.channel.guild ? `${msg.channel.guild.name} | ${msg.channel.name} > ${bot.formatUser(msg.author)} (${msg.author.id}): ` : `Direct Message > ${bot.formatUser(msg.author)} (${msg.author.id}): `;
+    return `${msg.channel.guild ? msg.channel.guild.id : msg.channel.id} > ${msg.author.id}: `;
 }
 
 /**
@@ -496,7 +481,7 @@ class Context {
         this[_msg] = msg;
 
         let cleaned = parseTulpa(msg.content);
-        cleaned = parsePrefix(cleaned, bot.config.prefixes);
+        cleaned = parsePrefix(cleaned, bot.prefixes);
 
         let tmp = parseArgs(cleaned);
         this.args = tmp.args;
@@ -504,7 +489,7 @@ class Context {
         this.raw = tmp.raw;
         this.cleanRaw = msg.content.split(this.cmd).slice(1).join(this.cmd).trim();
 
-        this.guildBot = msg.channel.guild.members.get(bot.user.id);
+        this.guildBot = msg.channel.guild ? msg.channel.guild.members.get(bot.user.id) : bot.user;
         this.settings = settings;
 
         // Get mention strings.
@@ -565,7 +550,7 @@ class Context {
         if (typeof where !== 'string') throw new TypeError('where is not a string.');
         if (!['channel', 'author'].includes(where)) throw new Error('where is an invalid place. Must either by `channel` or `author`');
             
-        if (content && content.embed && !content.embed.color) content.embed.color = 16665427;
+        if (content && content.embed && !content.embed.color) content.embed.color = this.client.embedColour;
 
         if (!this.hasPermission('embedLinks') && content && content.embed) content = Context.flattenEmbed(content.embed);
 
@@ -584,6 +569,9 @@ class Context {
      * @returns {Boolean} If the user has the permission.
      */
     hasPermission(permission, who='self') {
+        // If it is a DM, just return true.
+        if (!this.guild) return true;
+
         // Check if permission actually exists.
         if (!Object.keys(Eris.Constants.Permissions).includes(permission)) return false;
         if (!['self', 'author', 'both'].includes(who)) return false;

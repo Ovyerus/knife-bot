@@ -3,3 +3,6 @@ node_modules
 blacklist.json
 unloadedCommands.json
 .vscode
+package-lock.json
+pages/
+yarn.lock
