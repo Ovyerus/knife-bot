@@ -235,6 +235,7 @@ class CommandHolder {
      * Run a command from the command object.
      * 
      * @param {Context} ctx Context object to be passed to the command.
+     * @returns {Undefined}
      */
     async runCommand(ctx) {
         if (!(ctx instanceof Context)) throw new TypeError('ctx is not a Context object.');
@@ -325,97 +326,71 @@ class CommandHolder {
      * @access private
      * @param {Command} cmd The command to check permissions for.
      * @param {Context} ctx Context object to use.
+     * @returns {Undefined}
      */
     async [_handlePermissions](cmd, ctx) {
         // Permission checking
         let permChecks = {both: [], author: [], self: []};
 
         // Permissions for both
-        if (Array.isArray(cmd.permissions.both)) {
-            cmd.permissions.both.forEach(perm => {
-                if (ctx.hasPermission(perm, 'both')) permChecks.both.push(perm);
-            });
-        } else if (typeof cmd.permissions.both === 'string' && ctx.hasPermission(cmd.permissions.both, 'both')) {
-            permChecks.both.push(cmd.permissions.both);
-        }
+        if (Array.isArray(cmd.permissions.both)) permChecks.both = cmd.permissions.both.filter(perm => ctx.hasPermission(perm, 'both'));
+        else if (typeof cmd.permissions.both === 'string' && ctx.hasPermission(cmd.permissions.both, 'both')) permChecks.both.push(cmd.permissions.both);
 
         // Permissions for author
-        if (Array.isArray(cmd.permissions.author)) {
-            cmd.permissions.author.forEach(perm => {
-                if (ctx.hasPermission(perm, 'author')) permChecks.author.push(perm);
-            });
-        } else if (typeof cmd.permissions.author === 'string' && ctx.hasPermission(cmd.permissions.author, 'author')) {
-            permChecks.author.push(cmd.permissions.author);
-        }
+        if (Array.isArray(cmd.permissions.author)) permChecks.author = cmd.permissions.author.filter(perm => ctx.hasPermission(perm, 'author'));
+        else if (typeof cmd.permissions.author === 'string' && ctx.hasPermission(cmd.permissions.author, 'author')) permChecks.author.push(cmd.permissions.author);
 
         // Permissions for self
-        if (Array.isArray(cmd.permissions.self)) {
-            cmd.permissions.self.forEach(perm => {
-                if (ctx.hasPermission(perm)) permChecks.self.push(perm);
-            });
-        } else if (typeof cmd.permissions.self === 'string' && ctx.hasPermission(cmd.permissions.self)) {
-            permChecks.self.push(cmd.permissions.self);
-        }
+        if (Array.isArray(cmd.permissions.self)) permChecks.self = cmd.permissions.self.filter(perm => ctx.hasPermission(perm));
+        else if (typeof cmd.permissions.self === 'string' && ctx.hasPermission(cmd.permissions.self)) permChecks.self.push(cmd.permissions.self);
 
         // See if all permissions are met
         let haveAmt = permChecks.both.length + permChecks.author.length + permChecks.self.length;
         let permAmt = 0;
 
         for (let key in cmd.permissions) {
-            if (Array.isArray(cmd.permissions[key])) {
-                permAmt += cmd.permissions[key].length;
-            } else if (typeof cmd.permissions[key] === 'string') {
-                permAmt += 1;
-            }
+            if (Array.isArray(cmd.permissions[key])) permAmt += cmd.permissions[key].length;
+            else if (typeof cmd.permissions[key] === 'string') permAmt += 1;
         }
 
         if (haveAmt === permAmt) {
             // Run command since all permissions are fulfilled
-            await cmd.main(this[_bot], ctx);
-        } else {
-            // Figure out which permission is missing.
-            let foundPerm;
-            for (let key in cmd.permissions) {
-                if (Array.isArray(cmd.permissions[key])) {
-                    for (let perm of cmd.permissions[key]) {
-                        if (!~permChecks[key].indexOf(perm)) {
-                            foundPerm = {perm, who: key};
-                            break;
-                        }
-                    }
-                } else if (typeof cmd.permissions[key] === 'string') {
-                    if (permChecks[key][0] !== cmd.permissions[key]) {
-                        foundPerm = {perm: cmd.permissions[key], who: key};
+            return await cmd.main(this[_bot], ctx);
+        }
+
+        // Figure out which permission is missing.
+        let foundPerm;
+
+        for (let key in cmd.permissions) {
+            if (Array.isArray(cmd.permissions[key])) {
+                for (let perm of cmd.permissions[key]) {
+                    if (!~permChecks[key].indexOf(perm)) {
+                        foundPerm = {perm, who: key};
                         break;
                     }
                 }
-
-                if (foundPerm) break;
-            }
-
-            if (foundPerm) {
-                let {perm, who} = foundPerm;
-
-                if (who === 'author' && !PermissionMsgs[perm]) {
-                    await ctx.createMessage(`You require the **${PermissionsPrettyPrinted[perm]}** permission to use this command.`);
-                } else if (who === 'author') {
-                    await ctx.createMessage(PermissionMsgs[perm].author);
-                } else if (who === 'self' && !PermissionMsgs[perm]) {
-                    await ctx.createMessage(`I do not have the **${PermissionsPrettyPrinted[perm]}** permission.`);
-                } else if (who === 'self') {
-                    await ctx.createMessage(PermissionMsgs[perm].self);
-                } else if (who === 'both') {
-                    if (!ctx.hasPermission(perm, 'author') && !PermissionMsgs[perm]) {
-                        await ctx.createMessage(`You require the **${PermissionsPrettyPrinted[perm]}** permission to use this command.`);
-                    } else if (!ctx.hasPermission(perm, 'author')) {
-                        await ctx.createMessage(PermissionMsgs[perm].author);
-                    } else if (!ctx.hasPermission(perm) && !PermissionMsgs[perm]) {
-                        await ctx.createMessage(`I do not have the **${PermissionsPrettyPrinted[perm]}** permission.`);
-                    } else if (!ctx.hasPermission(perm)) {
-                        await ctx.createMessage(PermissionMsgs[perm].self);
-                    }
+            } else if (typeof cmd.permissions[key] === 'string') {
+                if (permChecks[key][0] !== cmd.permissions[key]) {
+                    foundPerm = {perm: cmd.permissions[key], who: key};
+                    break;
                 }
             }
+
+            if (foundPerm) break;
+        }
+
+        if (foundPerm) {
+            let {perm, who} = foundPerm;
+
+            if (who === 'author' && !PermissionMsgs[perm]) return await ctx.createMessage(`You require the **${PermissionsPrettyPrinted[perm]}** permission to use this command.`);
+            else if (who === 'author') return await ctx.createMessage(PermissionMsgs[perm].author);
+            else if (who === 'self' && !PermissionMsgs[perm]) return await ctx.createMessage(`I do not have the **${PermissionsPrettyPrinted[perm]}** permission.`);
+            else if (who === 'self') return await ctx.createMessage(PermissionMsgs[perm].self);
+
+            if (!ctx.hasPermission(perm, 'author') && !PermissionMsgs[perm]) await ctx.createMessage(`You require the **${PermissionsPrettyPrinted[perm]}** permission to use this command.`);
+            else if (!ctx.hasPermission(perm, 'author')) await ctx.createMessage(PermissionMsgs[perm].author);
+            else if (!ctx.hasPermission(perm) && !PermissionMsgs[perm]) await ctx.createMessage(`I do not have the **${PermissionsPrettyPrinted[perm]}** permission.`);
+            else if (!ctx.hasPermission(perm)) await ctx.createMessage(PermissionMsgs[perm].self);
         }
     }
 
