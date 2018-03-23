@@ -3,6 +3,8 @@
  * @author Ovyerus
  */
 
+const fs = require('fs');
+const path = require('path');
 const crypto = require('crypto');
 const Eris = require('eris');
 const got = require('got');
@@ -43,6 +45,7 @@ class KnifeBot extends Eris.Client {
 
         super(token, options);
 
+        this.version = JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', '..', 'package.json'))).version;
         this.redHot = '🔥 1⃣0⃣0⃣0⃣ 🌡 🔪';
         this.userAgent = 'Knife Bot/2.1';
         this.gameInterval = 300000;

@@ -17,7 +17,8 @@ exports.info = {
                 {name: 'Users Seen', value: bot.users.size, inline: true},
                 {name: 'Uptime', value: msToTime(bot.uptime), inline: true},
                 {name: 'Memory Usage', value: genBytes(process.memoryUsage().rss), inline: true}
-            ]
+            ],
+            footer: {text: `Running Knife Bot version ${bot.version}.`}
         }});
     }
 };
