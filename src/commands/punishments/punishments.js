@@ -126,7 +126,7 @@ async function rolebanMember(user, ctx) {
         let userTopRolePos = ctx.member.roles.map(r => ctx.guild.roles.get(r)).sort((a, b) => a.position - b.position)[0];
         userTopRolePos = userTopRolePos ? userTopRolePos.position : 0;
 
-        let mentionTopRolePos = user.roles.map(r => ctx.guild.roles.get(r)).sort((a, b) => a.position - b.position)[0]
+        let mentionTopRolePos = user.roles.map(r => ctx.guild.roles.get(r)).sort((a, b) => a.position - b.position)[0];
         mentionTopRolePos = mentionTopRolePos ? mentionTopRolePos.position : 0;
 
         if (ctx.author.id !== ctx.guild.ownerID && userTopRolePos <= mentionTopRolePos) {
@@ -156,7 +156,7 @@ async function muteMember(user, ctx, role) {
         let userTopRolePos = ctx.member.roles.map(r => ctx.guild.roles.get(r)).sort((a, b) => a.position - b.position)[0];
         userTopRolePos = userTopRolePos ? userTopRolePos.position : 0;
 
-        let mentionTopRolePos = user.roles.map(r => ctx.guild.roles.get(r)).sort((a, b) => a.position - b.position)[0]
+        let mentionTopRolePos = user.roles.map(r => ctx.guild.roles.get(r)).sort((a, b) => a.position - b.position)[0];
         mentionTopRolePos = mentionTopRolePos ? mentionTopRolePos.position : 0;
 
         if (ctx.author.id !== ctx.guild.ownerID && userTopRolePos <= mentionTopRolePos) {
