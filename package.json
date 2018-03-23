@@ -8,16 +8,13 @@
   "repository": "Ovyerus/knife-bot",
   "bugs": "https://github.com/Ovyerus/knife-bot/issues",
   "dependencies": {
-    "bluebird": "^3.4.7",
+    "bluebird": "^3.5.1",
     "eris": "abalabahaha/eris",
-    "got": "^6.7.1",
-    "moment": "^2.18.1",
-    "redite": "^1.1.0"
+    "got": "^8.3.0",
+    "moment": "^2.21.0",
+    "redite": "^1.1.2"
   },
   "devDependencies": {
-    "eslint": "^3.18.0",
-    "eslint-config-defaults": "^9.0.0",
-    "tslint": "^4.5.1",
-    "typescript": "^2.2.1"
+    "eslint": "^4.19.1"
   }
 }

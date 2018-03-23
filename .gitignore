@@ -5,3 +5,4 @@ unloadedCommands.json
 .vscode
 package-lock.json
 pages/
+yarn.lock
