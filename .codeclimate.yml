@@ -1,4 +1,6 @@
 checks:
+  argument-count:
+    enabled: false
   return-statements:
     enabled: false
   method-complexity:
