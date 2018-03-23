@@ -18,7 +18,8 @@ exports.help = {
             let fieldsPos = 0;
             let embed = {
                 title: `${bot.user.username} Help : ${cmds.length} Commands`,
-                description: 'Showing help for all commands.\nRun `🔪help <command>` to get more info on a particular command.\n\nA prettier view with notes is available on [**the official website**](https://knife.ovyerus.me).',
+                description: 'Showing help for all commands.\nRun `🔪help <command>` to get more info on a particular command.\n\n',
+                //+ 'A prettier view with notes is available on [**the official website**](https://knife.ovyerus.me).'
                 footer: {
                     text: 'Options in <angle brackets> are required, and options in [square brackets] are optional. Do not include the brackets when passing options.'
                 },
