@@ -1,7 +1,7 @@
 exports.commands = ['cooldown'];
 
 exports.cooldown = {
-    desc: 'Clean up  and shutdown the bot.',
+    desc: 'Clean up and shutdown the bot.',
     allowDM: true,
     owner: true,
     async main(bot, ctx) {
