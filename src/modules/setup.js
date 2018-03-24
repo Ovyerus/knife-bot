@@ -14,10 +14,9 @@ async function firstTimeSetup(redisURL) {
         await conn.settings.owner.set(process.env.OWNER);
         await conn.settings.blacklist.set([]);
         await conn.settings.unloaded.set([]);
-        if (process.env.KNIFE_DBOTS_TOKEN) await conn.settingsdbotsToken.set(process.env.KNIFE_DBOTS_TOKEN);
-        
+        if (process.env.KNIFE_DBOTS_TOKEN) await conn.settings.dbotsToken.set(process.env.KNIFE_DBOTS_TOKEN);
         return;
-    } else return;
+    }
 
     console.log('Welcome to Knife Bot first time setup.');
     console.log('This interactive prompt will help you set up the database so that you can run this bot properly.');
