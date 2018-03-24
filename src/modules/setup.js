@@ -15,6 +15,7 @@ async function firstTimeSetup(redisURL) {
         await conn.settings.blacklist.set([]);
         await conn.settings.unloaded.set([]);
         if (process.env.KNIFE_DBOTS_TOKEN) await conn.settings.dbotsToken.set(process.env.KNIFE_DBOTS_TOKEN);
+        if (process.env.KNIFE_ERR_CHANNEL) await conn.settings.errorChannel.set(process.env.KNIFE_ERR_CHANNEL);
         return;
     }
 
