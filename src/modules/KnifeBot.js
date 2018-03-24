@@ -10,7 +10,7 @@ const Eris = require('eris');
 const got = require('got');
 const Redite = require('redite');
 const Lookups = require('./Lookups');
-const Logger = require('./Logger');
+const Logger = require('./logger');
 const {CommandHolder} = require('./CommandHolder');
 const {AwaitTimeout, ValueError} = require('./helpers');
 
