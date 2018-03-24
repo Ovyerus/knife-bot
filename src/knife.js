@@ -27,7 +27,6 @@ Eris.Collection.prototype.asyncForEach = async function(func) {
 
 (async () => {
     if (!config.redisURL) config.redisURL = 'redis://127.0.0.1/0' || process.env.REDIS_URL;
-    if (!config.token) process.env.DISCORDAPP_TOKEN;
 
     await setup(config.redisURL);
 
