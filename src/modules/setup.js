@@ -6,6 +6,18 @@ async function firstTimeSetup(redisURL) {
     let conn = new Redite({url: redisURL});
 
     if (await conn.has('NOT_FIRST_SETUP')) return;
+    if (process.env.KNIFE_IN_DOCKER === 'true') {
+        console.log('Knife is in Docker. Setting values automatically.');
+        await conn.NOT_FIRST_SETUP.set(true);
+        await conn.settings.prefixes.set([process.env.KNIFE_PREFIX].concat(['<@{{id}}> ', '<@!{{id}}>']));
+        await conn.settings.token.set(process.env.KNIFE_DISCORD_TOKEN);
+        await conn.settings.owner.set(process.env.OWNER);
+        await conn.settings.blacklist.set([]);
+        await conn.settings.unloaded.set([]);
+        if (process.env.KNIFE_DBOTS_TOKEN) await conn.settingsdbotsToken.set(process.env.KNIFE_DBOTS_TOKEN);
+        
+        return;
+    } else return;
 
     console.log('Welcome to Knife Bot first time setup.');
     console.log('This interactive prompt will help you set up the database so that you can run this bot properly.');
