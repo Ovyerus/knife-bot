@@ -168,9 +168,221 @@
             <div class="name">halfway</div>
             <div class="aliases">softban</div>
             <div class="usage">&lt;user&gt; [for &lt;reason&gt;]</div>
+            <div class="required-permissions">
+              <div class="bot">Ban Members</div>
+              <div class="user">Ban Members</div>
+            </div>
             <div class="description">
               Softbans a given user.<br>
               Softbanning bans a user and then quickly unbans them, and is an effective way to delete all the recent messages of a user, while removing them from the server.
+            </div>
+            <div class="examples">
+              <div>
+                <div class="example-title">Softbanning a user</div>
+                <div class="example mono">halfway @example#1234</div>
+              </div>
+              <div>
+                <div class="example-title">Softbanning a user with a reason</div>
+                <div class="example mono">halfway @example#1234 for spam</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="mute" class="command">
+            <div class="name">mute</div>
+            <div class="usage">&lt;user&gt; [for &lt;reason&gt;]</div>
+            <div class="description">
+              Gives a user a muted role, preventing them from speaking.<br>
+              This relies on roles set with the <a href="#roles">roles command</a>. If there are no muted roles, this command <b>will not work</b>.<br>
+              If there are multiple muted roles, you will be asked to select one.
+            </div>
+            <div class="examples">
+              <div>
+                <div class="example-title">Muting a user</div>
+                <div class="example mono">mute @example#1234</div>
+              </div>
+              <div>
+                <div class="example-title">Muting a user with a reason</div>
+                <div class="example mono">mute @example#1234 for annoying</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="purge" class="command">
+            <div class="name">purge</div>
+            <div class="usage">&lt;type&gt; [options] [1-100]</div>
+            <div class="description">
+              Removes a bunch of messages, with optional filters and amount.
+            </div>
+            <div class="examples">
+              <div>
+                <div class="example-title">Muting a user</div>
+                <div class="example mono">mute @example#1234</div>
+              </div>
+              <div>
+                <div class="example-title">Muting a user with a reason</div>
+                <div class="example mono">mute @example#1234 for annoying</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="roleban" class="command">
+            <div class="name">roleban</div>
+            <div class="usage">&lt;user&gt; [for &lt;reason&gt;]</div>
+            <div class="description">
+              Rolebans a user, restricting them to a specific channel, allowing you to talk to them.<br>
+              This relies on a role set with the <a href="#roles">roles command</a>. If there is no roleban role, this command <b>will not work.</b>
+            </div>
+            <div class="examples">
+              <div>
+                <div class="example-title">Rolebanning a user</div>
+                <div class="example mono">roleban @example#1234</div>
+              </div>
+              <div>
+                <div class="example-title">Rolebanning a user with a reason</div>
+                <div class="example mono">roleban @example#1234 for idiot</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="stab" class="command">
+            <div class="name">stab</div>
+            <div class="aliases">kick</div>
+            <div class="usage">&lt;user&gt; [for &lt;reason&gt;]</div>
+            <div class="description">
+              Kicks a user from the server.
+            </div>
+            <div class="examples">
+              <div>
+                <div class="example-title">Kicking a user</div>
+                <div class="example mono">stab @example#1234</div>
+              </div>
+              <div>
+                <div class="example-title">Kicking a user with a reason</div>
+                <div class="example mono">stab @example#1234 for idiot</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="vs" class="command">
+            <div class="name">vs</div>
+            <div class="aliases">ban</div>
+            <div class="usage">&lt;user&gt; [for &lt;reason&gt;]</div>
+            <div class="description">
+              Bans a user from the server.
+            </div>
+            <div class="examples">
+              <div>
+                <div class="example-title">Banning a user</div>
+                <div class="example mono">vs @example#1234</div>
+              </div>
+              <div>
+                <div class="example-title">Banning a user with a reason</div>
+                <div class="example mono">vs @example#1234 for dm ads</div>
+              </div>
+            </div>
+          </div>
+
+          <span class="subtitle">Settings</span>
+
+          <div id="settings" class="command">
+            <div class="name">settings</div>
+            <div class="description">
+              Provides basic descriptions of the various commands for settings.<br>
+              This used to be used for managing all the settings for the bot, however that was deemed to be too annoying and messy, so they all got split up into their own commands.
+            </div>
+          </div>
+
+          <div id="channel" class="command">
+            <div class="name">channel</div>
+            <div class="usage">[channel | disable]</div>
+            <div class="description">
+              Sets or removes the channel used for logging various events from the bot, including auto-mod filters being triggered, users being punished, etc.
+            </div>
+            <div class="examples">
+              <div>
+                <div class="example-title">Setting a logging channel</div>
+                <div class="example mono">channel #mod-log</div>
+              </div>
+              <div>
+                <div class="example-title">Removing the logging channel</div>
+                <div class="example mono">channel disable</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="diacritics" class="command">
+            <div class="name">diacritics</div>
+            <div class="usage">[enable | disable | trigger &lt;amount&gt; | kick &lt;amount&gt; | ban &lt;amount&gt;]</div>
+            <div class="description">
+              Manages settings for the anti-diacritics filter.
+            </div>
+
+            <div class="accordion">
+              <input id="diacritics-subcommands" type="checkbox">
+              <label for="diacritics-subcommands">Subcommands</label>
+              <div class="accordion-content">
+                <div id="diacritics-enable" class="subcommand">
+                  <div class="name">enable</div>
+                  <div class="description">
+                    Enables the anti-diacritics filter.
+                  </div>
+                </div>
+
+                <div id="diacritics-disable" class="subcommand">
+                  <div class="name">disable</div>
+                  <div class="description">
+                    Disables the anti-diacritics filter.
+                  </div>
+                </div>
+
+                <div id="diacritics-trigger" class="subcommand">
+                  <div class="name">trigger</div>
+                  <div class="usage">&lt;amount&gt;</div>
+                  <div class="description">
+                    Sets the amount of diacritics in a single message that it takes to trigger the anti-diacritics filter.
+                  </div>
+                </div>
+
+                <div id="diacritics-kick" class="subcommand">
+                  <div class="name">kick</div>
+                  <div class="usage">&lt;amount&gt;</div>
+                  <div class="description">
+                    Sets the amount of warnings to be issued to a user before they are kicked from the server, due to the anti-diacritics filter.
+                  </div>
+                </div>
+
+                <div id="diacritics-ban" class="subcommand">
+                  <div class="name">ban</div>
+                  <div class="usage">&lt;amount&gt;</div>
+                  <div class="description">
+                    Sets the amount of warnings to be issued to a user, before they arre banned from the server, due to the anti-diacritics filter.<br>
+                    Cannot be lower or equal to the kick limit.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="exceptions" class="command">
+            <div class="name">exceptions</div>
+            <div class="usage">[option [arguments]]</div>
+            <div class="description">
+              Manage exceptions for the filters.
+            </div>
+
+            <div class="accordion">
+              <input id="exceptions-subcommands" type="checkbox">
+              <label for="exceptions-subcommands">Subcommands</label>
+              <div class="accordion-content">
+                <div id="exceptions-channels" class="subcommand">
+                  <div class="name">channels</div>
+                  <div class="usage">[add &lt;channel&gt; | remove &lt;channel&gt;</div>
+                  <div class="description">
+                    Manages the per-channel filter exceptions.
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -185,12 +397,32 @@
       document.querySelectorAll('.command .name').forEach(v => v.addEventListener('click', copyHash));
       linkJumpers.forEach(v => v.addEventListener('click', smoothJump));
 
+      if (location.hash) {
+        // I like my returns tyvm.
+        (function() {
+          let el = document.querySelector(location.hash);
+
+          if (!el || !Array.from(el.parentElement.classList).includes('accordion-content')) return;
+
+          window.scroll({top: 0});          
+
+          let accordionItems = Array.from(el.parentElement.parentElement.childNodes);
+          let accordionBox = accordionItems.find(v => v.localName === 'input');
+
+          if (!accordionBox) return;
+
+          accordionBox.checked = true;
+          scrollToEl(el);
+        })();
+      }
+
       function scroller() {
         if ((document.body.scrollTop || document.documentElement.scrollTop) >= 100) topBtn.classList.add('alive');
         else topBtn.classList.remove('alive');
       }
 
       function goToTop() {
+        history.pushState({}, null, location.pathname);
         window.scroll({
           top: 0,
           behavior: 'smooth'

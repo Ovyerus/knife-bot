@@ -203,11 +203,10 @@ li {
 }
 
 .mono {
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0, 0, 0, 0.5);
     padding: 0 5px;
     border-radius: 5px;
-    display: inline;
-    font-family: 'Space Mono', Courier New, Courier, monospace;
+    font-family: 'Iosevka', Courier New, Courier, monospace;
 }
 
 .knife {
@@ -346,7 +345,7 @@ li {
 
 .aliases {
     margin-bottom: 25px;
-    font-family: 'Space Mono', Courier New, Courier, monospace;
+    font-family: 'Iosevka', Courier New, Courier, monospace;
 }
 
 .aliases::before {
@@ -357,11 +356,11 @@ li {
 
 .usage {
     margin-bottom: 25px;
-    font-family: 'Space Mono', Courier New, Courier, monospace;
+    font-family: 'Iosevka', Courier New, Courier, monospace;
 }
 
 .usage::before {
-    content: 'Usage: ';
+    content: 'Usage:\a0\a0';
     font-family: Lato, Arial, Helvetica, sans-serif; 
     font-weight: 700;
 }
@@ -372,6 +371,19 @@ li {
 
 .description {
     line-height: 25px;
+}
+
+.subcommand .usage,
+.subcommand .aliases {
+    margin-bottom: 10px;
+}
+
+.subcommand .aliases + .usage {
+    margin-top: -10px;
+}
+
+.subcommand .description {
+    line-height: 20px;
 }
 
 .examples {
@@ -391,6 +403,69 @@ li {
 .example {
     margin-left: 15px;
 }
+
+.accordion {
+    width: 100%;
+    margin-top: 25px;
+    position: relative;
+    overflow: hidden;
+}
+
+input {
+    position: absolute;
+    opacity: 0;
+    z-index: -1;
+}
+
+label {
+    position: relative;
+    display: block;
+    padding: 0 0 0 25px;
+    background: rgba(0, 0, 0, 0.5);
+    font-weight: 700;
+    font-size: 25px;
+    height: 60px;
+    line-height: 75px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 15px 15px 0 0 ;
+}
+
+.accordion-content {
+    max-height: 15px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 0 0 15px 15px;
+    transition: max-height 0.2s ease-out;
+}
+
+.accordion-content > * {
+    margin: 25px;
+}
+
+input:checked ~ .accordion-content {
+    max-height: 100%;
+}
+
+label::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    display: block;
+    height: 75px;
+    width: 75px;
+    background-image: url('../img/plus.svg');
+    background-repeat: no-repeat;
+    background-position: center center;
+    text-align: center;
+    transition: transform 0.2s;
+}
+
+input:checked + label::after {
+    transform: rotate(135deg);
+}
+
 
 /*
    Mobile Devices
