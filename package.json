@@ -7,6 +7,9 @@
   "license": "MIT",
   "repository": "Ovyerus/knife-bot",
   "bugs": "https://github.com/Ovyerus/knife-bot/issues",
+  "scripts": {
+    "start": "node src/knife.js"
+  },
   "dependencies": {
     "bluebird": "^3.5.1",
     "eris": "abalabahaha/eris",
