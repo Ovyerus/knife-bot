@@ -109,7 +109,7 @@ exports.ban = {
     desc: 'Sets the limit for banning users due to invites.',
     usage: '<limit>',
     async main(bot, ctx) {
-        let num = Number(Math.abs(ctx.args[1]).toFixed(0));
+        let num = Number(Math.abs(ctx.args[0]).toFixed(0));
 
         if (isNaN(num)) return await ctx.createMessage('You can only set the ban limit to a valid number.');
         else if (num <= ctx.settings.actions.invites.kick) return await ctx.createMessage('You cannot set the ban limit to, or lower than the kick limit.');
