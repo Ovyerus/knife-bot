@@ -44,7 +44,11 @@ exports.help = {
                 };
             }
 
-            await ctx.createMessage({embed}, null, 'author');
+            try {
+                await ctx.createMessage({embed}, null, 'author');
+            } catch(err) {
+                await ctx.createMessage("I wasn't a ble to send a DM to you. Perhaps I am blocked?");
+            }
         } else {
             if (!bot.commands.getCommand(ctx.args[0])) return await ctx.createMessage(`Command \`${ctx.args[0]}\` could not be found. Make sure to check your spelling.`);
 
