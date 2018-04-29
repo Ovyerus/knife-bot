@@ -150,12 +150,12 @@ class KnifeBot extends Eris.Client {
      * Posts current guild count to bots.discord.pw.
      */
     async postGuildCount() {
-        if (this.config.dbotsKey) {
+        if (this.dbotsKey) {
             try {
                 await got(`https://bots.discord.pw/api/bots/${this.user.id}/stats`, {
                     method: 'POST',
                     headers: {
-                        Authorization: this.config.dbotsKey,
+                        Authorization: this.dbotsKey,
                         'Content-Type': 'application/json',
                         'User-Agent': this.userAgent
                     },
