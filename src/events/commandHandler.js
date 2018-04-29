@@ -54,7 +54,10 @@ module.exports = bot => {
         delete bot._currentlyAwaiting[msg.channel.id + msg.author.id];
     });
 
-    bot.on('messageUpdate', msg => {
+    bot.on('messageUpdate', async (msg, old) => {
+        // Handle uncached messages
+        if (!old) msg = await bot.getMessage(msg.channel.id, msg.id);
+
         if (msg.author.id === bot.user.id) return;
 
         if (URLRegex.test(msg.content)) bot.emit('invites', msg);
