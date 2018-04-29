@@ -1,4 +1,5 @@
 const {AwaitTimeout} = require(`${__baseDir}/modules/helpers`);
+const DiscordHTTPError = require('eris/lib/errors/DiscordHTTPError');
 
 exports.commands = [
     'mute',
@@ -143,7 +144,7 @@ async function rolebanMember(user, ctx) {
 
             await ctx.createMessage(`Cut all the way through **${ctx.client.formatUser(user)}**!`);
         } catch(err) {
-            if (err.resp && err.resp.statusCode === 403) {
+            if (err instanceof DiscordHTTPError) {
                 return await ctx.createMessage(`**${ctx.client.formatUser(user)}** is too tough for me and I was unable to be cut through.`);
             } else throw err;
         }
@@ -173,7 +174,7 @@ async function muteMember(user, ctx, role) {
 
             await ctx.createMessage(`Cut all the way through **${ctx.client.formatUser(user)}**!`);
         } catch(err) {
-            if (err.resp && err.resp.statusCode === 403) {
+            if (err instanceof DiscordHTTPError) {
                 return await ctx.createMessage(`**${ctx.client.formatUser(user)}** is too tough for me and I was unable to be cut through.`);
             } else throw err;
         }

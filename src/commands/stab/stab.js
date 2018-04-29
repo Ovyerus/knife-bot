@@ -1,3 +1,5 @@
+const DiscordHTTPError = require('eris/lib/errors/DiscordHTTPError');
+
 exports.commands = ['stab'];
 
 exports.stab = {
@@ -57,7 +59,7 @@ async function kickMember(user, ctx) {
 
             await ctx.createMessage(`Stabbed **${ctx.client.formatUser(user)}**.`);
         } catch(err) {
-            if (err.resp && err.resp.statusCode === 403) {
+            if (err instanceof DiscordHTTPError) {
                 return await ctx.createMessage(`**${ctx.client.formatUser(user)}** is too tough for me and I was unable to be stab them.`);
             } else throw err;
         }
